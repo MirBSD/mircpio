@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.2 2005/02/28 20:21:27 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -34,14 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)file_subs.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: file_subs.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $";
-#endif
-#endif /* not lint */
-
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -56,6 +49,9 @@ static const char rcsid[] = "$OpenBSD: file_subs.c,v 1.27 2004/04/16 22:50:23 de
 #include "pax.h"
 #include "options.h"
 #include "extern.h"
+
+__SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.2 2005/02/28 20:21:27 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -730,6 +726,7 @@ set_ids(char *fnm, uid_t uid, gid_t gid)
 int
 set_lids(char *fnm, uid_t uid, gid_t gid)
 {
+#ifndef __APPLE__
 	if (lchown(fnm, uid, gid) < 0) {
 		/*
 		 * ignore EPERM unless in verbose mode or being run by root.
@@ -741,6 +738,7 @@ set_lids(char *fnm, uid_t uid, gid_t gid)
 			    fnm);
 		return(-1);
 	}
+#endif
 	return(0);
 }
 
