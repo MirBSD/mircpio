@@ -1,4 +1,4 @@
-/*	$OpenBSD: pat_rep.c,v 1.26 2004/04/16 22:50:23 deraadt Exp $	*/
+/*	$OpenBSD: pat_rep.c,v 1.28 2004/06/11 03:10:43 millert Exp $	*/
 /*	$NetBSD: pat_rep.c,v 1.4 1995/03/21 09:07:33 cgd Exp $	*/
 
 /*-
@@ -38,7 +38,7 @@
 #if 0
 static const char sccsid[] = "@(#)pat_rep.c	8.2 (Berkeley) 4/18/94";
 #else
-static const char rcsid[] = "$OpenBSD: pat_rep.c,v 1.26 2004/04/16 22:50:23 deraadt Exp $";
+static const char rcsid[] = "$OpenBSD: pat_rep.c,v 1.28 2004/06/11 03:10:43 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -121,7 +121,7 @@ rep_add(char *str)
 		if (*pt1 == *str)
 			break;
 	}
-	if (pt1 == NULL) {
+	if (*pt1 == '\0') {
 		paxwarn(1, "Invalid replacement string %s", str);
 		return(-1);
 	}
@@ -157,7 +157,7 @@ rep_add(char *str)
 		if (*pt2 == *str)
 			break;
 	}
-	if (pt2 == NULL) {
+	if (*pt2 == '\0') {
 		regfree(&(rep->rcmp));
 		(void)free((char *)rep);
 		paxwarn(1, "Invalid replacement string %s", str);
@@ -887,6 +887,7 @@ rep_name(char *name, size_t nsize, int *nlen, int prnt)
 	 */
 	while (pt != NULL) {
 		do {
+			char *oinpt = inpt;
 			/*
 			 * check for a successful substitution, if not go to
 			 * the next pattern, or cleanup if we were global
@@ -915,7 +916,7 @@ rep_name(char *name, size_t nsize, int *nlen, int prnt)
 			 * replacement string and place it the prefix in the
 			 * final output. If we have problems, skip it.
 			 */
-			if ((res = resub(&(pt->rcmp),pm,pt->nstr,inpt,outpt,endpt))
+			if ((res = resub(&(pt->rcmp),pm,pt->nstr,oinpt,outpt,endpt))
 			    < 0) {
 				if (prnt)
 					paxwarn(1, "Replacement name error %s",
