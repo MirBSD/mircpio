@@ -1,6 +1,6 @@
-/*	$MirBSD: src/bin/pax/options.c,v 1.4 2004/02/25 14:15:14 tg Exp $	*/
-/*	$OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $	*/
-/*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
+/* $MirBSD: src/bin/pax/options.c,v 1.5 2004/05/23 12:47:03 tg Exp $	*/
+/* $OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $	*/
+/* $NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
  * Copyright (c) 1992 Keith Muller.
@@ -35,15 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-__SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirBSD: src/bin/pax/options.c,v 1.4 2004/02/25 14:15:14 tg Exp $");
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/mtio.h>
-#include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -56,6 +51,9 @@ __RCSID("$MirBSD: src/bin/pax/options.c,v 1.4 2004/02/25 14:15:14 tg Exp $");
 #include "cpio.h"
 #include "tar.h"
 #include "extern.h"
+
+__SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirBSD: src/bin/pax/options.c,v 1.5 2004/05/23 12:47:03 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -1287,7 +1285,7 @@ cpio_options(int argc, char **argv)
 			 */
 			maxflt = 0;
 			while ((str = getline(stdin)) != NULL) {
-				ftree_add(str, NULL);
+				ftree_add(str, 0);
 			}
 			if (getline_error) {
 				paxwarn(1, "Problem while reading stdin");
