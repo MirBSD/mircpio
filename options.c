@@ -1,5 +1,5 @@
-/*	$MirBSD: options.c,v 1.2 2004/02/25 13:57:18 tg Exp $	*/
-/*	$OpenBSD: options.c,v 1.60 2003/11/30 16:58:24 millert Exp $	*/
+/*	$MirBSD: src/bin/pax/options.c,v 1.4 2004/02/25 14:15:14 tg Exp $	*/
+/*	$OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -36,7 +36,8 @@
  */
 
 #include <sys/cdefs.h>
-__RCSID("$MirBSD: options.c,v 1.2 2004/02/25 13:57:18 tg Exp $");
+__SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirBSD: src/bin/pax/options.c,v 1.4 2004/02/25 14:15:14 tg Exp $");
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -272,7 +273,7 @@ pax_options(int argc, char **argv)
 			 * specify file characteristic options
 			 */
 			for (pt = optarg; *pt != '\0'; ++pt) {
-				switch(*pt) {
+				switch (*pt) {
 				case 'a':
 					/*
 					 * do not preserve access time
@@ -614,7 +615,7 @@ tar_options(int argc, char **argv)
 	 */
 	while ((c = getoldopt(argc, argv,
 	    "b:cef:hmopqruts:vwxzBC:HI:LOPRSXZ014578")) != -1) {
-		switch(c) {
+		switch (c) {
 		case 'b':
 			/*
 			 * specify blocksize in 512-byte blocks
@@ -1466,7 +1467,7 @@ str_offt(char *val)
 #	endif
 		return(0);
 
-	switch(*expr) {
+	switch (*expr) {
 	case 'b':
 		t = num;
 		num *= 512;
@@ -1497,7 +1498,7 @@ str_offt(char *val)
 		break;
 	}
 
-	switch(*expr) {
+	switch (*expr) {
 		case '\0':
 			break;
 		case '*':
