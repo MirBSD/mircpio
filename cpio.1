@@ -1,3 +1,4 @@
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.2 2005/02/28 20:04:58 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.20 2003/11/21 20:54:02 jmc Exp $
 .\"
 .\" Copyright (c) 1997 SigmaSoft, Th. Lockert
@@ -109,6 +110,15 @@ format.
 Old tar format.
 .It Ar ustar
 POSIX ustar format.
+.It "\ "
+.It Ar bin
+These
+.It Ar crc
+four
+.It Ar newc
+formats
+.It Ar odc
+are supported for backwards compatibility only.
 .El
 .It Fl L
 Follow symbolic links.
@@ -176,6 +186,15 @@ format.
 Old tar format.
 .It Ar ustar
 POSIX ustar format.
+.It "\ "
+.It Ar bin
+These
+.It Ar crc
+four
+.It Ar newc
+formats
+.It Ar odc
+are supported for backwards compatibility only.
 .El
 .It Fl m
 Restore modification times on files.
@@ -288,3 +307,7 @@ The
 and
 .Fl S
 options are currently not implemented.
+.Sh CAVEATS
+The backwards-compatible format options are not available in the
+.Xr pax 1
+front-end.
