@@ -127,7 +127,8 @@ FSUB fsub[] = {
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */
 #define	F_ACPIO	1	/* format when called as cpio -c */
-#define	F_CPIO	3	/* format when called as cpio */
+#define	F_NCPIO	2	/* format when called as tar -R */
+#define	F_CPIO	3	/* format when called as cpio or tar -S */
 #define F_OTAR	4	/* format when called as tar -o */
 #define F_TAR	5	/* format when called as tar */
 #define DEFLT	5	/* default write format from list above */
@@ -612,7 +613,7 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "b:cef:hmopqruts:vwxzBC:HI:LOPXZ014578")) != -1) {
+	    "b:cef:hmopqruts:vwxzBC:HI:LOPRSXZ014578")) != -1) {
 		switch(c) {
 		case 'b':
 			/*
@@ -688,6 +689,12 @@ tar_options(int argc, char **argv)
 			 * append to the archive
 			 */
 			act = APPND;
+			break;
+		case 'R':
+			Oflag = 3;
+			break;
+		case 'S':
+			Oflag = 4;
 			break;
 		case 's':
 			/*
@@ -890,10 +897,28 @@ tar_options(int argc, char **argv)
 		break;
 	case ARCHIVE:
 	case APPND:
-		frmt = &(fsub[Oflag ? F_OTAR : F_TAR]);
-
-		if (Oflag == 2 && opt_add("write_opt=nodir") < 0)
+		switch(Oflag) {
+		    case 0:
+			frmt = &(fsub[F_TAR]);
+			break;
+		    case 1:
+			frmt = &(fsub[F_OTAR]);
+			break;
+		    case 2:
+			frmt = &(fsub[F_OTAR]);
+			if (opt_add("write_opt=nodir") < 0)
+				tar_usage();
+			break;
+		    case 3:
+			frmt = &(fsub[F_NCPIO]);
+			break;
+		    case 4:
+			frmt = &(fsub[F_CPIO]);
+			break;
+		    default:
 			tar_usage();
+			break;
+		}
 
 		if (chdname != NULL) {	/* initial chdir() */
 			if (ftree_add(chdname, 1) < 0)
@@ -1566,7 +1591,7 @@ pax_usage(void)
 void
 tar_usage(void)
 {
-	(void)fputs("usage: tar [-]{crtux}[-befhmopqsvwzHLOPXZ014578] [blocksize] ",
+	(void)fputs("usage: tar [-]{crtux}[-befhmopqsvwzHLOPRSXZ014578] [blocksize] ",
 		 stderr);
 	(void)fputs("[archive] [replstr] [-C directory] [-I file] [file ...]\n",
 	    stderr);
