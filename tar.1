@@ -1,3 +1,4 @@
+.\"	$MirBSD$
 .\"	$OpenBSD: tar.1,v 1.45 2003/11/21 20:54:02 jmc Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -34,7 +35,7 @@
 .Sh SYNOPSIS
 .Nm tar
 .Sm off
-.Oo \&- Oc {crtux} Op befhmopqsvwzHLOPXZ014578
+.Oo \&- Oc {crtux} Op befhmopqsvwzHLOPRSXZ014578
 .Sm on
 .Op Ar blocksize
 .Op Ar archive
@@ -134,6 +135,10 @@ No more than one archive member is matched for each
 .Ar pattern .
 When members of type directory are matched, the file hierarchy rooted at that
 directory is also matched.
+.It Fl R
+Write SysVR4 CPIO files instead of tar or POSIX ustar files.
+.It Fl S
+Write SysVR4 CPIO files with CRC instead of tar or POSIX ustar files.
 .It Fl s Ar replstr
 Modify the file or archive member names specified by the
 .Ar pattern
@@ -326,3 +331,9 @@ The
 flag is not portable to other versions of
 .Nm
 where it may have a different meaning.
+The
+.Fl R
+and
+.Fl S
+options are extensions specific to
+.Mx .
