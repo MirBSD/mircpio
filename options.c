@@ -1,6 +1,5 @@
-/* $MirBSD: src/bin/pax/options.c,v 1.5 2004/05/23 12:47:03 tg Exp $	*/
-/* $OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $	*/
-/* $NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
+/*	$OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $	*/
+/*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
  * Copyright (c) 1992 Keith Muller.
@@ -35,10 +34,19 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
+#ifndef lint
+#if 0
+static const char sccsid[] = "@(#)options.c	8.2 (Berkeley) 4/18/94";
+#else
+static const char rcsid[] = "$OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $";
+#endif
+#endif /* not lint */
+
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/mtio.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -51,9 +59,6 @@
 #include "cpio.h"
 #include "tar.h"
 #include "extern.h"
-
-__SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirBSD: src/bin/pax/options.c,v 1.5 2004/05/23 12:47:03 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -126,8 +131,7 @@ FSUB fsub[] = {
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */
 #define	F_ACPIO	1	/* format when called as cpio -c */
-#define	F_NCPIO	2	/* format when called as tar -R */
-#define	F_CPIO	3	/* format when called as cpio or tar -S */
+#define	F_CPIO	3	/* format when called as cpio */
 #define F_OTAR	4	/* format when called as tar -o */
 #define F_TAR	5	/* format when called as tar */
 #define DEFLT	5	/* default write format from list above */
@@ -612,7 +616,7 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "b:cef:hmopqruts:vwxzBC:HI:LOPRSXZ014578")) != -1) {
+	    "b:cef:hmopqruts:vwxzBC:HI:LOPXZ014578")) != -1) {
 		switch (c) {
 		case 'b':
 			/*
@@ -688,12 +692,6 @@ tar_options(int argc, char **argv)
 			 * append to the archive
 			 */
 			act = APPND;
-			break;
-		case 'R':
-			Oflag = 3;
-			break;
-		case 'S':
-			Oflag = 4;
 			break;
 		case 's':
 			/*
@@ -896,28 +894,10 @@ tar_options(int argc, char **argv)
 		break;
 	case ARCHIVE:
 	case APPND:
-		switch(Oflag) {
-		    case 0:
-			frmt = &(fsub[F_TAR]);
-			break;
-		    case 1:
-			frmt = &(fsub[F_OTAR]);
-			break;
-		    case 2:
-			frmt = &(fsub[F_OTAR]);
-			if (opt_add("write_opt=nodir") < 0)
-				tar_usage();
-			break;
-		    case 3:
-			frmt = &(fsub[F_NCPIO]);
-			break;
-		    case 4:
-			frmt = &(fsub[F_CPIO]);
-			break;
-		    default:
+		frmt = &(fsub[Oflag ? F_OTAR : F_TAR]);
+
+		if (Oflag == 2 && opt_add("write_opt=nodir") < 0)
 			tar_usage();
-			break;
-		}
 
 		if (chdname != NULL) {	/* initial chdir() */
 			if (ftree_add(chdname, 1) < 0)
@@ -996,7 +976,8 @@ tar_options(int argc, char **argv)
 int mkpath(char *);
 
 int
-mkpath(char *path)
+mkpath(path)
+	char *path;
 {
 	struct stat sb;
 	char *slash;
@@ -1203,17 +1184,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * specify an archive format on write
 				 */
-				if (!strcmp(optarg, "bin")) {
-					tmp.name = "bcpio";
-				} else if (!strcmp(optarg, "crc")) {
-					tmp.name = "sv4crc";
-				} else if (!strcmp(optarg, "newc")) {
-					tmp.name = "sv4cpio";
-				} else if (!strcmp(optarg, "odc")) {
-					tmp.name = "cpio";
-				} else {
-					tmp.name = optarg;
-				}
+				tmp.name = optarg;
 				if ((frmt = (FSUB *)bsearch((void *)&tmp, (void *)fsub,
 				    sizeof(fsub)/sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
 					break;
@@ -1285,7 +1256,7 @@ cpio_options(int argc, char **argv)
 			 */
 			maxflt = 0;
 			while ((str = getline(stdin)) != NULL) {
-				ftree_add(str, 0);
+				ftree_add(str, NULL);
 			}
 			if (getline_error) {
 				paxwarn(1, "Problem while reading stdin");
@@ -1534,7 +1505,7 @@ getline(FILE *f)
 	temp[len-1] = 0;
 	return(temp);
 }
-
+			
 /*
  * no_op()
  *	for those option functions where the archive format has nothing to do.
@@ -1590,7 +1561,7 @@ pax_usage(void)
 void
 tar_usage(void)
 {
-	(void)fputs("usage: tar [-]{crtux}[-befhmopqsvwzHLOPRSXZ014578] [blocksize] ",
+	(void)fputs("usage: tar [-]{crtux}[-befhmopqsvwzHLOPXZ014578] [blocksize] ",
 		 stderr);
 	(void)fputs("[archive] [replstr] [-C directory] [-I file] [file ...]\n",
 	    stderr);
@@ -1606,9 +1577,9 @@ void
 cpio_usage(void)
 {
 	(void)fputs("usage: cpio -o [-aABcLvVzZ] [-C bytes] [-H format] [-O archive]\n", stderr);
-	(void)fputs("               [-F archive] <name-list [>archive]\n", stderr);
+	(void)fputs("               [-F archive] < name-list [> archive]\n", stderr);
 	(void)fputs("       cpio -i [-bBcdfmnrsStuvVzZ6] [-C bytes] [-E file] [-H format]\n", stderr);
-	(void)fputs("               [-I archive] [-F archive] [pattern...] [<archive]\n", stderr);
-	(void)fputs("       cpio -p [-adlLmuvV] destination-directory <name-list\n", stderr);
+	(void)fputs("               [-I archive] [-F archive] [pattern...] [< archive]\n", stderr);
+	(void)fputs("       cpio -p [-adlLmuvV] destination-directory < name-list\n", stderr);
 	exit(1);
 }
