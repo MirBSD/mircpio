@@ -1,3 +1,4 @@
+/*	$MirBSD$	*/
 /*	$OpenBSD: options.c,v 1.60 2003/11/30 16:58:24 millert Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -34,13 +35,8 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)options.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: options.c,v 1.60 2003/11/30 16:58:24 millert Exp $";
-#endif
-#endif /* not lint */
+#include <sys/cdefs.h>
+__RCSID("$MirBSD$");
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -976,8 +972,7 @@ tar_options(int argc, char **argv)
 int mkpath(char *);
 
 int
-mkpath(path)
-	char *path;
+mkpath(char *path)
 {
 	struct stat sb;
 	char *slash;
@@ -1184,7 +1179,23 @@ cpio_options(int argc, char **argv)
 				/*
 				 * specify an archive format on write
 				 */
-				tmp.name = optarg;
+				switch(optarg) {
+				    case "bin":
+					tmp.name = "bcpio";
+					break;
+				    case "crc":
+					tmp.name = "sv4crc";
+					break;
+				    case "newc":
+					tmp.name = "sv4cpio";
+					break;
+				    case "odc":
+					tmp.name = "cpio";
+					break;
+				    default:
+					tmp.name = optarg;
+					break;
+				}
 				if ((frmt = (FSUB *)bsearch((void *)&tmp, (void *)fsub,
 				    sizeof(fsub)/sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
 					break;
@@ -1505,7 +1516,7 @@ getline(FILE *f)
 	temp[len-1] = 0;
 	return(temp);
 }
-			
+
 /*
  * no_op()
  *	for those option functions where the archive format has nothing to do.

@@ -1,3 +1,4 @@
+.\"	$MirBSD$
 .\"	$OpenBSD: cpio.1,v 1.20 2003/11/21 20:54:02 jmc Exp $
 .\"
 .\" Copyright (c) 1997 SigmaSoft, Th. Lockert
@@ -109,6 +110,12 @@ format.
 Old tar format.
 .It Ar ustar
 POSIX ustar format.
+.It "\ "
+.It Ar bin
+.It Ar crc
+.It Ar newc
+.It Ar odc
+are supported for backwards compatibility only.
 .El
 .It Fl L
 Follow symbolic links.
@@ -288,3 +295,7 @@ The
 and
 .Fl S
 options are currently not implemented.
+.Sh CAVEATS
+The backwards-compatible format options are not available in the
+.Xr pax 1
+front-end.
