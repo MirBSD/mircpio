@@ -1,4 +1,4 @@
-/*	$MirBSD$	*/
+/*	$MirBSD: options.c,v 1.2 2004/02/25 13:57:18 tg Exp $	*/
 /*	$OpenBSD: options.c,v 1.60 2003/11/30 16:58:24 millert Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -36,7 +36,7 @@
  */
 
 #include <sys/cdefs.h>
-__RCSID("$MirBSD$");
+__RCSID("$MirBSD: options.c,v 1.2 2004/02/25 13:57:18 tg Exp $");
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -1179,22 +1179,16 @@ cpio_options(int argc, char **argv)
 				/*
 				 * specify an archive format on write
 				 */
-				switch(optarg) {
-				    case "bin":
+				if (!strcmp(optarg, "bin")) {
 					tmp.name = "bcpio";
-					break;
-				    case "crc":
+				} else if (!strcmp(optarg, "crc")) {
 					tmp.name = "sv4crc";
-					break;
-				    case "newc":
+				} else if (!strcmp(optarg, "newc")) {
 					tmp.name = "sv4cpio";
-					break;
-				    case "odc":
+				} else if (!strcmp(optarg, "odc")) {
 					tmp.name = "cpio";
-					break;
-				    default:
+				} else {
 					tmp.name = optarg;
-					break;
 				}
 				if ((frmt = (FSUB *)bsearch((void *)&tmp, (void *)fsub,
 				    sizeof(fsub)/sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
@@ -1588,9 +1582,9 @@ void
 cpio_usage(void)
 {
 	(void)fputs("usage: cpio -o [-aABcLvVzZ] [-C bytes] [-H format] [-O archive]\n", stderr);
-	(void)fputs("               [-F archive] < name-list [> archive]\n", stderr);
+	(void)fputs("               [-F archive] <name-list [>archive]\n", stderr);
 	(void)fputs("       cpio -i [-bBcdfmnrsStuvVzZ6] [-C bytes] [-E file] [-H format]\n", stderr);
-	(void)fputs("               [-I archive] [-F archive] [pattern...] [< archive]\n", stderr);
-	(void)fputs("       cpio -p [-adlLmuvV] destination-directory < name-list\n", stderr);
+	(void)fputs("               [-I archive] [-F archive] [pattern...] [<archive]\n", stderr);
+	(void)fputs("       cpio -p [-adlLmuvV] destination-directory <name-list\n", stderr);
 	exit(1);
 }
