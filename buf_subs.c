@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf_subs.c,v 1.18 2003/10/20 06:22:27 jmc Exp $	*/
+/*	$OpenBSD: buf_subs.c,v 1.20 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: buf_subs.c,v 1.5 1995/03/21 09:07:08 cgd Exp $	*/
 
 /*-
@@ -38,7 +38,7 @@
 #if 0
 static const char sccsid[] = "@(#)buf_subs.c	8.2 (Berkeley) 4/18/94";
 #else
-static const char rcsid[] = "$OpenBSD: buf_subs.c,v 1.18 2003/10/20 06:22:27 jmc Exp $";
+static const char rcsid[] = "$OpenBSD: buf_subs.c,v 1.20 2004/04/16 22:50:23 deraadt Exp $";
 #endif
 #endif /* not lint */
 
@@ -683,7 +683,7 @@ rd_wrfile(ARCHD *arcn, int ofd, off_t *left)
 	 * pass the blocksize of the file being written to the write routine,
 	 * if the size is zero, use the default MINFBSZ
 	 */
-	if (ofd == -1)
+	if (ofd < 0)
 		sz = PAXPATHLEN + 1;		/* GNU tar long link/file */
 	else if (fstat(ofd, &sb) == 0) {
 		if (sb.st_blksize > 0)
@@ -790,7 +790,7 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 	/*
 	 * read the source file and copy to destination file until EOF
 	 */
-	for(;;) {
+	for (;;) {
 		if ((cnt = read(fd1, buf, blksz)) <= 0)
 			break;
 		if (no_hole)
@@ -846,7 +846,7 @@ buf_fill(void)
 	if (fini)
 		return(0);
 
-	for(;;) {
+	for (;;) {
 		/*
 		 * try to fill the buffer. on error the next archive volume is
 		 * opened and we try again.
