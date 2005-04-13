@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_io.c,v 1.2 2005/04/13 19:49:34 tg Exp $ */
+/**	$MirOS: src/bin/pax/ar_io.c,v 1.3 2005/04/13 20:03:34 tg Exp $ */
 /*	$OpenBSD: ar_io.c,v 1.36 2004/06/20 16:22:08 niklas Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
@@ -35,14 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)ar_io.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: ar_io.c,v 1.36 2004/06/20 16:22:08 niklas Exp $";
-#endif
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -63,6 +55,9 @@ static const char rcsid[] = "$OpenBSD: ar_io.c,v 1.36 2004/06/20 16:22:08 niklas
 #include "pax.h"
 #include "options.h"
 #include "extern.h"
+
+__SCCSID("@(#)ar_io.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.3 2005/04/13 20:03:34 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.

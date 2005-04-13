@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/gen_subs.c,v 1.2 2005/04/13 19:49:34 tg Exp $ */
+/**	$MirOS: src/bin/pax/gen_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $ */
 /*	$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 millert Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
@@ -35,14 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)gen_subs.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 millert Exp $";
-#endif
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -60,6 +52,9 @@ static const char rcsid[] = "$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 mil
 #include <vis.h>
 #include "pax.h"
 #include "extern.h"
+
+__SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax

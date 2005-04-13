@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/cache.c,v 1.2 2005/04/13 20:03:35 tg Exp $ */
 /*	$OpenBSD: cache.c,v 1.17 2004/03/16 03:28:34 tedu Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
@@ -34,14 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)cache.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: cache.c,v 1.17 2004/03/16 03:28:34 tedu Exp $";
-#endif
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -55,6 +48,9 @@ static const char rcsid[] = "$OpenBSD: cache.c,v 1.17 2004/03/16 03:28:34 tedu E
 #include "pax.h"
 #include "cache.h"
 #include "extern.h"
+
+__SCCSID("@(#)cache.c	8.1 (Berkeley) 5/31/93");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.2 2005/04/13 20:03:35 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -200,7 +196,9 @@ name_uid(uid_t uid, int frc)
 	 * No entry for this uid, we will add it
 	 */
 	if (!pwopn) {
+#ifndef __INTERIX
 		setpassent(1);
+#endif
 		++pwopn;
 	}
 	if (ptr == NULL)
@@ -266,7 +264,9 @@ name_gid(gid_t gid, int frc)
 	 * No entry for this gid, we will add it
 	 */
 	if (!gropn) {
+#ifndef __INTERIX
 		setgroupent(1);
+#endif
 		++gropn;
 	}
 	if (ptr == NULL)
@@ -333,7 +333,9 @@ uid_name(char *name, uid_t *uid)
 	}
 
 	if (!pwopn) {
+#ifndef __INTERIX
 		setpassent(1);
+#endif
 		++pwopn;
 	}
 
@@ -396,7 +398,9 @@ gid_name(char *name, gid_t *gid)
 	}
 
 	if (!gropn) {
+#ifndef __INTERIX
 		setgroupent(1);
+#endif
 		++gropn;
 	}
 	if (ptr == NULL)

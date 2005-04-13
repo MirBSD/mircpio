@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/pax.h,v 1.2 2005/04/13 20:03:35 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.16 2003/10/20 06:22:27 jmc Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -231,9 +232,16 @@ typedef struct oplist {
 #ifndef MIN
 #define	MIN(a,b) (((a)<(b))?(a):(b))
 #endif
+#ifdef __INTERIX
+#include <sys/mkdev.h>
+#endif
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
+#ifdef __INTERIX
+#define	TODEV(x, y)	mkdev((x), (y))
+#else
 #define TODEV(x, y)	makedev((x), (y))
+#endif
 
 /*
  * General Defines

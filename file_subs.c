@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.2 2005/02/28 20:21:27 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -46,12 +46,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef __INTERIX
+#include <utime.h>
+#endif
 #include "pax.h"
 #include "options.h"
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.2 2005/02/28 20:21:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -666,6 +669,9 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
 {
 	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	struct stat sb;
+#ifdef __INTERIX
+	struct utimbuf u;
+#endif
 
 	tv[0].tv_sec = (long)atime;
 	tv[1].tv_sec = (long)mtime;
@@ -686,7 +692,13 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
 	/*
 	 * set the times
 	 */
+#ifdef __INTERIX
+	u.actime = tv[0].tv_sec;
+	u.modtime = tv[1].tv_sec;
+	if (utime(fnm, &u) < 0)
+#else
 	if (utimes(fnm, tv) < 0)
+#endif
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
 	return;
