@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_io.c,v 1.3 2005/04/13 20:03:34 tg Exp $ */
+/**	$MirOS: src/bin/pax/ar_io.c,v 1.4 2005/04/13 20:11:24 tg Exp $ */
 /*	$OpenBSD: ar_io.c,v 1.36 2004/06/20 16:22:08 niklas Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)ar_io.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.3 2005/04/13 20:03:34 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.4 2005/04/13 20:11:24 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -404,7 +404,7 @@ ar_close(void)
 	}
 
 	if (strcmp(NM_CPIO, argv0) == 0)
-		(void)fprintf(listf, "%qu blocks\n", (rdcnt ? rdcnt : wrcnt) / 5120);
+		(void)fprintf(listf, "%qu blocks\n", (rdcnt ? rdcnt : wrcnt) / 5120LL);
 	else if (strcmp(NM_TAR, argv0) != 0)
 		(void)fprintf(listf,
 #	ifdef LONG_OFF_T

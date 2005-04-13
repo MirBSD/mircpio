@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/gen_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $ */
+/**	$MirOS: src/bin/pax/gen_subs.c,v 1.4 2005/04/13 20:11:24 tg Exp $ */
 /*	$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 millert Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.4 2005/04/13 20:11:24 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -122,7 +122,8 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	 */
 	if (strftime(f_date,DATELEN,timefrmt,localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
-	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode, sbp->st_nlink,
+	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode,
+		(unsigned)sbp->st_nlink,
 		NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
 		NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
 
@@ -130,11 +131,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	 * print device id's for devices, or sizes for other nodes
 	 */
 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
-#		ifdef LONG_OFF_T
-		(void)fprintf(fp, "%4u,%4u ", MAJOR(sbp->st_rdev),
-#		else
 		(void)fprintf(fp, "%4lu,%4lu ", (unsigned long)MAJOR(sbp->st_rdev),
-#		endif
 		    (unsigned long)MINOR(sbp->st_rdev));
 	else {
 #		ifdef LONG_OFF_T
