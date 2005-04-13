@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.2 2005/02/28 20:04:58 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.3 2005/04/13 19:49:34 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.61 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -38,7 +38,9 @@
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#ifndef __INTERIX
 #include <sys/mtio.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -53,7 +55,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.2 2005/02/28 20:04:58 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.3 2005/04/13 19:49:34 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -988,8 +990,10 @@ tar_options(int argc, char **argv)
 	}
 	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
 		arcname = getenv("TAPE");
+#ifdef _PATH_DEFTAPE
 		if ((arcname == NULL) || (*arcname == '\0'))
 			arcname = _PATH_DEFTAPE;
+#endif
 	}
 }
 

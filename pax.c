@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/pax.c,v 1.2 2005/04/13 19:49:34 tg Exp $ */
 /*	$OpenBSD: pax.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
@@ -369,10 +370,12 @@ gen_init(void)
 	/*
 	 * not really needed, but doesn't hurt
 	 */
+#ifdef RLIMIT_RSS
 	if (getrlimit(RLIMIT_RSS , &reslimit) == 0){
 		reslimit.rlim_cur = reslimit.rlim_max;
 		(void)setrlimit(RLIMIT_RSS , &reslimit);
 	}
+#endif
 
 	/*
 	 * Handle posix locale

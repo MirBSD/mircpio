@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/gen_subs.c,v 1.2 2005/04/13 19:49:34 tg Exp $ */
 /*	$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 millert Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
@@ -48,7 +49,11 @@ static const char rcsid[] = "$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 mil
 #include <sys/param.h>
 #include <stdio.h>
 #include <tzfile.h>
+#ifdef __INTERIX
+#include <utmpx.h>
+#else
 #include <utmp.h>
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>

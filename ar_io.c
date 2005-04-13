@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/ar_io.c,v 1.2 2005/04/13 19:49:34 tg Exp $ */
 /*	$OpenBSD: ar_io.c,v 1.36 2004/06/20 16:22:08 niklas Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
@@ -46,7 +47,9 @@ static const char rcsid[] = "$OpenBSD: ar_io.c,v 1.36 2004/06/20 16:22:08 niklas
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#ifndef __INTERIX
 #include <sys/mtio.h>
+#endif
 #include <sys/param.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -103,7 +106,9 @@ static void ar_start_gzip(int, const char *, int);
 int
 ar_open(const char *name)
 {
+#ifndef __INTERIX
 	struct mtget mb;
+#endif
 
 	if (arfd != -1)
 		(void)close(arfd);
@@ -181,7 +186,11 @@ ar_open(const char *name)
 	}
 
 	if (S_ISCHR(arsb.st_mode))
+#ifndef __INTERIX
 		artyp = ioctl(arfd, MTIOCGET, &mb) ? ISCHR : ISTAPE;
+#else
+		artyp = ISCHR;
+#endif
 	else if (S_ISBLK(arsb.st_mode))
 		artyp = ISBLK;
 	else if ((lseek(arfd, (off_t)0L, SEEK_CUR) == -1) && (errno == ESPIPE))
@@ -721,7 +730,9 @@ ar_rdsync(void)
 	long fsbz;
 	off_t cpos;
 	off_t mpos;
+#ifndef __INTERIX
 	struct mtop mb;
+#endif
 
 	/*
 	 * Fail resync attempts at user request (done) or if this is going to be
@@ -739,6 +750,7 @@ ar_rdsync(void)
 		did_io = 1;
 
 	switch (artyp) {
+#ifndef __INTERIX
 	case ISTAPE:
 		/*
 		 * if the last i/o was a successful data transfer, we assume
@@ -759,6 +771,7 @@ ar_rdsync(void)
 			break;
 		lstrval = 1;
 		break;
+#endif
 	case ISREG:
 	case ISCHR:
 	case ISBLK:
@@ -864,7 +877,9 @@ int
 ar_rev(off_t sksz)
 {
 	off_t cpos;
+#ifndef __INTERIX
 	struct mtop mb;
+#endif
 	int phyblk;
 
 	/*
@@ -928,6 +943,7 @@ ar_rev(off_t sksz)
 			return(-1);
 		}
 		break;
+#ifndef __INTERIX
 	case ISTAPE:
 		/*
 		 * Calculate and move the proper number of PHYSICAL tape
@@ -976,6 +992,7 @@ ar_rev(off_t sksz)
 			return(-1);
 		}
 		break;
+#endif
 	}
 	lstrval = 1;
 	return(0);
@@ -995,6 +1012,7 @@ ar_rev(off_t sksz)
 static int
 get_phys(void)
 {
+#ifndef __INTERIX
 	int padsz = 0;
 	int res;
 	int phyblk;
@@ -1093,6 +1111,9 @@ get_phys(void)
 		return(-1);
 	}
 	return(phyblk);
+#else
+	return 0;
+#endif
 }
 
 /*
