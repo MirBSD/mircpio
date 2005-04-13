@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.4 2005/04/13 21:01:00 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.3 2005/04/13 20:03:35 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.4 2005/04/13 21:01:00 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -719,8 +719,12 @@ set_ids(char *fnm, uid_t uid, gid_t gid)
 		 * ignore EPERM unless in verbose mode or being run by root.
 		 * if running as pax, POSIX requires a warning.
 		 */
-		if (strcmp(NM_PAX, argv0) == 0 || errno != EPERM || vflag ||
-		    geteuid() == 0)
+		if (strcmp(NM_PAX, argv0) == 0
+#ifndef __INTERIX
+		    || errno != EPERM || vflag ||
+		    geteuid() == 0
+#endif
+		    )
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
 		return(-1);
@@ -744,8 +748,12 @@ set_lids(char *fnm, uid_t uid, gid_t gid)
 		 * ignore EPERM unless in verbose mode or being run by root.
 		 * if running as pax, POSIX requires a warning.
 		 */
-		if (strcmp(NM_PAX, argv0) == 0 || errno != EPERM || vflag ||
-		    geteuid() == 0)
+		if (strcmp(NM_PAX, argv0) == 0
+#ifndef __INTERIX
+		    || errno != EPERM || vflag ||
+		    geteuid() == 0
+#endif
+		    )
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
 		return(-1);
