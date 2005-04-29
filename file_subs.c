@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.4 2005/04/13 21:01:00 tg Exp $ */
-/*	$OpenBSD: file_subs.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $	*/
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $ */
+/*	$OpenBSD: file_subs.c,v 1.29 2005/04/25 19:39:52 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.4 2005/04/13 21:01:00 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -139,9 +139,6 @@ file_close(ARCHD *arcn, int fd)
 
 	if (fd < 0)
 		return;
-	if (close(fd) < 0)
-		syswarn(0, errno, "Unable to close file descriptor on %s",
-		    arcn->name);
 
 	/*
 	 * set owner/groups first as this may strip off mode bits we want
@@ -149,7 +146,8 @@ file_close(ARCHD *arcn, int fd)
 	 * modification times.
 	 */
 	if (pids)
-		res = set_ids(arcn->name, arcn->sb.st_uid, arcn->sb.st_gid);
+		res = fset_ids(arcn->name, fd, arcn->sb.st_uid,
+		    arcn->sb.st_gid);
 
 	/*
 	 * IMPORTANT SECURITY NOTE:
@@ -159,9 +157,13 @@ file_close(ARCHD *arcn, int fd)
 	if (!pmode || res)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode)
-		set_pmode(arcn->name, arcn->sb.st_mode);
+		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
 	if (patime || pmtime)
-		set_ftime(arcn->name, arcn->sb.st_mtime, arcn->sb.st_atime, 0);
+		fset_ftime(arcn->name, fd, arcn->sb.st_mtime,
+		    arcn->sb.st_atime, 0);
+	if (close(fd) < 0)
+		syswarn(0, errno, "Unable to close file descriptor on %s",
+		    arcn->name);
 }
 
 /*
@@ -507,9 +509,9 @@ badlink:
 			 * we have to force the mode to what was set here,
 			 * since we changed it from the default as created.
 			 */
-			add_dir(nm, strlen(nm), &(arcn->sb), 1);
+			add_dir(nm, &(arcn->sb), 1);
 		} else if (pmode || patime || pmtime)
-			add_dir(nm, strlen(nm), &(arcn->sb), 0);
+			add_dir(nm, &(arcn->sb), 0);
 	}
 
 	if (patime || pmtime)
@@ -644,7 +646,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 		if ((access(name, R_OK | W_OK | X_OK) < 0) &&
 		    (lstat(name, &sb) == 0)) {
 			set_pmode(name, ((sb.st_mode & FILEBITS) | S_IRWXU));
-			add_dir(name, spt - name, &sb, 1);
+			add_dir(name, &sb, 1);
 		}
 		*(spt++) = '/';
 		continue;
@@ -704,6 +706,36 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
 	return;
 }
 
+void
+fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
+{
+	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
+	struct stat sb;
+
+	tv[0].tv_sec = (long)atime;
+	tv[1].tv_sec = (long)mtime;
+	if (!frc && (!patime || !pmtime)) {
+		/*
+		 * if we are not forcing, only set those times the user wants
+		 * set. We get the current values of the times if we need them.
+		 */
+		if (fstat(fd, &sb) == 0) {
+			if (!patime)
+				tv[0].tv_sec = (long)sb.st_atime;
+			if (!pmtime)
+				tv[1].tv_sec = (long)sb.st_mtime;
+		} else
+			syswarn(0,errno,"Unable to obtain file stats %s", fnm);
+	}
+	/*
+	 * set the times
+	 */
+	if (futimes(fd, tv) < 0)
+		syswarn(1, errno, "Access/modification time set failed on: %s",
+		    fnm);
+	return;
+}
+
 /*
  * set_ids()
  *	set the uid and gid of a file system node
@@ -725,6 +757,23 @@ set_ids(char *fnm, uid_t uid, gid_t gid)
 		    geteuid() == 0
 #endif
 		    )
+			syswarn(1, errno, "Unable to set file uid/gid of %s",
+			    fnm);
+		return(-1);
+	}
+	return(0);
+}
+
+int
+fset_ids(char *fnm, int fd, uid_t uid, gid_t gid)
+{
+	if (fchown(fd, uid, gid) < 0) {
+		/*
+		 * ignore EPERM unless in verbose mode or being run by root.
+		 * if running as pax, POSIX requires a warning.
+		 */
+		if (strcmp(NM_PAX, argv0) == 0 || errno != EPERM || vflag ||
+		    geteuid() == 0)
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
 		return(-1);
@@ -772,6 +821,15 @@ set_pmode(char *fnm, mode_t mode)
 {
 	mode &= ABITS;
 	if (chmod(fnm, mode) < 0)
+		syswarn(1, errno, "Could not set permissions on %s", fnm);
+	return;
+}
+
+void
+fset_pmode(char *fnm, int fd, mode_t mode)
+{
+	mode &= ABITS;
+	if (fchmod(fd, mode) < 0)
 		syswarn(1, errno, "Could not set permissions on %s", fnm);
 	return;
 }

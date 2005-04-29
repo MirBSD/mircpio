@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/gen_subs.c,v 1.4 2005/04/13 20:11:24 tg Exp $ */
-/*	$OpenBSD: gen_subs.c,v 1.17 2003/06/13 17:51:14 millert Exp $	*/
+/**	$MirOS: src/bin/pax/gen_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $ */
+/*	$OpenBSD: gen_subs.c,v 1.18 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.4 2005/04/13 20:11:24 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -405,3 +405,25 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 	return(0);
 }
 #endif
+
+/*
+ * Copy at max min(bufz, fieldsz) chars from field to buf, stopping
+ * at the first NUL char. NUL terminate buf if there is room left.
+ */
+size_t
+fieldcpy(char *buf, size_t bufsz, const char *field, size_t fieldsz)
+{
+	char *p = buf;
+	const char *q = field;
+	size_t i = 0;
+
+	if (fieldsz > bufsz)
+		fieldsz = bufsz;
+	while (i < fieldsz && *q != '\0') {
+		*p++ = *q++;
+		i++;
+	}
+	if (i < bufsz)
+		*p = '\0';
+	return(i);
+}
