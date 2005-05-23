@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.2 2005/05/23 13:49:00 tg Exp $ */
 /*	$OpenBSD: strtonum.c,v 1.6 2004/08/03 19:38:01 millert Exp $	*/
 
 /*
@@ -20,6 +21,8 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
+
+__RCSID("$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.2 2005/05/23 13:49:00 tg Exp $");
 
 #define INVALID 	1
 #define TOOSMALL 	2
@@ -47,7 +50,7 @@ strtonum(const char *numstr, long long minval, long long maxval,
 	if (minval > maxval)
 		error = INVALID;
 	else {
-		ll = strtoll(numstr, &ep, 10);
+		ll = strtoll(numstr, &ep, 0);
 		if (numstr == ep || *ep != '\0')
 			error = INVALID;
 		else if ((ll == LLONG_MIN && errno == ERANGE) || ll < minval)
