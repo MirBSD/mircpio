@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.6 2005/11/10 20:27:48 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.29 2005/04/25 19:39:52 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.6 2005/11/10 20:27:48 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -158,9 +158,11 @@ file_close(ARCHD *arcn, int fd)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode)
 		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
+#ifndef __INTERIX
 	if (patime || pmtime)
 		fset_ftime(arcn->name, fd, arcn->sb.st_mtime,
 		    arcn->sb.st_atime, 0);
+#endif
 	if (close(fd) < 0)
 		syswarn(0, errno, "Unable to close file descriptor on %s",
 		    arcn->name);
@@ -706,6 +708,7 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
 	return;
 }
 
+#ifndef __INTERIX
 void
 fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
 {
@@ -735,6 +738,7 @@ fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
 		    fnm);
 	return;
 }
+#endif
 
 /*
  * set_ids()
