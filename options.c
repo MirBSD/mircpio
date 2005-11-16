@@ -1,8 +1,9 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.4 2005/10/21 11:02:36 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.5 2005/11/16 13:58:39 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
+ * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -55,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.4 2005/10/21 11:02:36 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.5 2005/11/16 13:58:39 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -124,6 +125,16 @@ FSUB fsub[] = {
 /* 5: POSIX USTAR */
 	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
+	rd_wrfile, wr_rdfile, bad_opt},
+
+/* 6: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
+	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
+	vcpio_rd, vcpio_endrd, v4norm_stwr, vcpio_wr, cpio_endwr, cpio_trail,
+	rd_wrfile, wr_rdfile, bad_opt},
+
+/* 7: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
+	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
+	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */

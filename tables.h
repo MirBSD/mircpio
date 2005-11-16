@@ -1,7 +1,9 @@
+/**	$MirOS: src/bin/pax/tables.h,v 1.2 2005/11/16 13:58:39 tg Exp $ */
 /*	$OpenBSD: tables.h,v 1.7 2004/11/29 16:23:22 otto Exp $	*/
 /*	$NetBSD: tables.h,v 1.3 1995/03/21 09:07:47 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -168,3 +170,14 @@ typedef struct dirdata {
 	u_int16_t mode;	/* file mode to restore */
 	u_int16_t frc_mode;	/* do we force mode settings? */
 } DIRDATA;
+
+/*
+ * file hard link structure (hashed by dev/ino and chained) for anonymisation
+ */
+typedef struct hrdflnk {
+	dev_t		dev;	/* files device number */
+	ino_t		ino;	/* files inode number */
+	u_long		nlink;	/* expected link count */
+	ino_t		newi;	/* new inode number */
+	struct hrdflnk	*fow;
+} HRDFLNK;

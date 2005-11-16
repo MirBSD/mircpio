@@ -1,7 +1,9 @@
+/**	$MirOS: src/bin/pax/tables.c,v 1.2 2005/11/16 13:58:39 tg Exp $ */
 /*	$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,18 +36,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)tables.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <sys/fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,6 +48,9 @@ static const char rcsid[] = "$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck 
 #include "pax.h"
 #include "tables.h"
 #include "extern.h"
+
+__SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.2 2005/11/16 13:58:39 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -72,6 +68,7 @@ static const char rcsid[] = "$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck 
  */
 
 static HRDLNK **ltab = NULL;	/* hard link table for detecting hard links */
+static HRDFLNK **fltab = NULL;	/* hard link table for anonymisation */
 static FTM **ftab = NULL;	/* file time table for updating arch */
 static NAMT **ntab = NULL;	/* interactive rename storage table */
 static DEVT **dtab = NULL;	/* device/inode mapping tables */
@@ -317,7 +314,7 @@ lnk_end(void)
  * hash table is indexed by hashing the file path. The nodes in the table store
  * the length of the filename and the lseek offset within the scratch file
  * where the actual name is stored. Since there are never any deletions from
- * this table, fragmentation of the scratch file is never a issue. Lookups 
+ * this table, fragmentation of the scratch file is never a issue. Lookups
  * seem to not exhibit any locality at all (files in the database are rarely
  * looked up more than once...), so caching is just a waste of memory. The
  * only limitation is the amount of scratch file space available to store the
@@ -1266,4 +1263,103 @@ st_hash(char *name, int len, int tabsz)
 	 * return the result mod the table size
 	 */
 	return(key % tabsz);
+}
+
+/* Forward hard link anonymisation routines */
+
+/*
+ * flnk_start
+ *	Creates the hard link table.
+ * Return:
+ *	0 if created, -1 if failure
+ */
+
+int
+flnk_start(void)
+{
+	if (fltab != NULL)
+		return (0);
+ 	if ((fltab = (HRDFLNK **)calloc(L_TAB_SZ, sizeof(HRDFLNK *))) == NULL) {
+		paxwarn(1, "Cannot allocate memory for hard link table");
+		return (-1);
+	}
+	return (0);
+}
+
+/*
+ * chk_flnk()
+ *	Looks up entry in hard link hash table. If found, it copies the name
+ *	of the file it is linked to (we already saw that file) into ln_name.
+ *	lnkcnt is decremented and if goes to 1 the node is deleted from the
+ *	database. (We have seen all the links to this file). If not found,
+ *	we add the file to the database if it has the potential for having
+ *	hard links to other files we may process (it has a link count > 1)
+ * Return:
+ *	if found returns the new inode number; -1 on error
+ */
+
+int
+chk_flnk(ARCHD *arcn)
+{
+	HRDFLNK *pt;
+	HRDFLNK **ppt;
+	u_int indx;
+	static ino_t running = 3;
+
+	if (fltab == NULL)
+		return (-1);
+	/*
+	 * ignore those nodes that cannot have hard links
+	 */
+	if ((arcn->type == PAX_DIR) || (arcn->sb.st_nlink <= 1))
+		return (running++);
+
+	/*
+	 * hash inode number and look for this file
+	 */
+	indx = ((unsigned)arcn->sb.st_ino) % L_TAB_SZ;
+	if ((pt = fltab[indx]) != NULL) {
+		/*
+		 * it's hash chain in not empty, walk down looking for it
+		 */
+		ppt = &(fltab[indx]);
+		while (pt != NULL) {
+			if ((pt->ino == arcn->sb.st_ino) &&
+			    (pt->dev == arcn->sb.st_dev))
+				break;
+			ppt = &(pt->fow);
+			pt = pt->fow;
+		}
+
+		if (pt != NULL) {
+			/* found a link */
+			ino_t rv = pt->newi;
+			/*
+			 * if we have found all the links to this file, remove
+			 * it from the database
+			 */
+			if (--pt->nlink <= 1) {
+				*ppt = pt->fow;
+				(void)free((char *)pt);
+			}
+			return (rv);
+		}
+	}
+
+	/*
+	 * we never saw this file before. It has links so we add it to the
+	 * front of this hash chain
+	 */
+	if ((pt = (HRDFLNK *)malloc(sizeof(HRDFLNK))) != NULL) {
+		pt->dev = arcn->sb.st_dev;
+		pt->ino = arcn->sb.st_ino;
+		pt->nlink = arcn->sb.st_nlink;
+		pt->fow = fltab[indx];
+		pt->newi = running++;
+		fltab[indx] = pt;
+		return (pt->newi);
+	}
+
+	paxwarn(1, "Hard link table out of memory");
+	return (-1);
 }

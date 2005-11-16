@@ -1,7 +1,9 @@
+/**	$MirOS: src/bin/pax/cpio.c,v 1.2 2005/11/16 13:58:38 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,18 +36,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)cpio.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -54,9 +47,15 @@ static const char rcsid[] = "$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt
 #include "cpio.h"
 #include "extern.h"
 
+__SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.2 2005/11/16 13:58:38 tg Exp $");
+
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
 static int com_rd(ARCHD *);
+
+/* Normalise SV4CRC archives? 1=uid/gid, 2=total */
+static int v4norm = 0;
 
 /*
  * Routines which support the different cpio versions
@@ -681,6 +680,24 @@ crc_stwr(void)
 	return(dev_start());
 }
 
+int
+v4root_stwr(void)
+{
+	v4norm = 1;
+	if (flnk_start())
+		return (-1);
+	return (crc_stwr());
+}
+
+int
+v4norm_stwr(void)
+{
+	v4norm = 2;
+	if (flnk_start())
+		return (-1);
+	return (crc_stwr());
+}
+
 /*
  * vcpio_wr()
  *	copy the data in the ARCHD to buffer in system VR4 cpio
@@ -696,6 +713,9 @@ vcpio_wr(ARCHD *arcn)
 	HD_VCPIO *hd;
 	unsigned int nsz;
 	char hdblk[sizeof(HD_VCPIO)];
+
+	u_long t_uid, t_gid, t_mtime;
+	ino_t t_ino;
 
 	/*
 	 * check and repair truncated device and inode fields in the cpio
@@ -767,18 +787,27 @@ vcpio_wr(ARCHD *arcn)
 		break;
 	}
 
+	t_uid   = (v4norm < 1) ? (u_long)arcn->sb.st_uid : 0UL;
+	t_gid   = (v4norm < 1) ? (u_long)arcn->sb.st_gid : 0UL;
+	t_mtime = (v4norm < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
+	t_ino   = (v4norm < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
+	if (t_ino == -1) {
+		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
+		return (1);
+	}
+
 	/*
 	 * set the other fields in the header
 	 */
-	if (ul_asc((u_long)arcn->sb.st_ino, hd->c_ino, sizeof(hd->c_ino),
+	if (ul_asc((u_long)t_ino, hd->c_ino, sizeof(hd->c_ino),
 		HEX) ||
 	    ul_asc((u_long)arcn->sb.st_mode, hd->c_mode, sizeof(hd->c_mode),
 		HEX) ||
-	    ul_asc((u_long)arcn->sb.st_uid, hd->c_uid, sizeof(hd->c_uid),
+	    ul_asc(t_uid, hd->c_uid, sizeof(hd->c_uid),
 		HEX) ||
-	    ul_asc((u_long)arcn->sb.st_gid, hd->c_gid, sizeof(hd->c_gid),
+	    ul_asc(t_gid, hd->c_gid, sizeof(hd->c_gid),
 		HEX) ||
-	    ul_asc((u_long)arcn->sb.st_mtime, hd->c_mtime, sizeof(hd->c_mtime),
+	    ul_asc(t_mtime, hd->c_mtime, sizeof(hd->c_mtime),
 		HEX) ||
 	    ul_asc((u_long)arcn->sb.st_nlink, hd->c_nlink, sizeof(hd->c_nlink),
 		HEX) ||

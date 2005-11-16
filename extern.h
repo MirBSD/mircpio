@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/extern.h,v 1.2 2005/11/16 13:58:39 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -126,6 +127,8 @@ int crc_strd(void);
 int vcpio_rd(ARCHD *, char *);
 off_t vcpio_endrd(void);
 int crc_stwr(void);
+int v4root_stwr(void);
+int v4norm_stwr(void);
 int vcpio_wr(ARCHD *);
 int bcpio_id(char *, int);
 int bcpio_rd(ARCHD *, char *);
@@ -278,6 +281,8 @@ int dir_start(void);
 void add_dir(char *, struct stat *, int);
 void proc_dir(void);
 u_int st_hash(char *, int, int);
+int flnk_start(void);
+int chk_flnk(ARCHD *);
 
 /*
  * tar.c
