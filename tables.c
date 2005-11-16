@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tables.c,v 1.2 2005/11/16 13:58:39 tg Exp $ */
+/**	$MirOS: src/bin/pax/tables.c,v 1.3 2005/11/16 14:27:29 tg Exp $ */
 /*	$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
@@ -50,7 +50,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.2 2005/11/16 13:58:39 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.3 2005/11/16 14:27:29 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -1334,6 +1334,8 @@ chk_flnk(ARCHD *arcn)
 		if (pt != NULL) {
 			/* found a link */
 			ino_t rv = pt->newi;
+			/* so cpio doesn't write file data twice */
+			arcn->type |= PAX_LINKOR;
 			/*
 			 * if we have found all the links to this file, remove
 			 * it from the database

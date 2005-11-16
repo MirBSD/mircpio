@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.2 2005/11/16 13:58:38 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.3 2005/11/16 14:27:28 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,7 +48,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.2 2005/11/16 13:58:38 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.3 2005/11/16 14:27:28 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -745,6 +745,15 @@ vcpio_wr(ARCHD *arcn)
 			goto out;
 	}
 
+	t_uid   = (v4norm < 1) ? (u_long)arcn->sb.st_uid : 0UL;
+	t_gid   = (v4norm < 1) ? (u_long)arcn->sb.st_gid : 0UL;
+	t_mtime = (v4norm < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
+	t_ino   = (v4norm < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
+	if (t_ino == -1) {
+		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
+		return (1);
+	}
+
 	switch (arcn->type) {
 	case PAX_CTG:
 	case PAX_REG:
@@ -785,15 +794,6 @@ vcpio_wr(ARCHD *arcn)
 		    HEX))
 			goto out;
 		break;
-	}
-
-	t_uid   = (v4norm < 1) ? (u_long)arcn->sb.st_uid : 0UL;
-	t_gid   = (v4norm < 1) ? (u_long)arcn->sb.st_gid : 0UL;
-	t_mtime = (v4norm < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
-	t_ino   = (v4norm < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
-	if (t_ino == -1) {
-		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
-		return (1);
 	}
 
 	/*
@@ -838,6 +838,14 @@ vcpio_wr(ARCHD *arcn)
 	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG) ||
 	    (arcn->type == PAX_HRG))
 		return(0);
+
+	/*
+	 * if we are a detected hard link, we're done too, but no data written
+	 */
+	if (arcn->type & PAX_LINKOR) {
+		arcn->type &= ~PAX_LINKOR;
+		return (1);
+	}
 
 	/*
 	 * if we are not a link, tell the caller we are done, go to next file

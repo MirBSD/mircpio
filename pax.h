@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.2 2005/04/13 20:03:35 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.3 2005/11/16 14:27:28 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.16 2003/10/20 06:22:27 jmc Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -126,6 +126,7 @@ typedef struct {
 #define PAX_CTG		10		/* high performance file */
 #define PAX_GLL		11		/* GNU long symlink */
 #define PAX_GLF		12		/* GNU long file */
+#define PAX_LINKOR	0x80000000	/* hard link detection OR */
 } ARCHD;
 
 /*
