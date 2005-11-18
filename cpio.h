@@ -132,10 +132,10 @@ typedef struct {
 	char	c_nlink[8];		/* # of links at archive creation */
 	char	c_mtime[8];		/* modification time */
 	char	c_filesize[8];		/* length of file in bytes */
-	char	c_maj[8];		/* block/char major # */
-	char	c_min[8];		/* block/char minor # */
-	char	c_rmaj[8];		/* special file major # */
-	char	c_rmin[8];		/* special file minor # */
+	char	c_maj[8];		/* block/char major # (device) */
+	char	c_min[8];		/* block/char minor # (device) */
+	char	c_rmaj[8];		/* special file major # (node) */
+	char	c_rmin[8];		/* special file minor # (node) */
 	char	c_namesize[8];		/* length of pathname */
 	char	c_chksum[8];		/* 0 OR CRC of bytes of FILE data */
 } HD_VCPIO;

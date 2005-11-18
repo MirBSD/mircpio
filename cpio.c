@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.3 2005/11/16 14:27:28 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.4 2005/11/18 13:40:43 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,7 +48,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.3 2005/11/16 14:27:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.4 2005/11/18 13:40:43 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -604,8 +604,8 @@ vcpio_rd(ARCHD *arcn, char *buf)
 	devmajor = (dev_t)asc_ul(hd->c_maj, sizeof(hd->c_maj), HEX);
 	devminor = (dev_t)asc_ul(hd->c_min, sizeof(hd->c_min), HEX);
 	arcn->sb.st_dev = TODEV(devmajor, devminor);
-	devmajor = (dev_t)asc_ul(hd->c_rmaj, sizeof(hd->c_maj), HEX);
-	devminor = (dev_t)asc_ul(hd->c_rmin, sizeof(hd->c_min), HEX);
+	devmajor = (dev_t)asc_ul(hd->c_rmaj, sizeof(hd->c_rmaj), HEX);
+	devminor = (dev_t)asc_ul(hd->c_rmin, sizeof(hd->c_rmin), HEX);
 	arcn->sb.st_rdev = TODEV(devmajor, devminor);
 	arcn->crc = asc_ul(hd->c_chksum, sizeof(hd->c_chksum), HEX);
 
@@ -811,14 +811,16 @@ vcpio_wr(ARCHD *arcn)
 		HEX) ||
 	    ul_asc((u_long)arcn->sb.st_nlink, hd->c_nlink, sizeof(hd->c_nlink),
 		HEX) ||
-	    ul_asc((u_long)MAJOR(arcn->sb.st_dev),hd->c_maj, sizeof(hd->c_maj),
-		HEX) ||
-	    ul_asc((u_long)MINOR(arcn->sb.st_dev),hd->c_min, sizeof(hd->c_min),
-		HEX) ||
-	    ul_asc((u_long)MAJOR(arcn->sb.st_rdev),hd->c_rmaj,sizeof(hd->c_maj),
-		HEX) ||
-	    ul_asc((u_long)MINOR(arcn->sb.st_rdev),hd->c_rmin,sizeof(hd->c_min),
-		HEX) ||
+	    /* device major:minor of the device the file resides on */
+	    ul_asc((u_long)MAJOR(arcn->sb.st_dev), hd->c_maj,
+		sizeof(hd->c_maj), HEX) ||
+	    ul_asc((u_long)MINOR(arcn->sb.st_dev), hd->c_min,
+		sizeof(hd->c_min), HEX) ||
+	    /* device major:minor of the file if it's a device node */
+	    ul_asc((u_long)MAJOR(arcn->sb.st_rdev), hd->c_rmaj,
+		sizeof(hd->c_rmaj), HEX) ||
+	    ul_asc((u_long)MINOR(arcn->sb.st_rdev), hd->c_rmin,
+		sizeof(hd->c_rmin), HEX) ||
 	    ul_asc((u_long)nsz, hd->c_namesize, sizeof(hd->c_namesize), HEX))
 		goto out;
 
