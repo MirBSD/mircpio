@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.4 2005/11/18 13:40:43 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.5 2005/11/18 13:58:47 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,7 +48,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.4 2005/11/18 13:40:43 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.5 2005/11/18 13:58:47 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -714,7 +714,7 @@ vcpio_wr(ARCHD *arcn)
 	unsigned int nsz;
 	char hdblk[sizeof(HD_VCPIO)];
 
-	u_long t_uid, t_gid, t_mtime;
+	u_long t_uid, t_gid, t_mtime, t_major, t_minor;
 	ino_t t_ino;
 
 	/*
@@ -749,6 +749,8 @@ vcpio_wr(ARCHD *arcn)
 	t_gid   = (v4norm < 1) ? (u_long)arcn->sb.st_gid : 0UL;
 	t_mtime = (v4norm < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
 	t_ino   = (v4norm < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
+	t_major = (v4norm < 2) ? (u_long)MAJOR(arcn->sb.st_dev) : 0UL;
+	t_minor = (v4norm < 2) ? (u_long)MINOR(arcn->sb.st_dev) : 0UL;
 	if (t_ino == -1) {
 		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
 		return (1);
@@ -812,10 +814,8 @@ vcpio_wr(ARCHD *arcn)
 	    ul_asc((u_long)arcn->sb.st_nlink, hd->c_nlink, sizeof(hd->c_nlink),
 		HEX) ||
 	    /* device major:minor of the device the file resides on */
-	    ul_asc((u_long)MAJOR(arcn->sb.st_dev), hd->c_maj,
-		sizeof(hd->c_maj), HEX) ||
-	    ul_asc((u_long)MINOR(arcn->sb.st_dev), hd->c_min,
-		sizeof(hd->c_min), HEX) ||
+	    ul_asc(t_major, hd->c_maj, sizeof(hd->c_maj), HEX) ||
+	    ul_asc(t_minor, hd->c_min, sizeof(hd->c_min), HEX) ||
 	    /* device major:minor of the file if it's a device node */
 	    ul_asc((u_long)MAJOR(arcn->sb.st_rdev), hd->c_rmaj,
 		sizeof(hd->c_rmaj), HEX) ||
