@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.6 2005/11/23 22:37:09 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.7 2005/11/23 22:51:02 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,14 +48,18 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.6 2005/11/23 22:37:09 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.7 2005/11/23 22:51:02 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
 static int com_rd(ARCHD *);
 
-/* Normalise archives? 1=uid/gid, 2=total */
+/* Normalise archives? */
 static int anonarch = 0;
+#define	ANON_UIDGID	1
+#define	ANON_INODES	2
+#define	ANON_MTIME	4
+#define	ANON_HARDLINKS	8
 
 /*
  * Routines which support the different cpio versions
@@ -683,16 +687,16 @@ crc_stwr(void)
 int
 v4root_stwr(void)
 {
-	anonarch = 1;
+	anonarch = ANON_UIDGID | ANON_INODES;
 	if (flnk_start())
 		return (-1);
 	return (crc_stwr());
 }
 
 int
-anonarch_stwr(void)
+v4norm_stwr(void)
 {
-	anonarch = 2;
+	anonarch = ANON_UIDGID | ANON_INODES | ANON_MTIME | ANON_HARDLINKS;
 	if (flnk_start())
 		return (-1);
 	return (crc_stwr());
@@ -745,16 +749,18 @@ vcpio_wr(ARCHD *arcn)
 			goto out;
 	}
 
-	t_uid   = (anonarch < 1) ? (u_long)arcn->sb.st_uid : 0UL;
-	t_gid   = (anonarch < 1) ? (u_long)arcn->sb.st_gid : 0UL;
-	t_mtime = (anonarch < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
-	t_ino   = (anonarch < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
-	t_major = (anonarch < 2) ? (u_long)MAJOR(arcn->sb.st_dev) : 0UL;
-	t_minor = (anonarch < 2) ? (u_long)MINOR(arcn->sb.st_dev) : 0UL;
+	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
+	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
+	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)arcn->sb.st_mtime;
+	t_ino   = (anonarch & ANON_INODES) ? chk_flnk(arcn) : arcn->sb.st_ino;
+	t_major = (anonarch & ANON_INODES) ? 0UL : (u_long)MAJOR(arcn->sb.st_dev);
+	t_minor = (anonarch & ANON_INODES) ? 0UL : (u_long)MINOR(arcn->sb.st_dev);
 	if (t_ino == -1) {
 		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
 		return (1);
 	}
+	if (!(anonarch & ANON_HARDLINKS))
+		arcn->type &= ~PAX_LINKOR;
 
 	switch (arcn->type) {
 	case PAX_CTG:
