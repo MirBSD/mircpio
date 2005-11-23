@@ -59,13 +59,13 @@
  */
 typedef struct {
 	char	c_magic[6];		/* magic cookie */
-	char	c_dev[6];		/* device number */
+	char	c_dev[6];		/* device number (device) */
 	char	c_ino[6];		/* inode number */
 	char	c_mode[6];		/* file type/access */
 	char	c_uid[6];		/* owners uid */
 	char	c_gid[6];		/* owners gid */
 	char	c_nlink[6];		/* # of links at archive creation */
-	char	c_rdev[6];		/* block/char major/minor # */
+	char	c_rdev[6];		/* block/char major/minor # (node) */
 	char	c_mtime[11];		/* modification time */
 	char	c_namesize[6];		/* length of pathname */
 	char	c_filesize[11];		/* length of file in bytes */

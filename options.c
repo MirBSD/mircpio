@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.5 2005/11/16 13:58:39 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.6 2005/11/23 23:27:10 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.5 2005/11/16 13:58:39 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.6 2005/11/23 23:27:10 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -107,50 +107,55 @@ FSUB fsub[] = {
 	cpio_rd, cpio_endrd, cpio_stwr, cpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 
-/* 2: SVR4 HEX CPIO */
+/* 2: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
+	{"dist", 512, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
+	cpio_rd, cpio_endrd, dist_stwr, cpio_wr, cpio_endwr, cpio_trail,
+	rd_wrfile, wr_rdfile, bad_opt},
+
+/* 3: SVR4 HEX CPIO */
 	{"sv4cpio", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, vcpio_id, cpio_strd,
 	vcpio_rd, vcpio_endrd, cpio_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 
-/* 3: SVR4 HEX CPIO WITH CRC */
+/* 4: SVR4 HEX CPIO WITH CRC */
 	{"sv4crc", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, crc_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 
-/* 4: OLD TAR */
+/* 5: OLD TAR */
 	{"tar", 10240, BLKMULT, 0, 1, BLKMULT, 0, tar_id, no_op,
 	tar_rd, tar_endrd, no_op, tar_wr, tar_endwr, tar_trail,
 	rd_wrfile, wr_rdfile, tar_opt},
 
-/* 5: POSIX USTAR */
+/* 6: POSIX USTAR */
 	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 
-/* 6: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
+/* 7: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
 	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4norm_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 
-/* 7: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
+/* 8: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
 	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt},
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */
 #define	F_ACPIO	1	/* format when called as cpio -c */
-#define	F_NCPIO	2	/* format when called as tar -R */
-#define	F_CPIO	3	/* format when called as cpio or tar -S */
-#define F_OTAR	4	/* format when called as tar -o */
-#define F_TAR	5	/* format when called as tar */
-#define DEFLT	5	/* default write format from list above */
+#define	F_NCPIO	3	/* format when called as tar -R */
+#define	F_CPIO	4	/* format when called as cpio or tar -S */
+#define F_OTAR	5	/* format when called as tar -o */
+#define F_TAR	6	/* format when called as tar */
+#define DEFLT	6	/* default write format from list above */
 
 /*
  * ford is the archive search order used by get_arc() to determine what kind
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-int ford[] = {5, 4, 3, 2, 1, 0, -1 };
+int ford[] = {6, 5, 4, 3, 1, 0, -1 };
 
 /*
  * options()

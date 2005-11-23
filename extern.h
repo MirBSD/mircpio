@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.2 2005/11/16 13:58:39 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.3 2005/11/23 23:27:10 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -120,6 +120,7 @@ int cpio_id(char *, int);
 int cpio_rd(ARCHD *, char *);
 off_t cpio_endrd(void);
 int cpio_stwr(void);
+int dist_stwr(void);
 int cpio_wr(ARCHD *);
 int vcpio_id(char *, int);
 int crc_id(char *, int);

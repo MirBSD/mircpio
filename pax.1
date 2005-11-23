@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/pax.1,v 1.4 2005/11/18 13:58:47 tg Exp $
+.\"	$MirOS: src/bin/pax/pax.1,v 1.5 2005/11/23 23:27:10 tg Exp $
 .\"	$OpenBSD: pax.1,v 1.46 2005/06/02 19:06:43 jaredy Exp $
 .\"	$NetBSD: pax.1,v 1.3 1995/03/21 09:07:37 cgd Exp $
 .\"
@@ -877,6 +877,14 @@ Inode and device information about a file (used for detecting file hard links
 by this format), which may be truncated by this format, is detected by
 .Nm
 and is repaired.
+.It Cm dist
+Anonymised version of the extended cpio interchange format specified in the
+.St -p1003.2
+standard.
+The default blocksize for this format is 512 bytes.
+Inode and device information about a file is anonymised, and the UID and GID
+information is set to zero.
+The content of hardlinked files is only stored once in the archive.
 .It Cm sv4cpio
 The System V release 4 cpio.
 The default blocksize for this format is 5120 bytes.
@@ -921,10 +929,6 @@ the total pathname must be 255 characters or less.
 .It Cm v4norm
 Normalised System V release 4 cpio with file CRC checksums.
 The default blocksize for this format is 512 bytes.
-Inode and device information about a file (used for detecting file hard links
-by this format), which may be truncated by this format, is detected by
-.Nm
-and is repaired.
 The files' ownerships (UID and GID) as well as modification times are
 set to 0 unconditionally; inode information is serialised and the
 major:minor of the device the file resided on is anonymised.
@@ -934,12 +938,9 @@ every instance of the multiple-linked file).
 .It Cm v4root
 Anonymised System V release 4 cpio with file CRC checksums.
 The default blocksize for this format is 512 bytes.
-Inode and device information about a file (used for detecting file hard links
-by this format), which may be truncated by this format, is detected by
-.Nm
-and is repaired.
-The files; ownerships (UID and GID) are
-set to 0 unconditionally; inode information is serialised.
+The files' ownerships (UID and GID) are
+set to 0 unconditionally; inode information is serialised
+and device information anonymised.
 The modification times are however retained.
 As an added bonus, this format stores the file content of hard links
 only once (in contrast to cpio/sv4cpio/sv4crc, which store it with

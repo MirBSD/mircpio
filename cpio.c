@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.7 2005/11/23 22:51:02 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.8 2005/11/23 23:27:10 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,7 +48,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.7 2005/11/23 22:51:02 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.8 2005/11/23 23:27:10 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -377,6 +377,15 @@ cpio_stwr(void)
 	return(dev_start());
 }
 
+int
+dist_stwr(void)
+{
+	anonarch = ANON_UIDGID | ANON_INODES | ANON_HARDLINKS;
+	if (flnk_start())
+		return (-1);
+	return(dev_start());
+}
+
 /*
  * cpio_wr()
  *	copy the data in the ARCHD to buffer in extended byte oriented cpio
@@ -393,6 +402,9 @@ cpio_wr(ARCHD *arcn)
 	int nsz;
 	char hdblk[sizeof(HD_CPIO)];
 
+	u_long t_uid, t_gid, t_mtime, t_dev;
+	ino_t t_ino;
+
 	/*
 	 * check and repair truncated device and inode fields in the header
 	 */
@@ -404,6 +416,20 @@ cpio_wr(ARCHD *arcn)
 	hd = (HD_CPIO *)hdblk;
 	if ((arcn->type != PAX_BLK) && (arcn->type != PAX_CHR))
 		arcn->sb.st_rdev = 0;
+
+	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
+	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
+	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)arcn->sb.st_mtime;
+	t_ino   = (anonarch & ANON_INODES) ? chk_flnk(arcn) : arcn->sb.st_ino;
+	t_dev   = (anonarch & ANON_INODES) ? 0UL : (u_long)arcn->sb.st_dev;
+	if (!cpio_trail(arcn, NULL, 0, NULL))
+		t_ino = 0UL;
+	if (t_ino == -1) {
+		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
+		return (1);
+	}
+	if (!(anonarch & ANON_HARDLINKS))
+		arcn->type &= ~PAX_LINKOR;
 
 	switch (arcn->type) {
 	case PAX_CTG:
@@ -446,21 +472,21 @@ cpio_wr(ARCHD *arcn)
 	 * copy the values to the header using octal ascii
 	 */
 	if (ul_asc((u_long)MAGIC, hd->c_magic, sizeof(hd->c_magic), OCT) ||
-	    ul_asc((u_long)arcn->sb.st_dev, hd->c_dev, sizeof(hd->c_dev),
+	    ul_asc(t_dev, hd->c_dev, sizeof(hd->c_dev),
 		OCT) ||
-	    ul_asc((u_long)arcn->sb.st_ino, hd->c_ino, sizeof(hd->c_ino),
+	    ul_asc((u_long)t_ino, hd->c_ino, sizeof(hd->c_ino),
 		OCT) ||
 	    ul_asc((u_long)arcn->sb.st_mode, hd->c_mode, sizeof(hd->c_mode),
 		OCT) ||
-	    ul_asc((u_long)arcn->sb.st_uid, hd->c_uid, sizeof(hd->c_uid),
+	    ul_asc(t_uid, hd->c_uid, sizeof(hd->c_uid),
 		OCT) ||
-	    ul_asc((u_long)arcn->sb.st_gid, hd->c_gid, sizeof(hd->c_gid),
+	    ul_asc(t_gid, hd->c_gid, sizeof(hd->c_gid),
 		OCT) ||
 	    ul_asc((u_long)arcn->sb.st_nlink, hd->c_nlink, sizeof(hd->c_nlink),
 		 OCT) ||
 	    ul_asc((u_long)arcn->sb.st_rdev, hd->c_rdev, sizeof(hd->c_rdev),
 		OCT) ||
-	    ul_asc((u_long)arcn->sb.st_mtime,hd->c_mtime,sizeof(hd->c_mtime),
+	    ul_asc(t_mtime,hd->c_mtime,sizeof(hd->c_mtime),
 		OCT) ||
 	    ul_asc((u_long)nsz, hd->c_namesize, sizeof(hd->c_namesize), OCT))
 		goto out;
@@ -481,6 +507,10 @@ cpio_wr(ARCHD *arcn)
 	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG) ||
 	    (arcn->type == PAX_HRG))
 		return(0);
+	if (arcn->type & PAX_LINKOR) {
+		arcn->type &= ~PAX_LINKOR;
+		return (1);
+	}
 	if (arcn->type != PAX_SLK)
 		return(1);
 
@@ -755,6 +785,8 @@ vcpio_wr(ARCHD *arcn)
 	t_ino   = (anonarch & ANON_INODES) ? chk_flnk(arcn) : arcn->sb.st_ino;
 	t_major = (anonarch & ANON_INODES) ? 0UL : (u_long)MAJOR(arcn->sb.st_dev);
 	t_minor = (anonarch & ANON_INODES) ? 0UL : (u_long)MINOR(arcn->sb.st_dev);
+	if (!cpio_trail(arcn, NULL, 0, NULL))
+		t_ino = 0UL;
 	if (t_ino == -1) {
 		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
 		return (1);
