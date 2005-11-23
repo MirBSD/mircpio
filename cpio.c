@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.5 2005/11/18 13:58:47 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.6 2005/11/23 22:37:09 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,14 +48,14 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.5 2005/11/18 13:58:47 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.6 2005/11/23 22:37:09 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
 static int com_rd(ARCHD *);
 
-/* Normalise SV4CRC archives? 1=uid/gid, 2=total */
-static int v4norm = 0;
+/* Normalise archives? 1=uid/gid, 2=total */
+static int anonarch = 0;
 
 /*
  * Routines which support the different cpio versions
@@ -683,16 +683,16 @@ crc_stwr(void)
 int
 v4root_stwr(void)
 {
-	v4norm = 1;
+	anonarch = 1;
 	if (flnk_start())
 		return (-1);
 	return (crc_stwr());
 }
 
 int
-v4norm_stwr(void)
+anonarch_stwr(void)
 {
-	v4norm = 2;
+	anonarch = 2;
 	if (flnk_start())
 		return (-1);
 	return (crc_stwr());
@@ -745,12 +745,12 @@ vcpio_wr(ARCHD *arcn)
 			goto out;
 	}
 
-	t_uid   = (v4norm < 1) ? (u_long)arcn->sb.st_uid : 0UL;
-	t_gid   = (v4norm < 1) ? (u_long)arcn->sb.st_gid : 0UL;
-	t_mtime = (v4norm < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
-	t_ino   = (v4norm < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
-	t_major = (v4norm < 2) ? (u_long)MAJOR(arcn->sb.st_dev) : 0UL;
-	t_minor = (v4norm < 2) ? (u_long)MINOR(arcn->sb.st_dev) : 0UL;
+	t_uid   = (anonarch < 1) ? (u_long)arcn->sb.st_uid : 0UL;
+	t_gid   = (anonarch < 1) ? (u_long)arcn->sb.st_gid : 0UL;
+	t_mtime = (anonarch < 2) ? (u_long)arcn->sb.st_mtime : 0UL;
+	t_ino   = (anonarch < 1) ? arcn->sb.st_ino : chk_flnk(arcn);
+	t_major = (anonarch < 2) ? (u_long)MAJOR(arcn->sb.st_dev) : 0UL;
+	t_minor = (anonarch < 2) ? (u_long)MINOR(arcn->sb.st_dev) : 0UL;
 	if (t_ino == -1) {
 		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
 		return (1);
