@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.3 2005/10/21 11:02:36 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.4 2005/12/17 07:20:23 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -198,8 +198,12 @@ When members of type directory are matched, the file hierarchy rooted at that
 directory is also matched.
 .It Fl R
 Write SysVR4 CPIO files instead of tar or POSIX ustar files.
+Serialise inode numbers, zero out device information.
+The file content of hard links is stored only once.
 .It Fl S
 Write SysVR4 CPIO files with CRC instead of tar or POSIX ustar files.
+Serialise inode numbers, zero out device information.
+The file content of hard links is stored only once.
 .It Fl s Ar replstr
 Modify the archive member names according to the substitution expression
 .Ar replstr ,

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.7 2005/12/17 07:12:06 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.8 2005/12/17 07:20:23 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.7 2005/12/17 07:12:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.8 2005/12/17 07:20:23 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -712,9 +712,11 @@ tar_options(int argc, char **argv)
 			break;
 		case 'R':
 			Oflag = 3;
+			anonarch = ANON_INODES | ANON_HARDLINKS;
 			break;
 		case 'S':
 			Oflag = 4;
+			anonarch = ANON_INODES | ANON_HARDLINKS;
 			break;
 		case 's':
 			/*
