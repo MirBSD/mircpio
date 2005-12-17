@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.8 2005/11/23 23:27:10 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.9 2005/12/17 07:12:06 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -48,18 +48,11 @@
 #include "extern.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.8 2005/11/23 23:27:10 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.9 2005/12/17 07:12:06 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
 static int com_rd(ARCHD *);
-
-/* Normalise archives? */
-static int anonarch = 0;
-#define	ANON_UIDGID	1
-#define	ANON_INODES	2
-#define	ANON_MTIME	4
-#define	ANON_HARDLINKS	8
 
 /*
  * Routines which support the different cpio versions
@@ -70,6 +63,15 @@ static int swp_head;		/* binary cpio header byte swap */
 /*
  * Routines common to all versions of cpio
  */
+
+static void
+anonarch_init(void)
+{
+	if (anonarch & ANON_VERBOSE) {
+		anonarch &= ~ANON_VERBOSE;
+		paxwarn(0, "debug: -M 0x%08X", anonarch);
+	}
+}
 
 /*
  * cpio_strd()
@@ -374,16 +376,17 @@ cpio_endrd(void)
 int
 cpio_stwr(void)
 {
+	if ((anonarch & ANON_INODES) && flnk_start())
+		return (-1);
 	return(dev_start());
 }
 
 int
 dist_stwr(void)
 {
-	anonarch = ANON_UIDGID | ANON_INODES | ANON_HARDLINKS;
-	if (flnk_start())
-		return (-1);
-	return(dev_start());
+	anonarch &= ANON_DEBUG | ANON_VERBOSE;
+	anonarch |= ANON_UIDGID | ANON_INODES | ANON_HARDLINKS;
+	return(cpio_stwr());
 }
 
 /*
@@ -404,6 +407,8 @@ cpio_wr(ARCHD *arcn)
 
 	u_long t_uid, t_gid, t_mtime, t_dev;
 	ino_t t_ino;
+
+	anonarch_init();
 
 	/*
 	 * check and repair truncated device and inode fields in the header
@@ -467,6 +472,12 @@ cpio_wr(ARCHD *arcn)
 			goto out;
 		break;
 	}
+
+	if (anonarch & ANON_DEBUG)
+		paxwarn(0, "writing dev %lX inode %10lX mode %8lo user %ld:%ld"
+		    "\n\tnlink %3ld mtime %08lX name '%s'", t_dev,
+		    (u_long)t_ino, (u_long)arcn->sb.st_mode, t_uid, t_gid,
+		    (u_long)arcn->sb.st_nlink, t_mtime, arcn->name);
 
 	/*
 	 * copy the values to the header using octal ascii
@@ -711,24 +722,24 @@ int
 crc_stwr(void)
 {
 	docrc = 1;
+	if ((anonarch & ANON_INODES) && flnk_start())
+		return (-1);
 	return(dev_start());
 }
 
 int
 v4root_stwr(void)
 {
-	anonarch = ANON_UIDGID | ANON_INODES;
-	if (flnk_start())
-		return (-1);
+	anonarch &= ANON_DEBUG | ANON_VERBOSE;
+	anonarch |= ANON_UIDGID | ANON_INODES;
 	return (crc_stwr());
 }
 
 int
 v4norm_stwr(void)
 {
-	anonarch = ANON_UIDGID | ANON_INODES | ANON_MTIME | ANON_HARDLINKS;
-	if (flnk_start())
-		return (-1);
+	anonarch &= ANON_DEBUG | ANON_VERBOSE;
+	anonarch |= ANON_UIDGID | ANON_INODES | ANON_MTIME | ANON_HARDLINKS;
 	return (crc_stwr());
 }
 
@@ -750,6 +761,8 @@ vcpio_wr(ARCHD *arcn)
 
 	u_long t_uid, t_gid, t_mtime, t_major, t_minor;
 	ino_t t_ino;
+
+	anonarch_init();
 
 	/*
 	 * check and repair truncated device and inode fields in the cpio
@@ -835,6 +848,12 @@ vcpio_wr(ARCHD *arcn)
 			goto out;
 		break;
 	}
+
+	if (anonarch & ANON_DEBUG)
+		paxwarn(0, "writing dev %lX:%lx inode %10lX mode %8lo user %ld:%ld"
+		    "\n\tnlink %3ld mtime %08lX name '%s'", t_major, t_minor,
+		    (u_long)t_ino, (u_long)arcn->sb.st_mode, t_uid, t_gid,
+		    (u_long)arcn->sb.st_nlink, t_mtime, arcn->name);
 
 	/*
 	 * set the other fields in the header

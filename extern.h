@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.3 2005/11/23 23:27:10 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.4 2005/12/17 07:12:06 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -198,6 +198,13 @@ OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
 char *chdname;
+#define	ANON_INODES	0x0001
+#define	ANON_HARDLINKS	0x0002
+#define	ANON_MTIME	0x0004
+#define	ANON_UIDGID	0x0008
+#define	ANON_VERBOSE	0x0010
+#define	ANON_DEBUG	0x0020
+extern int anonarch;
 
 /*
  * pat_rep.c

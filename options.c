@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.6 2005/11/23 23:27:10 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.7 2005/12/17 07:12:06 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.6 2005/11/23 23:27:10 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.7 2005/12/17 07:12:06 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -156,6 +156,9 @@ FSUB fsub[] = {
  * some formats may be subsets of others....
  */
 int ford[] = {6, 5, 4, 3, 1, 0, -1 };
+
+/* Normalise archives? */
+int anonarch = 0;
 
 /*
  * options()
@@ -1069,7 +1072,7 @@ cpio_options(int argc, char **argv)
 	dflag = 1;
 	act = -1;
 	nodirs = 1;
-	while ((c=getopt(argc,argv,"abcdfiklmoprstuvzABC:E:F:H:I:LO:SZ6")) != -1)
+	while ((c=getopt(argc,argv,"abcdfiklmoprstuvzABC:E:F:H:I:LM:O:SZ6")) != -1)
 		switch (c) {
 			case 'a':
 				/*
@@ -1250,6 +1253,53 @@ cpio_options(int argc, char **argv)
 				 */
 				Lflag = 1;
 				break;
+			case 'M': {
+				int j, k;
+
+				if ((optarg[0] >= '0') && (optarg[0] <= '9')) {
+					const char *s;
+					int64_t i = strtonum(optarg, 0, 0xF, &s);
+					if (s)
+						errx(1, "%s M value: %s", s,
+						    optarg);
+					break;
+				}
+
+				if (!strncmp(optarg, "no-", 3)) {
+					j = 0;
+					optarg += 3;
+				} else
+					j = 1;
+				if (!strncmp(optarg, "uid", 3) ||
+				    !strncmp(optarg, "gid", 3)) {
+					k = ANON_UIDGID;
+				} else if (!strncmp(optarg, "ino", 3)) {
+					k = ANON_INODES;
+				} else if (!strncmp(optarg, "mtim", 4)) {
+					k = ANON_MTIME;
+				} else if (!strncmp(optarg, "link", 4)) {
+					k = ANON_HARDLINKS;
+				} else if (!strncmp(optarg, "norm", 4)) {
+					k = ANON_UIDGID | ANON_INODES
+					    | ANON_MTIME | ANON_HARDLINKS;
+				} else if (!strncmp(optarg, "root", 4)) {
+					k = ANON_UIDGID | ANON_INODES;
+				} else if (!strncmp(optarg, "dist", 4)) {
+					k = ANON_UIDGID | ANON_INODES
+					    | ANON_HARDLINKS;
+				} else if (!strncmp(optarg, "set", 3)) {
+					k = ANON_INODES | ANON_HARDLINKS;
+				} else if (!strncmp(optarg, "v", 1)) {
+					k = ANON_VERBOSE;
+				} else if (!strncmp(optarg, "debug", 5)) {
+					k = ANON_DEBUG;
+				} else cpio_usage();
+				if (j)
+					anonarch |= k;
+				else
+					anonarch &= ~k;
+				break;
+				}
 			case 'S':
 				/*
 				 * swap halfwords after reading data
@@ -1618,7 +1668,7 @@ void
 cpio_usage(void)
 {
 	(void)fputs("usage: cpio -o [-aABcLvVzZ] [-C bytes] [-H format] [-O archive]\n", stderr);
-	(void)fputs("               [-F archive] <name-list [>archive]\n", stderr);
+	(void)fputs("               [-M flag] [-F archive] <name-list [>archive]\n", stderr);
 	(void)fputs("       cpio -i [-bBcdfmnrsStuvVzZ6] [-C bytes] [-E file] [-H format]\n", stderr);
 	(void)fputs("               [-I archive] [-F archive] [pattern...] [<archive]\n", stderr);
 	(void)fputs("       cpio -p [-adlLmuvV] destination-directory <name-list\n", stderr);
