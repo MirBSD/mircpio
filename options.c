@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.9 2005/12/30 14:17:37 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.10 2005/12/30 14:19:15 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.9 2005/12/30 14:17:37 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.10 2005/12/30 14:19:15 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -1261,7 +1261,8 @@ cpio_options(int argc, char **argv)
 				if ((optarg[0] >= '0') && (optarg[0] <= '9')) {
 #ifdef __OpenBSD__
 					const char *s;
-					int64_t i = strtonum(optarg, 0, 0xF, &s);
+					int64_t i = strtonum(optarg, 0,
+					    ANON_MAXVAL, &s);
 					if (s)
 						errx(1, "%s M value: %s", s,
 						    optarg);
@@ -1269,10 +1270,11 @@ cpio_options(int argc, char **argv)
 					char *ep;
 					long long i = strtoll(optarg, &ep, 0);
 					if ((ep == optarg) || (*ep != '\0') ||
-					    || (i < 0) || (i > 0xF))
+					    || (i < 0) || (i > ANON_MAXVAL))
 						errx(1, "impossible M value:"
 						    " %s", optarg);
 #endif
+					anonarch = i;
 					break;
 				}
 

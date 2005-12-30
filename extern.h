@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.4 2005/12/17 07:12:06 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.5 2005/12/30 14:19:15 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -204,6 +204,7 @@ char *chdname;
 #define	ANON_UIDGID	0x0008
 #define	ANON_VERBOSE	0x0010
 #define	ANON_DEBUG	0x0020
+#define	ANON_MAXVAL	0x003F
 extern int anonarch;
 
 /*
