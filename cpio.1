@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.6 2005/12/17 07:12:06 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.7 2006/05/27 20:17:35 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.20 2003/11/21 20:54:02 jmc Exp $
 .\"
 .\" Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
@@ -98,10 +98,16 @@ Recognized formats are:
 Old binary
 .Nm
 format.
+Selected by the
+.Fl 6
+option.
 .It Ar cpio
 Old octal character
 .Nm
 format.
+Selected by the
+.Fl c
+option.
 .It Ar dist
 Same as
 .Ar cpio ,
@@ -116,6 +122,7 @@ format.
 SVR4 hex
 .Nm
 format with checksums.
+This is the default format.
 .It Ar tar
 Old tar format.
 .It Ar ustar
