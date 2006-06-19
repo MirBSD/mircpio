@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.5 2006/06/19 19:40:55 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.6 2006/06/19 20:31:05 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -186,7 +186,12 @@ for a comprehensive list and compatibility notes.
 .El
 .Pp
 This option is only implemented for the cpio, sv4cpio,
-and sv4crc file format writing routines.
+ustar, and sv4crc file format writing routines.
+For the ustar format, the
+.Ar inodes
+and
+.Ar links
+specifiers are ignored.
 .It Fl m
 Do not preserve modification time.
 .It Fl O

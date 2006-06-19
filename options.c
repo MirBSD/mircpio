@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.14 2006/06/19 19:40:55 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.15 2006/06/19 20:31:05 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.14 2006/06/19 19:40:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.15 2006/06/19 20:31:05 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -635,7 +635,7 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "b:cef:hmopqruts:vwxzBC:HI:LMOPRSXZ014578")) != -1) {
+	    "b:cef:hmopqruts:vwxzBC:HI:LM:OPRSXZ014578")) != -1) {
 		switch (c) {
 		case 'b':
 			/*

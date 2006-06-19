@@ -1,7 +1,9 @@
+/**	$MirOS: src/bin/pax/tar.c,v 1.2 2006/06/19 20:31:06 tg Exp $ */
 /*	$OpenBSD: tar.c,v 1.39 2005/06/13 19:20:05 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2006 Thorsten Glaser.
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -53,6 +55,7 @@ static const char rcsid[] = "$OpenBSD: tar.c,v 1.39 2005/06/13 19:20:05 otto Exp
 #include "pax.h"
 #include "extern.h"
 #include "tar.h"
+#include "options.h"
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -65,6 +68,8 @@ static int ul_oct(u_long, char *, int, int);
 #ifndef LONG_OFF_T
 static int uqd_oct(u_quad_t, char *, int, int);
 #endif
+
+static void tar_dbgfld(const char *, const char *, size_t);
 
 static uid_t uid_nobody;
 static uid_t uid_warn;
@@ -914,6 +919,10 @@ ustar_wr(ARCHD *arcn)
 	char *pt;
 	char hdblk[sizeof(HD_USTAR)];
 
+	u_long t_uid, t_gid, t_mtime;
+
+	anonarch_init();
+
 	/*
 	 * check for those file system types ustar cannot store
 	 */
@@ -967,6 +976,10 @@ ustar_wr(ARCHD *arcn)
 	 */
 	fieldcpy(hd->name, sizeof(hd->name), pt,
 	    sizeof(arcn->name) - (pt - arcn->name));
+
+	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
+	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
+	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)arcn->sb.st_mtime;
 
 	/*
 	 * set the fields in the header that are type dependent
@@ -1038,39 +1051,39 @@ ustar_wr(ARCHD *arcn)
 	 * set the remaining fields. Some versions want all 16 bits of mode
 	 * we better humor them (they really do not meet spec though)....
 	 */
-	if (ul_oct((u_long)arcn->sb.st_uid, hd->uid, sizeof(hd->uid), 3)) {
+	if (ul_oct(t_uid, hd->uid, sizeof(hd->uid), 3)) {
 		if (uid_nobody == 0) {
 			if (uid_name("nobody", &uid_nobody) == -1)
 				goto out;
 		}
-		if (uid_warn != arcn->sb.st_uid) {
-			uid_warn = arcn->sb.st_uid;
+		if (uid_warn != t_uid) {
+			uid_warn = t_uid;
 			paxwarn(1,
 			    "Ustar header field is too small for uid %lu, "
-			    "using nobody", (u_long)arcn->sb.st_uid);
+			    "using nobody", t_uid);
 		}
 		if (ul_oct((u_long)uid_nobody, hd->uid, sizeof(hd->uid), 3))
 			goto out;
 	}
-	if (ul_oct((u_long)arcn->sb.st_gid, hd->gid, sizeof(hd->gid), 3)) {
+	if (ul_oct(t_gid, hd->gid, sizeof(hd->gid), 3)) {
 		if (gid_nobody == 0) {
 			if (gid_name("nobody", &gid_nobody) == -1)
 				goto out;
 		}
-		if (gid_warn != arcn->sb.st_gid) {
-			gid_warn = arcn->sb.st_gid;
+		if (gid_warn != t_gid) {
+			gid_warn = t_gid;
 			paxwarn(1,
 			    "Ustar header field is too small for gid %lu, "
-			    "using nobody", (u_long)arcn->sb.st_gid);
+			    "using nobody", t_gid);
 		}
 		if (ul_oct((u_long)gid_nobody, hd->gid, sizeof(hd->gid), 3))
 			goto out;
 	}
 	if (ul_oct((u_long)arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3) ||
-	    ul_oct((u_long)arcn->sb.st_mtime,hd->mtime,sizeof(hd->mtime),3))
+	    ul_oct(t_mtime,hd->mtime,sizeof(hd->mtime),3))
 		goto out;
-	strncpy(hd->uname, name_uid(arcn->sb.st_uid, 0), sizeof(hd->uname));
-	strncpy(hd->gname, name_gid(arcn->sb.st_gid, 0), sizeof(hd->gname));
+	strncpy(hd->uname, name_uid(t_uid, 0), sizeof(hd->uname));
+	strncpy(hd->gname, name_gid(t_gid, 0), sizeof(hd->gname));
 
 	/*
 	 * calculate and store the checksum write the header to the archive
@@ -1080,6 +1093,28 @@ ustar_wr(ARCHD *arcn)
 	if (ul_oct(tar_chksm(hdblk, sizeof(HD_USTAR)), hd->chksum,
 	   sizeof(hd->chksum), 3))
 		goto out;
+
+	if (anonarch & ANON_DEBUG) {
+		tar_dbgfld(NULL, NULL, 0);
+		tar_dbgfld("writing name '", hd->name, TNMSZ);
+		tar_dbgfld("' mode ", hd->mode, 8);
+		tar_dbgfld(" uid ", hd->uid, 8);
+		tar_dbgfld(" (", hd->uname, 32);
+		tar_dbgfld(") gid ", hd->gid, 8);
+		tar_dbgfld(" (", hd->gname, 32);
+		tar_dbgfld(") size ", hd->size, 12);
+		tar_dbgfld(" mtime ", hd->mtime, 12);
+		tar_dbgfld(" type ", &(hd->typeflag), 1);
+		tar_dbgfld(" linked to '", hd->linkname, TNMSZ);
+		tar_dbgfld("' magic '", hd->magic, TMAGLEN);
+		tar_dbgfld("' v", hd->version, TVERSLEN);
+		tar_dbgfld(" device '", hd->devmajor, 8);
+		tar_dbgfld(":", hd->devminor, 8);
+		tar_dbgfld("' prefix '", hd->prefix, TPFSZ);
+		tar_dbgfld("' checksum ", hd->chksum, CHK_LEN);
+		tar_dbgfld(NULL, NULL, 1);
+	}
+
 	if (wr_rdbuf(hdblk, sizeof(HD_USTAR)) < 0)
 		return(-1);
 	if (wr_skip((off_t)(BLKMULT - sizeof(HD_USTAR))) < 0)
@@ -1170,4 +1205,40 @@ expandname(char *buf, size_t len, char **gnu_name, const char *name,
 	} else
 		nlen = fieldcpy(buf, len, name, limit);
 	return(nlen);
+}
+
+static void
+tar_dbgfld(const char *pfx, const char *sp, size_t len)
+{
+	static char fbuf[256];
+	char tbuf[256], *s;
+
+	if ((pfx == NULL) || (sp == NULL)) {
+		if ((pfx == NULL) && (sp == NULL)) {
+			if (len == 0) {
+				*fbuf = 0;
+			} else {
+				paxwarn(0, fbuf);
+			}
+		} else
+			paxwarn(0, "tar_dbgfld: wrong call");
+		return;
+	}
+
+	strlcat(fbuf, pfx, sizeof (fbuf));
+
+	if (len == 0)
+		return;
+
+	if (len > (sizeof (tbuf) - 1))
+		len = sizeof (tbuf) - 1;
+
+	memmove(s = tbuf, sp, len);
+	tbuf[len] = 0;
+	while (*s == ' ')
+		++s;
+	while (s[strlen(s) - 1] == ' ')
+		s[strlen(s) - 1] = 0;
+
+	strlcat(fbuf, tbuf, sizeof (fbuf));
 }
