@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.12 2006/06/19 19:22:08 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.13 2006/06/19 19:33:48 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.12 2006/06/19 19:22:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.13 2006/06/19 19:33:48 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -77,6 +77,8 @@ static void tar_options(int, char **);
 static void tar_usage(void);
 static void cpio_options(int, char **);
 static void cpio_usage(void);
+
+static void process_M(const char *, void (*)(void));
 
 /* errors from getline */
 #define GETLINE_FILE_CORRUPT 1
@@ -1255,64 +1257,9 @@ cpio_options(int argc, char **argv)
 				 */
 				Lflag = 1;
 				break;
-			case 'M': {
-				int j, k;
-
-				if ((optarg[0] >= '0') && (optarg[0] <= '9')) {
-#ifdef __OpenBSD__
-					const char *s;
-					int64_t i = strtonum(optarg, 0,
-					    ANON_MAXVAL, &s);
-					if (s)
-						errx(1, "%s M value: %s", s,
-						    optarg);
-#else
-					char *ep;
-					long long i = strtoll(optarg, &ep, 0);
-					if ((ep == optarg) || (*ep != '\0') ||
-					    (i < 0) || (i > ANON_MAXVAL))
-						errx(1, "impossible M value:"
-						    " %s", optarg);
-#endif
-					anonarch = i;
-					break;
-				}
-
-				if (!strncmp(optarg, "no-", 3)) {
-					j = 0;
-					optarg += 3;
-				} else
-					j = 1;
-				if (!strncmp(optarg, "uid", 3) ||
-				    !strncmp(optarg, "gid", 3)) {
-					k = ANON_UIDGID;
-				} else if (!strncmp(optarg, "ino", 3)) {
-					k = ANON_INODES;
-				} else if (!strncmp(optarg, "mtim", 4)) {
-					k = ANON_MTIME;
-				} else if (!strncmp(optarg, "link", 4)) {
-					k = ANON_HARDLINKS;
-				} else if (!strncmp(optarg, "norm", 4)) {
-					k = ANON_UIDGID | ANON_INODES
-					    | ANON_MTIME | ANON_HARDLINKS;
-				} else if (!strncmp(optarg, "root", 4)) {
-					k = ANON_UIDGID | ANON_INODES;
-				} else if (!strncmp(optarg, "dist", 4)) {
-					k = ANON_UIDGID | ANON_INODES
-					    | ANON_HARDLINKS;
-				} else if (!strncmp(optarg, "set", 3)) {
-					k = ANON_INODES | ANON_HARDLINKS;
-				} else if (!strncmp(optarg, "v", 1)) {
-					k = ANON_VERBOSE;
-				} else if (!strncmp(optarg, "debug", 5)) {
-					k = ANON_DEBUG;
-				} else cpio_usage();
-				if (j)
-					anonarch |= k;
-				else
-					anonarch &= ~k;
+			case 'M':
+				process_M(optarg, cpio_usage);
 				break;
-				}
 			case 'S':
 				/*
 				 * swap halfwords after reading data
@@ -1695,4 +1642,65 @@ anonarch_init(void)
 		anonarch &= ~ANON_VERBOSE;
 		paxwarn(0, "debug: -M 0x%08X", anonarch);
 	}
+}
+
+static void
+process_M(const char *arg, void (*call_usage)(void))
+{
+	int j, k;
+
+	if ((arg[0] >= '0') && (arg[0] <= '9')) {
+#ifdef __OpenBSD__
+		const char *s;
+		int64_t i = strtonum(arg, 0,
+		    ANON_MAXVAL, &s);
+		if (s)
+			errx(1, "%s M value: %s", s,
+			    arg);
+#else
+		char *ep;
+		long long i = strtoll(arg, &ep, 0);
+		if ((ep == arg) || (*ep != '\0') ||
+		    (i < 0) || (i > ANON_MAXVAL))
+			errx(1, "impossible M value:"
+			    " %s", arg);
+#endif
+		anonarch = i;
+		return;
+	}
+
+	if (!strncmp(arg, "no-", 3)) {
+		j = 0;
+		arg += 3;
+	} else
+		j = 1;
+	if (!strncmp(arg, "uid", 3) ||
+	    !strncmp(arg, "gid", 3)) {
+		k = ANON_UIDGID;
+	} else if (!strncmp(arg, "ino", 3)) {
+		k = ANON_INODES;
+	} else if (!strncmp(arg, "mtim", 4)) {
+		k = ANON_MTIME;
+	} else if (!strncmp(arg, "link", 4)) {
+		k = ANON_HARDLINKS;
+	} else if (!strncmp(arg, "norm", 4)) {
+		k = ANON_UIDGID | ANON_INODES
+		    | ANON_MTIME | ANON_HARDLINKS;
+	} else if (!strncmp(arg, "root", 4)) {
+		k = ANON_UIDGID | ANON_INODES;
+	} else if (!strncmp(arg, "dist", 4)) {
+		k = ANON_UIDGID | ANON_INODES
+		    | ANON_HARDLINKS;
+	} else if (!strncmp(arg, "set", 3)) {
+		k = ANON_INODES | ANON_HARDLINKS;
+	} else if (!strncmp(arg, "v", 1)) {
+		k = ANON_VERBOSE;
+	} else if (!strncmp(arg, "debug", 5)) {
+		k = ANON_DEBUG;
+	} else
+		call_usage();
+	if (j)
+		anonarch |= k;
+	else
+		anonarch &= ~k;
 }
