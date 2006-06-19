@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.9 2005/12/17 07:12:06 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.10 2006/06/19 19:22:08 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -46,9 +46,10 @@
 #include "pax.h"
 #include "cpio.h"
 #include "extern.h"
+#include "options.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.9 2005/12/17 07:12:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.10 2006/06/19 19:22:08 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -63,15 +64,6 @@ static int swp_head;		/* binary cpio header byte swap */
 /*
  * Routines common to all versions of cpio
  */
-
-static void
-anonarch_init(void)
-{
-	if (anonarch & ANON_VERBOSE) {
-		anonarch &= ~ANON_VERBOSE;
-		paxwarn(0, "debug: -M 0x%08X", anonarch);
-	}
-}
 
 /*
  * cpio_strd()

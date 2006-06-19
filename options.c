@@ -1,9 +1,9 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.11 2005/12/30 14:27:20 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.12 2006/06/19 19:22:08 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.63 2005/06/02 19:11:06 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
+ * Copyright (c) 2005, 2006 Thorsten Glaser <tg@66h.42h.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.11 2005/12/30 14:27:20 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.12 2006/06/19 19:22:08 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -1686,4 +1686,13 @@ cpio_usage(void)
 	(void)fputs("               [-I archive] [-F archive] [pattern...] [<archive]\n", stderr);
 	(void)fputs("       cpio -p [-adlLmuvV] destination-directory <name-list\n", stderr);
 	exit(1);
+}
+
+void
+anonarch_init(void)
+{
+	if (anonarch & ANON_VERBOSE) {
+		anonarch &= ~ANON_VERBOSE;
+		paxwarn(0, "debug: -M 0x%08X", anonarch);
+	}
 }

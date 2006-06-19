@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/options.h,v 1.2 2006/06/19 19:22:08 tg Exp $ */
 /*	$OpenBSD: options.h,v 1.4 2003/06/13 17:51:14 millert Exp $	*/
 /*	$NetBSD: options.h,v 1.3 1995/03/21 09:07:32 cgd Exp $	*/
 
@@ -111,3 +112,17 @@
 #define	BDARCH	(CF|KF|LF|NF|PF|RF|CDF|CEF|CYF|CZF)
 #define	BDCOPY	(AF|BF|FF|OF|XF|CBF|CEF)
 #define	BDLIST (AF|BF|IF|KF|LF|OF|PF|RF|TF|UF|WF|XF|CBF|CDF|CHF|CLF|CPF|CXF|CYF|CZF)
+
+/*
+ * Archive manipulation code
+ */
+
+#define	ANON_INODES	0x0001
+#define	ANON_HARDLINKS	0x0002
+#define	ANON_MTIME	0x0004
+#define	ANON_UIDGID	0x0008
+#define	ANON_VERBOSE	0x0010
+#define	ANON_DEBUG	0x0020
+#define	ANON_MAXVAL	0x003F
+extern int anonarch;
+void anonarch_init(void);
