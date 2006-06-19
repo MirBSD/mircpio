@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.4 2005/12/17 07:20:23 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.5 2006/06/19 19:40:55 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -51,6 +51,7 @@
 .Op Fl C Ar directory
 .Op Fl f Ar archive
 .Op Fl I Ar file
+.Op Fl M Ar value
 .Op Fl s Ar replstr
 .Op Ar file ...
 .Sh DESCRIPTION
@@ -163,6 +164,29 @@ archive or extract from the given file, one per line.
 Synonym for the
 .Fl h
 option.
+.It Fl M Ar value
+Configure the archive normaliser.
+.Ar value
+is either a number or a string, optionally prefixed with
+.Dq no-
+to turn the flag off.
+See
+.Xr cpio 1
+for a comprehensive list and compatibility notes.
+.Pp
+.Bl -tag -width xxxxxx -compact
+.It Ar inodes
+0x0001: Serialise inodes, zero device info.
+.It Ar links
+0x0002: Store content of hard links only once.
+.It Ar mtime
+0x0004: Zero out the file modification time.
+.It Ar uidgid
+0x0008: Set owner to 0:0 (root:wheel).
+.El
+.Pp
+This option is only implemented for the cpio, sv4cpio,
+and sv4crc file format writing routines.
 .It Fl m
 Do not preserve modification time.
 .It Fl O
@@ -391,8 +415,9 @@ flag is not portable to other versions of
 .Nm
 where it may have a different meaning.
 The
-.Fl R
+.Fl R ,
+.Fl S ,
 and
-.Fl S
+.Fl M
 options are extensions specific to
 .Mx .
