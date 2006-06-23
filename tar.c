@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/tar.c,v 1.2 2006/06/19 20:31:06 tg Exp $ */
-/*	$OpenBSD: tar.c,v 1.39 2005/06/13 19:20:05 otto Exp $	*/
+/**	$MirOS: src/bin/pax/tar.c,v 1.3 2006/06/23 23:03:57 tg Exp $ */
+/*	$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
@@ -40,7 +40,7 @@
 #if 0
 static const char sccsid[] = "@(#)tar.c	8.2 (Berkeley) 4/18/94";
 #else
-static const char rcsid[] = "$OpenBSD: tar.c,v 1.39 2005/06/13 19:20:05 otto Exp $";
+static const char rcsid[] = "$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $";
 #endif
 #endif /* not lint */
 
@@ -645,7 +645,7 @@ tar_wr(ARCHD *arcn)
 	if (ul_oct((u_long)arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 0) ||
 	    ul_oct((u_long)arcn->sb.st_uid, hd->uid, sizeof(hd->uid), 0) ||
 	    ul_oct((u_long)arcn->sb.st_gid, hd->gid, sizeof(hd->gid), 0) ||
-	    ul_oct((u_long)arcn->sb.st_mtime, hd->mtime, sizeof(hd->mtime), 1))
+	    ul_oct((u_long)(u_int)arcn->sb.st_mtime, hd->mtime, sizeof(hd->mtime), 1))
 		goto out;
 
 	/*
@@ -935,7 +935,7 @@ ustar_wr(ARCHD *arcn)
 	 * check the length of the linkname
 	 */
 	if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
-	    (arcn->type == PAX_HRG)) && (arcn->ln_nlen >= sizeof(hd->linkname))){
+	    (arcn->type == PAX_HRG)) && (arcn->ln_nlen > sizeof(hd->linkname))){
 		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
 		return(1);
 	}
@@ -979,7 +979,7 @@ ustar_wr(ARCHD *arcn)
 
 	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
-	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)arcn->sb.st_mtime;
+	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)(u_int)arcn->sb.st_mtime;
 
 	/*
 	 * set the fields in the header that are type dependent
@@ -1151,19 +1151,22 @@ name_split(char *name, int len)
 	/*
 	 * check to see if the file name is small enough to fit in the name
 	 * field. if so just return a pointer to the name.
+	 * The strings can fill the complete name and prefix fields
+	 * without a NUL terminator.
 	 */
-	if (len < TNMSZ)
+	if (len <= TNMSZ)
 		return(name);
-	if (len > (TPFSZ + TNMSZ))
+	if (len > (TPFSZ + TNMSZ + 1))
 		return(NULL);
 
 	/*
 	 * we start looking at the biggest sized piece that fits in the name
 	 * field. We walk forward looking for a slash to split at. The idea is
 	 * to find the biggest piece to fit in the name field (or the smallest
-	 * prefix we can find)
+	 * prefix we can find) (the -1 is correct the biggest piece would
+	 * include the slash between the two parts that gets thrown away)
 	 */
-	start = name + len - TNMSZ;
+	start = name + len - TNMSZ - 1;
 	while ((*start != '\0') && (*start != '/'))
 		++start;
 
@@ -1181,7 +1184,7 @@ name_split(char *name, int len)
 	 * the file would then expand on extract to //str. The len == 0 below
 	 * makes this special case follow the spec to the letter.
 	 */
-	if ((len >= TPFSZ) || (len == 0))
+	if ((len > TPFSZ) || (len == 0))
 		return(NULL);
 
 	/*

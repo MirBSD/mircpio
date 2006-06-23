@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.3 2005/11/16 14:27:28 tg Exp $ */
-/*	$OpenBSD: pax.h,v 1.16 2003/10/20 06:22:27 jmc Exp $	*/
+/**	$MirOS: src/bin/pax/pax.h,v 1.4 2006/06/23 23:03:57 tg Exp $ */
+/*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
@@ -112,7 +112,7 @@ typedef struct {
 					/* IMPORTANT. The st_size field does */
 					/* not always indicate the amount of */
 					/* data following the header. */
-	u_long crc;			/* file crc */
+	u_int32_t crc;			/* file crc */
 	int type;			/* type of file node */
 #define PAX_DIR		1		/* directory */
 #define PAX_CHR		2		/* character device */

@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.6 2005/11/10 20:27:48 tg Exp $ */
-/*	$OpenBSD: file_subs.c,v 1.29 2005/04/25 19:39:52 otto Exp $	*/
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.7 2006/06/23 23:03:56 tg Exp $ */
+/*	$OpenBSD: file_subs.c,v 1.30 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.6 2005/11/10 20:27:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.7 2006/06/23 23:03:56 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -1059,7 +1059,7 @@ set_crc(ARCHD *arcn, int fd)
 	int res;
 	off_t cpcnt = 0L;
 	u_long size;
-	unsigned long crc = 0L;
+	u_int32_t crc = 0;
 	char tbuf[FILEBLK];
 	struct stat sb;
 

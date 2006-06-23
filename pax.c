@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/pax.c,v 1.3 2005/04/13 20:03:35 tg Exp $ */
-/*	$OpenBSD: pax.c,v 1.27 2004/04/16 22:50:23 deraadt Exp $	*/
+/**	$MirOS: src/bin/pax/pax.c,v 1.4 2006/06/23 23:03:57 tg Exp $ */
+/*	$OpenBSD: pax.c,v 1.28 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
@@ -58,7 +58,7 @@ static const char copyright[] =
 #include "extern.h"
 
 __SCCSID("@(#)pax.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.3 2005/04/13 20:03:35 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.4 2006/06/23 23:03:57 tg Exp $");
 
 static int gen_init(void);
 
@@ -236,7 +236,7 @@ main(int argc, char **argv)
 	 */
 	cwdfd = open(".", O_RDONLY);
 	if (cwdfd < 0) {
-		syswarn(0, errno, "Can't open current working directory.");
+		syswarn(1, errno, "Can't open current working directory.");
 		return(exit_val);
 	}
 

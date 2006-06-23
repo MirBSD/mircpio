@@ -1,5 +1,5 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.11 2006/06/19 20:31:05 tg Exp $
-.\"	$OpenBSD: cpio.1,v 1.20 2003/11/21 20:54:02 jmc Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.12 2006/06/23 23:03:56 tg Exp $
+.\"	$OpenBSD: cpio.1,v 1.23 2006/01/03 17:22:47 jmc Exp $
 .\"
 .\" Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
 .\" Copyright (c) 1997 SigmaSoft, Th. Lockert
@@ -354,6 +354,19 @@ specific archive format specification.
 .Xr tar 1
 .Sh AUTHORS
 Keith Muller at the University of California, San Diego.
+.Sh CAVEATS
+Different file formats have different maximum file sizes.
+It is recommended that a format such as cpio or ustar
+be used for larger files.
+.Pp
+.Bl -column "File format" "Maximum file size" -offset indent -compact
+.It Sy "File format" Ta Sy "Maximum file size"
+.It bcpio Ta 4 Gigabytes
+.It sv4cpio Ta 4 Gigabytes
+.It cpio Ta 8 Gigabytes
+.It tar Ta 8 Gigabytes
+.It ustar Ta 8 Gigabytes
+.El
 .Sh BUGS
 The
 .Fl s
