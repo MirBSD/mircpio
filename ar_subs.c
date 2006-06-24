@@ -405,9 +405,12 @@ wr_archive(ARCHD *arcn, int is_app)
 	/*
 	 * start up the file traversal code and format specific write
 	 */
-	if (ftree_start() < 0)
+	if (ftree_start() < 0) {
 		if (is_app)
 			goto trailer;
+		else
+			return;
+	}
 	if (((*frmt->st_wr)() < 0))
 		return;
 	wrf = frmt->wr;
