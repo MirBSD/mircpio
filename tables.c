@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tables.c,v 1.5 2006/06/23 23:47:07 tg Exp $ */
+/**	$MirOS: src/bin/pax/tables.c,v 1.6 2006/06/24 00:21:54 tg Exp $ */
 /*	$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
@@ -50,7 +50,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.5 2006/06/23 23:47:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.6 2006/06/24 00:21:54 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -1306,7 +1306,7 @@ chk_flnk(ARCHD *arcn)
 	u_int indx;
 	static ino_t running = 3;
 
-	if ((fltab == NULL) && flnk_start())
+	if (fltab == NULL)
 		return (-1);
 	/*
 	 * ignore those nodes that cannot have hard links
