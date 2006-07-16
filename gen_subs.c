@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/gen_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $ */
+/**	$MirOS: src/bin/pax/gen_subs.c,v 1.6 2006/07/16 17:58:08 tg Exp $ */
 /*	$OpenBSD: gen_subs.c,v 1.18 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
@@ -49,12 +49,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef __GLIBC__
 #include <vis.h>
+#endif
 #include "pax.h"
 #include "extern.h"
 
 __SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.5 2005/04/29 18:34:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.6 2006/07/16 17:58:08 tg Exp $");
+
+#ifdef __GLIBC__
+void strmode(mode_t, char *);
+#endif
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -196,6 +202,7 @@ ls_tty(ARCHD *arcn)
 void
 safe_print(const char *str, FILE *fp)
 {
+#ifndef __GLIBC__
 	char visbuf[5];
 	const char *cp;
 
@@ -207,9 +214,9 @@ safe_print(const char *str, FILE *fp)
 			(void)vis(visbuf, cp[0], VIS_CSTYLE, cp[1]);
 			(void)fputs(visbuf, fp);
 		}
-	} else {
+	} else
+#endif
 		(void)fputs(str, fp);
-	}
 }
 
 /*
