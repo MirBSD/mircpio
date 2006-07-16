@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.16 2006/06/23 23:03:56 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.17 2006/07/16 15:34:23 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -44,6 +44,7 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <err.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -56,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.16 2006/06/23 23:03:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.17 2006/07/16 15:34:23 tg Exp $");
 
 /*
  * Routines which handle command line options
