@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.18 2006/07/16 16:14:50 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.19 2006/07/16 17:58:39 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -57,7 +57,11 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.18 2006/07/16 16:14:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.19 2006/07/16 17:58:39 tg Exp $");
+
+#ifdef __GLIBC__
+char *fgetln(FILE *, size_t *);
+#endif
 
 /*
  * Routines which handle command line options
