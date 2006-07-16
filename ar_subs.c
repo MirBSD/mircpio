@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/ar_subs.c,v 1.4 2006/07/16 16:14:50 tg Exp $ */
 /*	$OpenBSD: ar_subs.c,v 1.29 2006/01/25 17:42:08 markus Exp $	*/
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
@@ -34,18 +35,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)ar_subs.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: ar_subs.c,v 1.29 2006/01/25 17:42:08 markus Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
@@ -55,6 +47,10 @@ static const char rcsid[] = "$OpenBSD: ar_subs.c,v 1.29 2006/01/25 17:42:08 mark
 #include <stdlib.h>
 #include "pax.h"
 #include "extern.h"
+#include "options.h"
+
+__SCCSID("@(#)ar_subs.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.4 2006/07/16 16:14:50 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -301,7 +297,7 @@ extract(void)
 		 * if required, chdir around.
 		 */
 		if ((arcn->pat != NULL) && (arcn->pat->chdname != NULL))
-			if (chdir(arcn->pat->chdname) != 0)
+			if (!to_stdout && chdir(arcn->pat->chdname) != 0)
 				syswarn(1, errno, "Cannot chdir to %s",
 				    arcn->pat->chdname);
 
@@ -314,10 +310,12 @@ extract(void)
 			 * throw out padding and any data that might follow the
 			 * header (as determined by the format).
 			 */
-			if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG))
-				res = lnk_creat(arcn);
-			else
-				res = node_creat(arcn);
+			if (!to_stdout) {
+				if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG))
+					res = lnk_creat(arcn);
+				else
+					res = node_creat(arcn);
+			}
 
 			(void)rd_skip(arcn->skip + arcn->pad);
 			if (res < 0)
@@ -333,7 +331,9 @@ extract(void)
 		 * we have a file with data here. If we can not create it, skip
 		 * over the data and purge the name from hard link table
 		 */
-		if ((fd = file_creat(arcn)) < 0) {
+		if (to_stdout)
+			fd = STDOUT_FILENO;
+		else if ((fd = file_creat(arcn)) < 0) {
 			(void)rd_skip(arcn->skip + arcn->pad);
 			purg_lnk(arcn);
 			continue;
@@ -343,7 +343,8 @@ extract(void)
 		 * any unprocessed data
 		 */
 		res = (*frmt->rd_data)(arcn, fd, &cnt);
-		file_close(arcn, fd);
+		if (fd != STDOUT_FILENO)
+			file_close(arcn, fd);
 		if (vflag && vfpart) {
 			(void)putc('\n', listf);
 			vfpart = 0;
@@ -355,7 +356,7 @@ extract(void)
 		 * if required, chdir around.
 		 */
 		if ((arcn->pat != NULL) && (arcn->pat->chdname != NULL))
-			if (fchdir(cwdfd) != 0)
+			if (!to_stdout && fchdir(cwdfd) != 0)
 				syswarn(1, errno,
 				    "Can't fchdir to starting directory");
 	}
@@ -397,7 +398,7 @@ wr_archive(ARCHD *arcn, int is_app)
 		return;
 
 	/*
-	 * if this is not append, and there are no files, we do not write a 
+	 * if this is not append, and there are no files, we do not write a
 	 * trailer
 	 */
 	wr_one = is_app;

@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.6 2006/06/19 20:31:05 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.7 2006/07/16 16:14:50 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -195,7 +195,9 @@ specifiers are ignored.
 .It Fl m
 Do not preserve modification time.
 .It Fl O
-Write old-style (non-POSIX) archives.
+If reading, extract files to standard output.
+.br
+If writing, write old-style (non-POSIX) archives.
 .It Fl o
 Don't write directory information that the older (V7) style
 .Nm

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.17 2006/07/16 15:34:23 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.18 2006/07/16 16:14:50 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.17 2006/07/16 15:34:23 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.18 2006/07/16 16:14:50 tg Exp $");
 
 /*
  * Routines which handle command line options
@@ -78,6 +78,7 @@ static void tar_options(int, char **);
 static void tar_usage(void);
 static void cpio_options(int, char **);
 static void cpio_usage(void);
+int mkpath(char *);
 
 static void process_M(const char *, void (*)(void));
 
@@ -160,8 +161,11 @@ FSUB fsub[] = {
  */
 int ford[] = {6, 5, 4, 3, 1, 0, -1 };
 
-/* Normalise archives? */
+/* normalise archives */
 int anonarch = 0;
+
+/* extract to standard output */
+int to_stdout = 0;
 
 /*
  * options()
@@ -689,6 +693,7 @@ tar_options(int argc, char **argv)
 			break;
 		case 'O':
 			Oflag = 1;
+			to_stdout = 2;
 			break;
 		case 'o':
 			Oflag = 2;
@@ -857,12 +862,14 @@ tar_options(int argc, char **argv)
 	 * process the args as they are interpreted by the operation mode
 	 */
 	switch (act) {
-	case LIST:
 	case EXTRACT:
+		if (to_stdout == 2)
+			to_stdout = 1;
+	case LIST:
 	default:
 		{
 			int sawpat = 0;
-			char *file, *dir;
+			char *file, *dir = NULL;
 
 			while (nincfiles || *argv != NULL) {
 				/*
@@ -954,7 +961,7 @@ tar_options(int argc, char **argv)
 		}
 
 		while (nincfiles || *argv != NULL) {
-			char *file, *dir;
+			char *file, *dir = NULL;
 
 			/*
 			 * If we queued up any include files, pull them in
@@ -1015,6 +1022,8 @@ tar_options(int argc, char **argv)
 		maxflt = 0;
 		break;
 	}
+	if (to_stdout != 1)
+		to_stdout = 0;
 	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
 		arcname = getenv("TAPE");
 #ifdef _PATH_DEFTAPE
@@ -1023,8 +1032,6 @@ tar_options(int argc, char **argv)
 #endif
 	}
 }
-
-int mkpath(char *);
 
 int
 mkpath(char *path)
@@ -1651,7 +1658,7 @@ anonarch_init(void)
 static void
 process_M(const char *arg, void (*call_usage)(void))
 {
-	int j, k;
+	int j, k = 0;
 
 	if ((arg[0] >= '0') && (arg[0] <= '9')) {
 #ifdef __OpenBSD__
