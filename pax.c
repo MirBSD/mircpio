@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.c,v 1.4 2006/06/23 23:03:57 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.c,v 1.5 2006/07/16 18:00:33 tg Exp $ */
 /*	$OpenBSD: pax.c,v 1.28 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
@@ -58,7 +58,7 @@ static const char copyright[] =
 #include "extern.h"
 
 __SCCSID("@(#)pax.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.4 2006/06/23 23:03:57 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.5 2006/07/16 18:00:33 tg Exp $");
 
 static int gen_init(void);
 
@@ -101,7 +101,7 @@ char	*dirptr;		/* destination dir in a copy */
 char	*ltmfrmt;		/* -v locale time format (if any) */
 char	*argv0;			/* root of argv[0] */
 sigset_t s_mask;		/* signal mask for cleanup critical sect */
-FILE	*listf = stderr;	/* file pointer to print file list to */
+FILE	*listf;			/* fp to print file list to (default stderr) */
 char	*tempfile;		/* tempfile to use for mkstemp(3) */
 char	*tempbase;		/* basename of tempfile to use for mkstemp(3) */
 
@@ -257,6 +257,8 @@ main(int argc, char **argv)
 		memcpy(tempfile, tmpdir, tdlen);
 	tempbase = tempfile + tdlen;
 	*tempbase++ = '/';
+
+	listf = stderr;
 
 	/*
 	 * parse options, determine operational mode, general init
