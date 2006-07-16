@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cache.c,v 1.2 2005/04/13 20:03:35 tg Exp $ */
+/**	$MirOS: src/bin/pax/cache.c,v 1.3 2006/07/16 17:55:18 tg Exp $ */
 /*	$OpenBSD: cache.c,v 1.17 2004/03/16 03:28:34 tedu Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
@@ -50,7 +50,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)cache.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.2 2005/04/13 20:03:35 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.3 2006/07/16 17:55:18 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -196,7 +196,7 @@ name_uid(uid_t uid, int frc)
 	 * No entry for this uid, we will add it
 	 */
 	if (!pwopn) {
-#ifndef __INTERIX
+#if !defined(__INTERIX) && !defined(__GLIBC__)
 		setpassent(1);
 #endif
 		++pwopn;
@@ -264,7 +264,7 @@ name_gid(gid_t gid, int frc)
 	 * No entry for this gid, we will add it
 	 */
 	if (!gropn) {
-#ifndef __INTERIX
+#if !defined(__INTERIX) && !defined(__GLIBC__)
 		setgroupent(1);
 #endif
 		++gropn;
@@ -333,7 +333,7 @@ uid_name(char *name, uid_t *uid)
 	}
 
 	if (!pwopn) {
-#ifndef __INTERIX
+#if !defined(__INTERIX) && !defined(__GLIBC__)
 		setpassent(1);
 #endif
 		++pwopn;
@@ -398,7 +398,7 @@ gid_name(char *name, gid_t *gid)
 	}
 
 	if (!gropn) {
-#ifndef __INTERIX
+#if !defined(__INTERIX) && !defined(__GLIBC__)
 		setgroupent(1);
 #endif
 		++gropn;
