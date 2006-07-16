@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.6 2006/06/19 19:22:08 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.7 2006/07/16 17:56:29 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -42,6 +42,9 @@
  */
 
 #include <sys/cdefs.h>
+#if defined(__GLIBC__)
+#include <time.h>
+#endif
 
 /*
  * ar_io.c
