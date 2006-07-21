@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.19 2006/07/16 17:58:39 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.20 2006/07/21 17:34:59 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.19 2006/07/16 17:58:39 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.20 2006/07/21 17:34:59 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -222,7 +222,7 @@ pax_options(int argc, char **argv)
 	/*
 	 * process option flags
 	 */
-	while ((c=getopt(argc,argv,"ab:cdf:iklno:p:rs:tuvwx:zB:DE:G:HLOPT:U:XYZ0"))
+	while ((c=getopt(argc,argv,"ab:cdf:iklno:p:rs:tuvwx:zB:DE:G:HLM:OPT:U:XYZ0"))
 	    != -1) {
 		switch (c) {
 		case 'a':
@@ -474,6 +474,12 @@ pax_options(int argc, char **argv)
 			 */
 			Lflag = 1;
 			flg |= CLF;
+			break;
+		case 'M':
+			/*
+			 * MirOS extension: archive normaliser
+			 */
+			process_M(optarg, pax_usage);
 			break;
 		case 'O':
 			/*
@@ -1608,7 +1614,7 @@ pax_usage(void)
 	    "\t  [-o options] [-p string] [-s replstr] [-T [from_date][,to_date]]\n"
 	    "\t  [-U user] [pattern ...]\n"
 	    "       pax -w [-0adHiLOPtuvXz] [-B bytes] [-b blocksize] [-f archive]\n"
-	    "\t  [-G group] [-o options] [-s replstr]\n"
+	    "\t  [-G group] [-M value] [-o options] [-s replstr]\n"
 	    "\t  [-T [from_date][,to_date][/[c][m]]] [-U user] [-x format] [file ...]\n"
 	    "       pax -r -w [-0DdHikLlnOPtuvXYZ] [-G group] [-p string] [-s replstr]\n"
 	    "\t  [-T [from_date][,to_date][/[c][m]]] [-U user] [file ...] directory\n",
@@ -1655,7 +1661,7 @@ anonarch_init(void)
 {
 	if (anonarch & ANON_VERBOSE) {
 		anonarch &= ~ANON_VERBOSE;
-		paxwarn(0, "debug: -M 0x%08X", anonarch);
+		paxwarn(0, "debug: -M 0x%08X -x %s", anonarch, frmt->name);
 	}
 }
 

@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.7 2006/07/16 16:14:50 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.8 2006/07/21 17:34:59 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -26,9 +26,22 @@
 .\"
 .\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
 .\"
-.Dd February 7, 2001
+.Dd July 21, 2006
 .Dt TAR 1
-.Os
+.Os MirBSD
+.\" for portability
+.de Mx
+.nr cF \\n(.f
+.nr cZ \\n(.s
+.ds aa \&\f\\n(cF\s\\n(cZ
+.if \\n(aC==0 \{\
+.	if \\n(.$==0 \&MirBSD\\*(aa
+.\}
+.if \\n(.$==1 \{\
+.	if "\\$1"."  \&MirBSD\\$1\\*(aa
+.	if "\\$1","  \&MirBSD\\$1\\*(aa
+.\}
+..
 .Sh NAME
 .Nm tar
 .Nd tape archiver
@@ -186,7 +199,7 @@ for a comprehensive list and compatibility notes.
 .El
 .Pp
 This option is only implemented for the cpio, sv4cpio,
-ustar, and sv4crc file format writing routines.
+sv4crc, and ustar file format writing routines.
 For the ustar format, the
 .Ar inodes
 and
