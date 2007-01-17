@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.20 2006/07/21 17:34:59 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.21 2007/01/17 16:25:40 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.20 2006/07/21 17:34:59 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.21 2007/01/17 16:25:40 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -78,8 +78,10 @@ static off_t str_offt(char *);
 static char *getline(FILE *fp);
 static void pax_options(int, char **);
 static void pax_usage(void);
+static void tar_set_action(int);
 static void tar_options(int, char **);
 static void tar_usage(void);
+static void cpio_set_action(int);
 static void cpio_options(int, char **);
 static void cpio_usage(void);
 int mkpath(char *);
@@ -213,7 +215,7 @@ static void
 pax_options(int argc, char **argv)
 {
 	int c;
-	int i;
+	size_t i;
 	unsigned int flg = 0;
 	unsigned int bflg = 0;
 	char *pt;
@@ -628,6 +630,14 @@ pax_options(int argc, char **argv)
  */
 
 static void
+tar_set_action(int op)
+{
+	if (act != ERROR && act != op)
+		tar_usage();
+	act = op;
+}
+
+static void
 tar_options(int argc, char **argv)
 {
 	int c;
@@ -666,7 +676,7 @@ tar_options(int argc, char **argv)
 			/*
 			 * create an archive
 			 */
-			act = ARCHIVE;
+			tar_set_action(ARCHIVE);
 			break;
 		case 'e':
 			/*
@@ -726,7 +736,7 @@ tar_options(int argc, char **argv)
 			/*
 			 * append to the archive
 			 */
-			act = APPND;
+			tar_set_action(APPND);
 			break;
 		case 'R':
 			Oflag = 3;
@@ -749,7 +759,7 @@ tar_options(int argc, char **argv)
 			/*
 			 * list contents of the tape
 			 */
-			act = LIST;
+			tar_set_action(LIST);
 			break;
 		case 'v':
 			/*
@@ -768,7 +778,7 @@ tar_options(int argc, char **argv)
 			 * extract an archive, preserving mode,
 			 * and mtime if possible.
 			 */
-			act = EXTRACT;
+			tar_set_action(EXTRACT);
 			pmtime = 1;
 			break;
 		case 'z':
@@ -1075,6 +1085,18 @@ mkpath(char *path)
 
 	return (0);
 }
+
+static void
+cpio_set_action(int op)
+{
+	if ((act == APPND && op == ARCHIVE) || (act == ARCHIVE && op == APPND))
+		act = APPND;
+	else if (act != ERROR && act != op)
+		cpio_usage();
+	else
+		act = op;
+}
+
 /*
  * cpio_options()
  *	look at the user specified flags. set globals as required and check if
@@ -1084,7 +1106,8 @@ mkpath(char *path)
 static void
 cpio_options(int argc, char **argv)
 {
-	int c, i;
+	int c;
+	size_t i;
 	char *str;
 	FSUB tmp;
 	FILE *fp;
@@ -1132,7 +1155,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * restore an archive
 				 */
-				act = EXTRACT;
+				cpio_set_action(EXTRACT);
 				break;
 			case 'k':
 				break;
@@ -1152,14 +1175,14 @@ cpio_options(int argc, char **argv)
 				/*
 				 * create an archive
 				 */
-				act = ARCHIVE;
+				cpio_set_action(ARCHIVE);
 				frmt = &(fsub[F_CPIO]);
 				break;
 			case 'p':
 				/*
 				 * copy-pass mode
 				 */
-				act = COPY;
+				cpio_set_action(COPY);
 				break;
 			case 'r':
 				/*
@@ -1176,7 +1199,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * list contents of archive
 				 */
-				act = LIST;
+				cpio_set_action(LIST);
 				listf = stdout;
 				break;
 			case 'u':
@@ -1201,7 +1224,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * append mode
 				 */
-				act = APPND;
+				cpio_set_action(APPND);
 				break;
 			case 'B':
 				/*

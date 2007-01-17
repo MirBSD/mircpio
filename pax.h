@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.4 2006/06/23 23:03:57 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.5 2007/01/17 16:25:40 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -55,6 +55,7 @@
 /*
  * Pax modes of operation
  */
+#define ERROR		-1	/* nothing selected */
 #define	LIST		0	/* List the file in an archive */
 #define	EXTRACT		1	/* extract the files in an archive */
 #define ARCHIVE		2	/* write a new archive */
@@ -140,7 +141,7 @@ typedef struct {
  * dependent routines pass pointers to ARCHD structure (described below).
  */
 typedef struct {
-	char *name;		/* name of format, this is the name the user */
+	const char *name;	/* name of format, this is the name the user */
 				/* gives to -x option to select it. */
 	int bsz;		/* default block size. used when the user */
 				/* does not specify a blocksize for writing */
