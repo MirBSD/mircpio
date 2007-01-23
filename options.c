@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.22 2007/01/23 11:29:17 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.23 2007/01/23 11:55:53 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.22 2007/01/23 11:29:17 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.23 2007/01/23 11:55:53 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -868,6 +868,10 @@ tar_options(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
+	/* Tar requires an action. */
+	if (act == ERROR)
+		tar_usage();
+
 	/* Traditional tar behaviour (pax uses stderr unless in list mode) */
 	if (fstdin == 1 && act == ARCHIVE)
 		listf = stderr;
@@ -1120,7 +1124,6 @@ cpio_options(int argc, char **argv)
 	pmtime = 0;
 	arcname = NULL;
 	dflag = 1;
-	act = -1;
 	nodirs = 1;
 	while ((c=getopt(argc,argv,"abcdfiklmoprstuvzABC:E:F:H:I:LM:O:SZ6")) != -1)
 		switch (c) {

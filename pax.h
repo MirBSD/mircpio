@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.5 2007/01/17 16:25:40 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.6 2007/01/23 11:55:54 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -61,7 +61,6 @@
 #define ARCHIVE		2	/* write a new archive */
 #define APPND		3	/* append to the end of an archive */
 #define	COPY		4	/* copy files to destination dir */
-#define DEFOP		LIST	/* if no flags default is to LIST */
 
 /*
  * Device type of the current archive volume

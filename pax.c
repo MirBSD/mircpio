@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.c,v 1.5 2006/07/16 18:00:33 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.c,v 1.6 2007/01/23 11:55:54 tg Exp $ */
 /*	$OpenBSD: pax.c,v 1.28 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
@@ -35,12 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static const char copyright[] =
-"@(#) Copyright (c) 1992, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -57,8 +51,10 @@ static const char copyright[] =
 #include "pax.h"
 #include "extern.h"
 
+__COPYRIGHT("@(#) Copyright (c) 1992, 1993\n\
+	The Regents of the University of California.  All rights reserved.\n");
 __SCCSID("@(#)pax.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.5 2006/07/16 18:00:33 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.6 2007/01/23 11:55:54 tg Exp $");
 
 static int gen_init(void);
 
@@ -69,7 +65,7 @@ static int gen_init(void);
 /*
  * Variables that can be accessed by any routine within pax
  */
-int	act = DEFOP;		/* read/write/append/copy */
+int	act = ERROR;		/* read/write/append/copy */
 FSUB	*frmt = NULL;		/* archive format type */
 int	cflag;			/* match all EXCEPT pattern/file */
 int	cwdfd;			/* starting cwd */
@@ -286,6 +282,7 @@ main(int argc, char **argv)
 		copy();
 		break;
 	default:
+		act = LIST;	/* for ar_io.c &c. */
 	case LIST:
 		list();
 		break;
