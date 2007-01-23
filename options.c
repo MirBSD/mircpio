@@ -1,9 +1,9 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.21 2007/01/17 16:25:40 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.22 2007/01/23 11:29:17 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006 Thorsten Glaser <tg@66h.42h.de>
+ * Copyright (c) 2005, 2006, 2007 Thorsten Glaser <tg@66h.42h.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.21 2007/01/17 16:25:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.22 2007/01/23 11:29:17 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -1091,6 +1091,8 @@ cpio_set_action(int op)
 {
 	if ((act == APPND && op == ARCHIVE) || (act == ARCHIVE && op == APPND))
 		act = APPND;
+	else if ((act == LIST && op == EXTRACT) || (act == EXTRACT && op == LIST))
+		act = LIST;
 	else if (act != ERROR && act != op)
 		cpio_usage();
 	else
