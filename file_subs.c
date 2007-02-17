@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.9 2007/02/17 04:16:09 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.10 2007/02/17 04:18:29 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.30 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -54,9 +54,10 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.9 2007/02/17 04:16:09 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.10 2007/02/17 04:18:29 tg Exp $");
 
-#if !defined(__INTERIX)
+#if !defined(__INTERIX) && \
+    (!defined(__GLIBC__) || (defined(__GLIBC_PREREQ) && __GLIBC_PREREQ(2, 3)))
 #define PAX_FUTIMES	/* we have futimes() */
 #endif
 
