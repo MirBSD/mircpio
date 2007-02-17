@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.7 2006/06/23 23:03:56 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.8 2007/02/17 04:03:19 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.30 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -54,7 +54,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.7 2006/06/23 23:03:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.8 2007/02/17 04:03:19 tg Exp $");
 
 static int
 mk_link(char *, struct stat *, char *, int);
@@ -937,6 +937,8 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 				 */
 				if (fd > -1 &&
 				    lseek(fd, (off_t)wcnt, SEEK_CUR) < 0) {
+					if (errno == ESPIPE)
+						goto isapipe;
 					syswarn(1,errno,"File seek on %s",
 					    name);
 					return(-1);
@@ -944,6 +946,7 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 				st = pt;
 				continue;
 			}
+ isapipe:
 			/*
 			 * drat, the buf is not zero filled
 			 */
