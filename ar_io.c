@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_io.c,v 1.6 2006/06/23 23:03:55 tg Exp $ */
+/**	$MirOS: src/bin/pax/ar_io.c,v 1.7 2007/02/17 04:12:40 tg Exp $ */
 /*	$OpenBSD: ar_io.c,v 1.37 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)ar_io.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.6 2006/06/23 23:03:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.7 2007/02/17 04:12:40 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -85,7 +85,9 @@ const char *gzip_program;		/* name of gzip program */
 static pid_t zpid = -1;			/* pid of child process */
 int force_one_volume;			/* 1 if we ignore volume changes */
 
+#ifndef __INTERIX
 static int get_phys(void);
+#endif
 extern sigset_t s_mask;
 static void ar_start_gzip(int, const char *, int);
 
@@ -997,6 +999,7 @@ ar_rev(off_t sksz)
 	return(0);
 }
 
+#ifndef __INTERIX
 /*
  * get_phys()
  *	Determine the physical block size on a tape drive. We need the physical
@@ -1011,7 +1014,6 @@ ar_rev(off_t sksz)
 static int
 get_phys(void)
 {
-#ifndef __INTERIX
 	int padsz = 0;
 	int res;
 	int phyblk;
@@ -1110,10 +1112,8 @@ get_phys(void)
 		return(-1);
 	}
 	return(phyblk);
-#else
-	return 0;
-#endif
 }
+#endif
 
 /*
  * ar_next()
