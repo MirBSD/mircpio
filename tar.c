@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tar.c,v 1.3 2006/06/23 23:03:57 tg Exp $ */
+/**	$MirOS: src/bin/pax/tar.c,v 1.4 2007/02/17 04:52:41 tg Exp $ */
 /*	$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
@@ -36,18 +36,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)tar.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -56,6 +47,9 @@ static const char rcsid[] = "$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp
 #include "extern.h"
 #include "tar.h"
 #include "options.h"
+
+__SCCSID("@(#)tar.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.4 2007/02/17 04:52:41 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -122,7 +116,8 @@ tar_endrd(void)
  */
 
 int
-tar_trail(ARCHD *ignore, char *buf, int in_resync, int *cnt)
+tar_trail(ARCHD *ignore __attribute__((unused)), char *buf, int in_resync,
+    int *cnt)
 {
 	int i;
 
@@ -557,7 +552,7 @@ tar_wr(ARCHD *arcn)
 	case PAX_SLK:
 	case PAX_HLK:
 	case PAX_HRG:
-		if (arcn->ln_nlen > sizeof(hd->linkname)) {
+		if ((size_t)arcn->ln_nlen > sizeof(hd->linkname)) {
 			paxwarn(1, "Link name too long for tar %s",
 			    arcn->ln_name);
 			return(1);
@@ -575,7 +570,7 @@ tar_wr(ARCHD *arcn)
 	len = arcn->nlen;
 	if (arcn->type == PAX_DIR)
 		++len;
-	if (len > sizeof(hd->name)) {
+	if ((size_t)len > sizeof(hd->name)) {
 		paxwarn(1, "File name too long for tar %s", arcn->name);
 		return(1);
 	}
@@ -935,7 +930,8 @@ ustar_wr(ARCHD *arcn)
 	 * check the length of the linkname
 	 */
 	if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
-	    (arcn->type == PAX_HRG)) && (arcn->ln_nlen > sizeof(hd->linkname))){
+	    (arcn->type == PAX_HRG)) &&
+	    ((size_t)arcn->ln_nlen > sizeof(hd->linkname))) {
 		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
 		return(1);
 	}

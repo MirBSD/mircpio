@@ -34,18 +34,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)sel_subs.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: sel_subs.c,v 1.18 2004/04/16 22:50:23 deraadt Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <ctype.h>
 #include <grp.h>
 #include <pwd.h>
@@ -57,6 +48,9 @@ static const char rcsid[] = "$OpenBSD: sel_subs.c,v 1.18 2004/04/16 22:50:23 der
 #include "pax.h"
 #include "sel_subs.h"
 #include "extern.h"
+
+__SCCSID("@(#)sel_subs.c	8.1 (Berkeley) 5/31/93");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.2 2007/02/17 04:52:41 tg Exp $");
 
 static int str_sec(const char *, time_t *);
 static int usr_match(ARCHD *);

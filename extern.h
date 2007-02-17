@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.8 2007/02/17 04:16:09 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.9 2007/02/17 04:52:40 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -108,10 +108,10 @@ int uidtb_start(void);
 int gidtb_start(void);
 int usrtb_start(void);
 int grptb_start(void);
-char * name_uid(uid_t, int);
-char * name_gid(gid_t, int);
-int uid_name(char *, uid_t *);
-int gid_name(char *, gid_t *);
+const char *name_uid(uid_t, int);
+const char *name_gid(gid_t, int);
+int uid_name(const char *, uid_t *);
+int gid_name(const char *, gid_t *);
 
 /*
  * cpio.c
@@ -245,13 +245,12 @@ extern int exit_val;
 extern int docrc;
 extern char *dirptr;
 extern char *ltmfrmt;
-extern char *argv0;
+extern const char *argv0;
 extern FILE *listf;
 extern char *tempfile;
 extern char *tempbase;
 
 int main(int, char **);
-void sig_cleanup(int);
 
 /*
  * sel_subs.c
@@ -283,7 +282,7 @@ int get_atdir(dev_t, ino_t, time_t *, time_t *);
 int dir_start(void);
 void add_dir(char *, struct stat *, int);
 void proc_dir(void);
-u_int st_hash(char *, int, int);
+u_int st_hash(const char *, int, int);
 int flnk_start(void);
 int chk_flnk(ARCHD *);
 
@@ -308,7 +307,10 @@ int ustar_wr(ARCHD *);
  * tty_subs.c
  */
 int tty_init(void);
-void tty_prnt(const char *, ...);
+void tty_prnt(const char *, ...)
+    __attribute__((format (printf, 1, 2)));
 int tty_read(char *, int);
-void paxwarn(int, const char *, ...);
-void syswarn(int, int, const char *, ...);
+void paxwarn(int, const char *, ...)
+    __attribute__((format (printf, 2, 3)));
+void syswarn(int, int, const char *, ...)
+    __attribute__((format (printf, 3, 4)));

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.c,v 1.23 2007/01/23 11:55:53 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.c,v 1.24 2007/02/17 04:52:41 tg Exp $ */
 /*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.23 2007/01/23 11:55:53 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.24 2007/02/17 04:52:41 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -77,13 +77,13 @@ static int c_frmt(const void *, const void *);
 static off_t str_offt(char *);
 static char *getline(FILE *fp);
 static void pax_options(int, char **);
-static void pax_usage(void);
+static void pax_usage(void) __attribute__((noreturn));
 static void tar_set_action(int);
 static void tar_options(int, char **);
-static void tar_usage(void);
+static void tar_usage(void) __attribute__((noreturn));
 static void cpio_set_action(int);
 static void cpio_options(int, char **);
-static void cpio_usage(void);
+static void cpio_usage(void) __attribute__((noreturn));
 int mkpath(char *);
 
 static void process_M(const char *, void (*)(void));
@@ -1406,7 +1406,7 @@ printflg(unsigned int flg)
 static int
 c_frmt(const void *a, const void *b)
 {
-	return(strcmp(((FSUB *)a)->name, ((FSUB *)b)->name));
+	return(strcmp(((const FSUB *)a)->name, ((const FSUB *)b)->name));
 }
 
 /*

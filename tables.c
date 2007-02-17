@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tables.c,v 1.6 2006/06/24 00:21:54 tg Exp $ */
+/**	$MirOS: src/bin/pax/tables.c,v 1.7 2007/02/17 04:52:41 tg Exp $ */
 /*	$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
@@ -50,7 +50,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.6 2006/06/24 00:21:54 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.7 2007/02/17 04:52:41 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -169,7 +169,7 @@ chk_lnk(ARCHD *arcn)
 			arcn->ln_nlen = strlcpy(arcn->ln_name, pt->name,
 				sizeof(arcn->ln_name));
 			/* XXX truncate? */
-			if (arcn->nlen >= sizeof(arcn->name))
+			if ((size_t)arcn->nlen >= sizeof(arcn->name))
 				arcn->nlen = sizeof(arcn->name) - 1;
 			if (arcn->type == PAX_REG)
 				arcn->type = PAX_HRG;
@@ -601,7 +601,7 @@ sub_name(char *oname, int *onamelen, size_t onamesize)
 			 * and return (we know that oname has enough space)
 			 */
 			*onamelen = strlcpy(oname, pt->nname, onamesize);
-			if (*onamelen >= onamesize)
+			if ((size_t)*onamelen >= onamesize)
 				*onamelen = onamesize - 1; /* XXX truncate? */
 			return;
 		}
@@ -1127,7 +1127,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	if (dirp == NULL)
 		return;
 
-	if (dircnt == dirsize) {
+	if (dircnt == (long)dirsize) {
 		dblk = realloc(dirp, 2 * dirsize * sizeof(DIRDATA));
 		if (dblk == NULL) {
 			paxwarn(1, "Unable to store mode and times for created"
@@ -1205,11 +1205,11 @@ proc_dir(void)
  */
 
 u_int
-st_hash(char *name, int len, int tabsz)
+st_hash(const char *name, int len, int tabsz)
 {
-	char *pt;
+	const char *pt;
 	char *dest;
-	char *end;
+	const char *end;
 	int i;
 	u_int key = 0;
 	int steps;

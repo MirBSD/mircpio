@@ -34,18 +34,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)buf_subs.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: buf_subs.c,v 1.21 2005/11/09 19:59:06 otto Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -53,6 +44,9 @@ static const char rcsid[] = "$OpenBSD: buf_subs.c,v 1.21 2005/11/09 19:59:06 ott
 #include <string.h>
 #include "pax.h"
 #include "extern.h"
+
+__SCCSID("@(#)buf_subs.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.2 2007/02/17 04:52:40 tg Exp $");
 
 /*
  * routines which implement archive and file buffering

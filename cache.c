@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cache.c,v 1.3 2006/07/16 17:55:18 tg Exp $ */
+/**	$MirOS: src/bin/pax/cache.c,v 1.4 2007/02/17 04:52:40 tg Exp $ */
 /*	$OpenBSD: cache.c,v 1.17 2004/03/16 03:28:34 tedu Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
@@ -35,10 +35,9 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -50,7 +49,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)cache.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.3 2006/07/16 17:55:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.4 2007/02/17 04:52:40 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -170,7 +169,7 @@ grptb_start(void)
  *	Pointer to stored name (or a empty string)
  */
 
-char *
+const char *
 name_uid(uid_t uid, int frc)
 {
 	struct passwd *pw;
@@ -238,7 +237,7 @@ name_uid(uid_t uid, int frc)
  *	Pointer to stored name (or a empty string)
  */
 
-char *
+const char *
 name_gid(gid_t gid, int frc)
 {
 	struct group *gr;
@@ -306,7 +305,7 @@ name_gid(gid_t gid, int frc)
  */
 
 int
-uid_name(char *name, uid_t *uid)
+uid_name(const char *name, uid_t *uid)
 {
 	struct passwd *pw;
 	UIDC *ptr;
@@ -371,7 +370,7 @@ uid_name(char *name, uid_t *uid)
  */
 
 int
-gid_name(char *name, gid_t *gid)
+gid_name(const char *name, gid_t *gid)
 {
 	struct group *gr;
 	GIDC *ptr;

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.10 2006/06/19 19:22:08 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.11 2007/02/17 04:52:40 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -49,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.10 2006/06/19 19:22:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.11 2007/02/17 04:52:40 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -89,7 +89,9 @@ cpio_strd(void)
  */
 
 int
-cpio_trail(ARCHD *arcn, char *notused, int notused2, int *notused3)
+cpio_trail(ARCHD *arcn, char *notused __attribute__((unused)),
+    int notused2 __attribute__((unused)),
+    int *notused3 __attribute__((unused)))
 {
 	/*
 	 * look for trailer id in file we are about to process
@@ -184,7 +186,7 @@ rd_nm(ARCHD *arcn, int nsz)
 	/*
 	 * do not even try bogus values
 	 */
-	if ((nsz == 0) || (nsz > sizeof(arcn->name))) {
+	if ((nsz == 0) || ((size_t)nsz > sizeof(arcn->name))) {
 		paxwarn(1, "Cpio file name length %d is out of range", nsz);
 		return(-1);
 	}
@@ -220,7 +222,7 @@ rd_ln_nm(ARCHD *arcn)
 		paxwarn(1, "Cpio link name length is invalid: %lu",
 		    arcn->sb.st_size);
 #		else
-		paxwarn(1, "Cpio link name length is invalid: %qu",
+		paxwarn(1, "Cpio link name length is invalid: %llu",
 		    arcn->sb.st_size);
 #		endif
 		return(-1);
@@ -262,7 +264,7 @@ rd_ln_nm(ARCHD *arcn)
 int
 cpio_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_CPIO)) ||
+	if (((size_t)size < sizeof(HD_CPIO)) ||
 	    (strncmp(blk, AMAGIC, sizeof(AMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -417,11 +419,12 @@ cpio_wr(ARCHD *arcn)
 	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
 	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)arcn->sb.st_mtime;
-	t_ino   = (anonarch & ANON_INODES) ? chk_flnk(arcn) : arcn->sb.st_ino;
+	t_ino   = (anonarch & ANON_INODES) ? (ino_t)chk_flnk(arcn) :
+	    arcn->sb.st_ino;
 	t_dev   = (anonarch & ANON_INODES) ? 0UL : (u_long)arcn->sb.st_dev;
 	if (!cpio_trail(arcn, NULL, 0, NULL))
 		t_ino = 0UL;
-	if (t_ino == -1) {
+	if (t_ino == (ino_t)-1) {
 		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
 		return (1);
 	}
@@ -552,7 +555,7 @@ cpio_wr(ARCHD *arcn)
 int
 vcpio_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_VCPIO)) ||
+	if (((size_t)size < sizeof(HD_VCPIO)) ||
 	    (strncmp(blk, AVMAGIC, sizeof(AVMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -569,7 +572,7 @@ vcpio_id(char *blk, int size)
 int
 crc_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_VCPIO)) ||
+	if (((size_t)size < sizeof(HD_VCPIO)) ||
 	    (strncmp(blk, AVCMAGIC, sizeof(AVCMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -787,12 +790,13 @@ vcpio_wr(ARCHD *arcn)
 	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
 	t_mtime = (anonarch & ANON_MTIME) ? 0UL : (u_long)arcn->sb.st_mtime;
-	t_ino   = (anonarch & ANON_INODES) ? chk_flnk(arcn) : arcn->sb.st_ino;
+	t_ino   = (anonarch & ANON_INODES) ? (ino_t)chk_flnk(arcn) :
+	    arcn->sb.st_ino;
 	t_major = (anonarch & ANON_INODES) ? 0UL : (u_long)MAJOR(arcn->sb.st_dev);
 	t_minor = (anonarch & ANON_INODES) ? 0UL : (u_long)MINOR(arcn->sb.st_dev);
 	if (!cpio_trail(arcn, NULL, 0, NULL))
 		t_ino = 0UL;
-	if (t_ino == -1) {
+	if (t_ino == (ino_t)-1) {
 		paxwarn(1, "Invalid inode number for file %s", arcn->org_name);
 		return (1);
 	}
@@ -938,7 +942,7 @@ vcpio_wr(ARCHD *arcn)
 int
 bcpio_id(char *blk, int size)
 {
-	if (size < sizeof(HD_BCPIO))
+	if ((size_t)size < sizeof(HD_BCPIO))
 		return(-1);
 
 	/*

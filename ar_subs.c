@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_subs.c,v 1.4 2006/07/16 16:14:50 tg Exp $ */
+/**	$MirOS: src/bin/pax/ar_subs.c,v 1.5 2007/02/17 04:52:39 tg Exp $ */
 /*	$OpenBSD: ar_subs.c,v 1.29 2006/01/25 17:42:08 markus Exp $	*/
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
@@ -50,7 +50,7 @@
 #include "options.h"
 
 __SCCSID("@(#)ar_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.4 2006/07/16 16:14:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.5 2007/02/17 04:52:39 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -759,8 +759,8 @@ copy(void)
 	int res;
 	int fddest;
 	char *dest_pt;
-	int dlen;
-	int drem;
+	size_t dlen;
+	size_t drem;
 	int fdsrc = -1;
 	struct stat sb;
 	ARCHD archd;

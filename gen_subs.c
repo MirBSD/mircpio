@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/gen_subs.c,v 1.6 2006/07/16 17:58:08 tg Exp $ */
+/**	$MirOS: src/bin/pax/gen_subs.c,v 1.7 2007/02/17 04:52:40 tg Exp $ */
 /*	$OpenBSD: gen_subs.c,v 1.18 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
@@ -35,10 +35,9 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <stdio.h>
 #include <tzfile.h>
 #ifdef __INTERIX
@@ -56,7 +55,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.6 2006/07/16 17:58:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.7 2007/02/17 04:52:40 tg Exp $");
 
 #ifdef __GLIBC__
 void strmode(mode_t, char *);
@@ -143,7 +142,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 #		ifdef LONG_OFF_T
 		(void)fprintf(fp, "%9lu ", sbp->st_size);
 #		else
-		(void)fprintf(fp, "%9qu ", sbp->st_size);
+		(void)fprintf(fp, "%9llu ", sbp->st_size);
 #		endif
 	}
 

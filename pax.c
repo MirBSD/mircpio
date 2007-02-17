@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.c,v 1.6 2007/01/23 11:55:54 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.c,v 1.7 2007/02/17 04:52:41 tg Exp $ */
 /*	$OpenBSD: pax.c,v 1.28 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
@@ -54,9 +54,10 @@
 __COPYRIGHT("@(#) Copyright (c) 1992, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n");
 __SCCSID("@(#)pax.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.6 2007/01/23 11:55:54 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.7 2007/02/17 04:52:41 tg Exp $");
 
 static int gen_init(void);
+static void sig_cleanup(int) __attribute__((noreturn));
 
 /*
  * PAX main routines, general globals and some simple start up routines
@@ -95,7 +96,7 @@ int	exit_val;		/* exit value */
 int	docrc;			/* check/create file crc */
 char	*dirptr;		/* destination dir in a copy */
 char	*ltmfrmt;		/* -v locale time format (if any) */
-char	*argv0;			/* root of argv[0] */
+const char *argv0;		/* root of argv[0] */
 sigset_t s_mask;		/* signal mask for cleanup critical sect */
 FILE	*listf;			/* fp to print file list to (default stderr) */
 char	*tempfile;		/* tempfile to use for mkstemp(3) */
@@ -224,7 +225,7 @@ char	*tempbase;		/* basename of tempfile to use for mkstemp(3) */
 int
 main(int argc, char **argv)
 {
-	char *tmpdir;
+	const char *tmpdir;
 	size_t tdlen;
 
 	/*
@@ -299,7 +300,7 @@ main(int argc, char **argv)
  *	never....
  */
 
-void
+static void
 sig_cleanup(int which_sig)
 {
 	/* XXX signal races */

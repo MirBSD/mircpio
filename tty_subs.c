@@ -34,18 +34,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)tty_subs.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: tty_subs.c,v 1.12 2003/06/02 23:32:09 millert Exp $";
-#endif
-#endif /* not lint */
-
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
@@ -55,6 +46,9 @@ static const char rcsid[] = "$OpenBSD: tty_subs.c,v 1.12 2003/06/02 23:32:09 mil
 #include "pax.h"
 #include "extern.h"
 #include <stdarg.h>
+
+__SCCSID("@(#)tty_subs.c	8.2 (Berkeley) 4/18/94");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.2 2007/02/17 04:52:41 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user

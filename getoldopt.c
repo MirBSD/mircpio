@@ -10,10 +10,6 @@
  * in the Public Domain for your edification and enjoyment.
  */
 
-#ifndef lint
-static const char rcsid[] = "$OpenBSD: getoldopt.c,v 1.8 2003/07/02 21:19:33 deraadt Exp $";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -21,6 +17,8 @@ static const char rcsid[] = "$OpenBSD: getoldopt.c,v 1.8 2003/07/02 21:19:33 der
 #include <unistd.h>
 #include "pax.h"
 #include "extern.h"
+
+__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.2 2007/02/17 04:52:40 tg Exp $");
 
 int
 getoldopt(int argc, char **argv, const char *optstring)
