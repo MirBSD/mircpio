@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.8 2007/02/17 04:03:19 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.9 2007/02/17 04:16:09 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.30 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
@@ -54,10 +54,16 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.8 2007/02/17 04:03:19 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.9 2007/02/17 04:16:09 tg Exp $");
 
-static int
-mk_link(char *, struct stat *, char *, int);
+#if !defined(__INTERIX)
+#define PAX_FUTIMES	/* we have futimes() */
+#endif
+
+static int mk_link(char *, struct stat *, char *, int);
+#ifdef PAX_FUTIMES
+static void fset_ftime(char *, int, time_t, time_t, int);
+#endif
 
 /*
  * routines that deal with file operations such as: creating, removing;
@@ -158,7 +164,7 @@ file_close(ARCHD *arcn, int fd)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode)
 		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
-#ifndef __INTERIX
+#ifdef PAX_FUTIMES
 	if (patime || pmtime)
 		fset_ftime(arcn->name, fd, arcn->sb.st_mtime,
 		    arcn->sb.st_atime, 0);
@@ -708,8 +714,8 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
 	return;
 }
 
-#ifndef __INTERIX
-void
+#ifdef PAX_FUTIMES
+static void
 fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
 {
 	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.7 2006/07/16 17:56:29 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.8 2007/02/17 04:16:09 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -152,7 +152,6 @@ int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
 void set_ftime(char *fnm, time_t mtime, time_t atime, int frc);
-void fset_ftime(char *fnm, int, time_t mtime, time_t atime, int frc);
 int set_ids(char *, uid_t, gid_t);
 int fset_ids(char *, int, uid_t, gid_t);
 int set_lids(char *, uid_t, gid_t);
