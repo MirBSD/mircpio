@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.11 2007/02/17 04:52:40 tg Exp $ */
+/**	$MirOS: src/bin/pax/cpio.c,v 1.12 2007/02/17 05:07:12 tg Exp $ */
 /*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
@@ -49,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.11 2007/02/17 04:52:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.12 2007/02/17 05:07:12 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -217,7 +217,7 @@ rd_ln_nm(ARCHD *arcn)
 	 * check the length specified for bogus values
 	 */
 	if ((arcn->sb.st_size == 0) ||
-	    (arcn->sb.st_size >= sizeof(arcn->ln_name))) {
+	    ((size_t)arcn->sb.st_size >= sizeof(arcn->ln_name))) {
 #		ifdef LONG_OFF_T
 		paxwarn(1, "Cpio link name length is invalid: %lu",
 		    arcn->sb.st_size);
