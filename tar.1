@@ -1,5 +1,5 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.8 2006/07/21 17:34:59 tg Exp $
-.\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.9 2007/10/23 20:07:43 tg Exp $
+.\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -24,9 +24,9 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\"	$OpenBSD: tar.1,v 1.47 2005/05/24 16:33:45 jaredy Exp $
+.\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
-.Dd July 21, 2006
+.Dd October 23, 2007
 .Dt TAR 1
 .Os MirBSD
 .\" for portability
@@ -59,12 +59,12 @@
 .Pp
 .Nm tar
 .No { Ns Fl crtux Ns }
-.Op Fl 014578eHhLmOoPpqvwXZz
+.Op Fl 014578eHhLmOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
 .Op Fl I Ar file
-.Op Fl M Ar value
+.Op Fl M Ar flag
 .Op Fl s Ar replstr
 .Op Ar file ...
 .Sh DESCRIPTION
@@ -177,12 +177,12 @@ archive or extract from the given file, one per line.
 Synonym for the
 .Fl h
 option.
-.It Fl M Ar value
+.It Fl M Ar flag
 Configure the archive normaliser.
-.Ar value
+.Ar flag
 is either a number or a string, optionally prefixed with
 .Dq no-
-to turn the flag off.
+to turn it off.
 See
 .Xr cpio 1
 for a comprehensive list and compatibility notes.

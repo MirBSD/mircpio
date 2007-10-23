@@ -1,4 +1,4 @@
-/*	$OpenBSD: ftree.c,v 1.26 2005/04/21 21:47:18 beck Exp $	*/
+/*	$OpenBSD: ftree.c,v 1.27 2006/12/26 20:58:25 otto Exp $	*/
 /*	$NetBSD: ftree.c,v 1.4 1995/03/21 09:07:21 cgd Exp $	*/
 
 /*-
@@ -48,7 +48,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)ftree.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.2 2007/02/17 04:52:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.3 2007/10/23 20:07:42 tg Exp $");
 
 /*
  * routines to interface with the fts library function.
@@ -349,6 +349,8 @@ next_file(ARCHD *arcn)
 	 */
 	for (;;) {
 		if ((ftent = fts_read(ftsp)) == NULL) {
+			if (errno)
+				syswarn(1, errno, "next_file");
 			/*
 			 * out of files in this tree, go to next arg, if none
 			 * we are done

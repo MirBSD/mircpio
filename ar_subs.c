@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_subs.c,v 1.5 2007/02/17 04:52:39 tg Exp $ */
-/*	$OpenBSD: ar_subs.c,v 1.29 2006/01/25 17:42:08 markus Exp $	*/
+/*	$OpenBSD: ar_subs.c,v 1.31 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
 /*-
@@ -50,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)ar_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.5 2007/02/17 04:52:39 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.6 2007/10/23 20:07:41 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -325,7 +324,7 @@ extract(void)
 				(void)putc('\n', listf);
 				vfpart = 0;
 			}
-			continue;
+			goto popd;
 		}
 		/*
 		 * we have a file with data here. If we can not create it, skip
@@ -336,7 +335,7 @@ extract(void)
 		else if ((fd = file_creat(arcn)) < 0) {
 			(void)rd_skip(arcn->skip + arcn->pad);
 			purg_lnk(arcn);
-			continue;
+			goto popd;
 		}
 		/*
 		 * extract the file from the archive and skip over padding and
@@ -352,6 +351,7 @@ extract(void)
 		if (!res)
 			(void)rd_skip(cnt + arcn->pad);
 
+popd:
 		/*
 		 * if required, chdir around.
 		 */
@@ -409,11 +409,10 @@ wr_archive(ARCHD *arcn, int is_app)
 	if (ftree_start() < 0) {
 		if (is_app)
 			goto trailer;
-		else
-			return;
-	}
-	if (((*frmt->st_wr)() < 0))
 		return;
+	} else if (((*frmt->st_wr)() < 0))
+		return;
+
 	wrf = frmt->wr;
 
 	/*

@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/tables.c,v 1.7 2007/02/17 04:52:41 tg Exp $ */
-/*	$OpenBSD: tables.c,v 1.23 2005/04/21 21:47:18 beck Exp $	*/
+/*	$OpenBSD: tables.c,v 1.25 2007/09/02 15:19:08 deraadt Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
@@ -50,7 +49,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.7 2007/02/17 04:52:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.8 2007/10/23 20:07:42 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -148,7 +147,7 @@ chk_lnk(ARCHD *arcn)
 	indx = ((unsigned)arcn->sb.st_ino) % L_TAB_SZ;
 	if ((pt = ltab[indx]) != NULL) {
 		/*
-		 * it's hash chain in not empty, walk down looking for it
+		 * its hash chain in not empty, walk down looking for it
 		 */
 		ppt = &(ltab[indx]);
 		while (pt != NULL) {
@@ -1099,7 +1098,7 @@ dir_start(void)
 		return(0);
 
 	dirsize = DIRP_SIZE;
-	if ((dirp = malloc(dirsize * sizeof(DIRDATA))) == NULL) {
+	if ((dirp = calloc(dirsize, sizeof(DIRDATA))) == NULL) {
 		paxwarn(1, "Unable to allocate memory for directory times");
 		return(-1);
 	}
@@ -1123,10 +1122,18 @@ void
 add_dir(char *name, struct stat *psb, int frc_mode)
 {
 	DIRDATA *dblk;
+	char realname[MAXPATHLEN], *rp;
 
 	if (dirp == NULL)
 		return;
 
+	if (havechd && *name != '/') {
+		if ((rp = realpath(name, realname)) == NULL) {
+			paxwarn(1, "Cannot canonicalize %s", name);
+			return;
+		}
+		name = rp;
+	}
 	if (dircnt == (long)dirsize) {
 		dblk = realloc(dirp, 2 * dirsize * sizeof(DIRDATA));
 		if (dblk == NULL) {

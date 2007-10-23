@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.9 2007/02/17 04:52:40 tg Exp $ */
-/*	$OpenBSD: extern.h,v 1.31 2005/04/28 06:58:07 otto Exp $	*/
+/**	$MirOS: src/bin/pax/extern.h,v 1.10 2007/10/23 20:07:42 tg Exp $ */
+/*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -249,6 +249,7 @@ extern const char *argv0;
 extern FILE *listf;
 extern char *tempfile;
 extern char *tempbase;
+extern int havechd;
 
 int main(int, char **);
 
