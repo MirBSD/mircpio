@@ -1,4 +1,4 @@
-/*	$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $	*/
+/*	$OpenBSD: options.c,v 1.67 2007/02/24 09:50:55 jmc Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -38,7 +38,7 @@
 #if 0
 static const char sccsid[] = "@(#)options.c	8.2 (Berkeley) 4/18/94";
 #else
-static const char rcsid[] = "$OpenBSD: options.c,v 1.64 2006/04/09 03:35:34 jaredy Exp $";
+static const char rcsid[] = "$OpenBSD: options.c,v 1.67 2007/02/24 09:50:55 jmc Exp $";
 #endif
 #endif /* not lint */
 
@@ -142,6 +142,11 @@ FSUB fsub[] = {
  * some formats may be subsets of others....
  */
 int ford[] = {5, 4, 3, 2, 1, 0, -1 };
+
+/*
+ * Do we have -C anywhere?
+ */
+int havechd = 0;
 
 /*
  * options()
@@ -740,6 +745,7 @@ tar_options(int argc, char **argv)
 			 */
 			break;
 		case 'C':
+			havechd++;
 			chdname = optarg;
 			break;
 		case 'H':
@@ -878,6 +884,7 @@ tar_options(int argc, char **argv)
 					if (*++argv == NULL)
 						break;
 					chdname = *argv++;
+					havechd++;
 				} else if (pat_add(*argv++, chdname) < 0)
 					tar_usage();
 				else
@@ -957,6 +964,7 @@ tar_options(int argc, char **argv)
 					break;
 				if (ftree_add(*argv++, 1) < 0)
 					tar_usage();
+				havechd++;
 			} else if (ftree_add(*argv++, 0) < 0)
 				tar_usage();
 		}
@@ -1528,16 +1536,16 @@ void
 pax_usage(void)
 {
 	(void)fputs(
-	    "usage: pax [-0cdOnvz] [-E limit] [-f archive] [-G group] [-s replstr]\n"
-	    "\t  [-T [from_date][,to_date][/[c][m]]] [-U user] [pattern ...]\n"
-	    "       pax -r [-0cDdikOnuvzYZz] [-E limit] [-f archive] [-G group]\n"
-	    "\t  [-o options] [-p string] [-s replstr] [-T [from_date][,to_date]]\n"
+	    "usage: pax [-0cdnOvz] [-E limit] [-f archive] [-G group] [-s replstr]\n"
+	    "\t  [-T range] [-U user] [pattern ...]\n"
+	    "       pax -r [-0cDdiknOuvYZz] [-E limit] [-f archive] [-G group]\n"
+	    "\t  [-o options] [-p string] [-s replstr] [-T range]\n"
 	    "\t  [-U user] [pattern ...]\n"
 	    "       pax -w [-0adHiLOPtuvXz] [-B bytes] [-b blocksize] [-f archive]\n"
 	    "\t  [-G group] [-o options] [-s replstr]\n"
-	    "\t  [-T [from_date][,to_date][/[c][m]]] [-U user] [-x format] [file ...]\n"
-	    "       pax -r -w [-0DdHikLlnOPtuvXYZ] [-G group] [-p string] [-s replstr]\n"
-	    "\t  [-T [from_date][,to_date][/[c][m]]] [-U user] [file ...] directory\n",
+	    "\t  [-T range] [-U user] [-x format] [file ...]\n"
+	    "       pax -rw [-0DdHikLlnOPtuvXYZ] [-G group] [-p string] [-s replstr]\n"
+	    "\t  [-T range] [-U user] [file ...] directory\n",
 	    stderr);
 	exit(1);
 }
@@ -1568,10 +1576,10 @@ tar_usage(void)
 void
 cpio_usage(void)
 {
-	(void)fputs("usage: cpio -o [-aABcLvVzZ] [-C bytes] [-H format] [-O archive]\n", stderr);
-	(void)fputs("               [-F archive] < name-list [> archive]\n", stderr);
-	(void)fputs("       cpio -i [-bBcdfmnrsStuvVzZ6] [-C bytes] [-E file] [-H format]\n", stderr);
-	(void)fputs("               [-I archive] [-F archive] [pattern...] [< archive]\n", stderr);
-	(void)fputs("       cpio -p [-adlLmuvV] destination-directory < name-list\n", stderr);
+	(void)fputs("usage: cpio -o [-AaBcLvZz] [-C bytes] [-F archive] [-H format]\n", stderr);
+	(void)fputs("               [-O archive] < name-list [> archive]\n", stderr);
+	(void)fputs("       cpio -i [-6BbcdfmrSstuvZz] [-C bytes] [-E file] [-F archive]\n", stderr);
+	(void)fputs("               [-H format] [-I archive] [pattern...] [< archive]\n", stderr);
+	(void)fputs("       cpio -p [-adLlmuv] destination-directory < name-list\n", stderr);
 	exit(1);
 }
