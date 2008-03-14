@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.6 2007/01/23 11:55:54 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.7 2008/03/14 15:55:21 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -251,3 +251,12 @@ typedef struct oplist {
 #define OCT		8
 #define _PAX_		1
 #define _TFILE_BASE	"paxXXXXXXXXXX"
+
+/* copied from <tzfile.h> */
+#define SECSPERMIN	60
+#define MINSPERHOUR	60
+#define HOURSPERDAY	24
+#define DAYSPERNYEAR	365
+#define SECSPERHOUR	(SECSPERMIN * MINSPERHOUR)
+#define SECSPERDAY	((long) SECSPERHOUR * HOURSPERDAY)
+#define TM_YEAR_BASE	1900

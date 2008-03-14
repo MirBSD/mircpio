@@ -38,7 +38,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <tzfile.h>
 #ifdef __INTERIX
 #include <utmpx.h>
 #else
@@ -54,7 +53,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.8 2007/10/23 20:07:42 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.9 2008/03/14 15:55:21 tg Exp $");
 
 #ifdef __GLIBC__
 void strmode(mode_t, char *);
