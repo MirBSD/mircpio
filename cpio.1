@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.16 2007/10/23 20:07:42 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.17 2008/03/14 17:05:06 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
@@ -27,10 +27,43 @@
 .\"
 .\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
 .\"
-.Dd October 23, 2007
-.Dt CPIO 1
-.Os MirBSD
-.\" for portability
+.\"-
+.\" Try to make GNU groff and AT&T nroff more compatible
+.\" * ` generates ‘ in groff, so use \`
+.\" * ' generates ’ in groff, \' generates ´, so use \*(aq
+.\" * - generates ‐ in groff, \- generates −, fixed in tmac/mdoc/doc-groff
+.\"   thus use - for hyphens and \- for minus signs and option dashes
+.\" * ~ is size-reduced and placed atop in groff, so use \*(TI
+.\" * ^ is size-reduced and placed atop in groff, so use \*(ha
+.\" * \(en does not work in nroff, so use \*(en
+.ie \n(.g \{\
+.	ds aq \(aq
+.	ds TI \(ti
+.	ds ha \(ha
+.	ds en \(en
+.\}
+.el \{\
+.	ds aq '
+.	ds TI ~
+.	ds ha ^
+.	ds en \(em
+.\}
+.\"
+.\" Implement .Dd with the Mdocdate RCS keyword
+.rn Dd xD
+.de Dd
+.ie \\$1$Mdocdate: \{\
+.	xD \\$2 \\$3, \\$4
+.\}
+.el .xD \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+..
+.\"
+.\" .Dd must come before definition of .Mx, because when called
+.\" with -mandoc, it might implement .Mx itself, but we want to
+.\" use our own definition. And .Dd must come *first*, always.
+.Dd $Mdocdate: March 14 2008 $
+.\"
+.\" Implement .Mx (MirBSD)
 .de Mx
 .nr cF \\n(.f
 .nr cZ \\n(.s
@@ -55,6 +88,8 @@
 .	\}
 .\}
 ..
+.Dt CPIO 1
+.Os MirBSD
 .Sh NAME
 .Nm cpio
 .Nd copy file archives in and out
