@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.5 2008/03/27 19:05:11 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.6 2008/05/07 13:50:21 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 
 # To install on versions prior to BSD 4.4 the following may have to be
@@ -20,7 +20,7 @@ MAN=	pax.1 tar.1 cpio.1
 LINKS=	${BINDIR}/pax ${BINDIR}/tar \
 	${BINDIR}/pax ${BINDIR}/cpio
 
-.if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux")
+.if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux") || (${MACHINE_OS} == "GNU")
 CPPFLAGS+= -DLONG_OFF_T
 .endif
 
