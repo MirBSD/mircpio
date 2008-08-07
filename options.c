@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.25 2007/10/23 20:07:42 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.26 2008/08/07 19:40:39 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -186,27 +186,21 @@ int havechd = 0;
 void
 options(int argc, char **argv)
 {
+	size_t n;
 
 	/*
 	 * Are we acting like pax, tar or cpio (based on argv[0])
 	 */
-	if ((argv0 = strrchr(argv[0], '/')) != NULL)
-		argv0++;
-	else
-		argv0 = argv[0];
-
-	if (strcmp(NM_TAR, argv0) == 0) {
+	if ((n = strlen(argv[0])) >= 3 && !strcmp(argv[0] + n - 3, NM_TAR)) {
+		argv0 = NM_TAR;
 		tar_options(argc, argv);
-		return;
-	} else if (strcmp(NM_CPIO, argv0) == 0) {
+	} else if (n >= 4 && !strcmp(argv[0] + n - 4, NM_CPIO)) {
+		argv0 = NM_CPIO;
 		cpio_options(argc, argv);
-		return;
+	} else {
+		argv0 = NM_PAX;
+		pax_options(argc, argv);
 	}
-	/*
-	 * assume pax as the default
-	 */
-	argv0 = NM_PAX;
-	pax_options(argc, argv);
 }
 
 /*
