@@ -1,9 +1,10 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.12 2007/02/17 04:52:40 tg Exp $ */
+/**	$MirOS: src/bin/pax/file_subs.c,v 1.13 2008/10/29 17:34:48 tg Exp $ */
 /*	$OpenBSD: file_subs.c,v 1.30 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007 Thorsten Glaser
+ * Copyright (c) 2007, 2008
+ *	Thorsten Glaser <tg@mirbsd.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -55,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.12 2007/02/17 04:52:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.13 2008/10/29 17:34:48 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -184,13 +185,15 @@ file_close(ARCHD *arcn, int fd)
  *	Create a hard link to arcn->ln_name from arcn->name. arcn->ln_name
  *	must exist;
  * Return:
- *	0 if ok, -1 otherwise
+ *	fd+2 if data should be extracted,
+ *	0 if ok, 1 if we could not make the link, -1 otherwise
  */
 
 int
-lnk_creat(ARCHD *arcn)
+lnk_creat(ARCHD *arcn, int *fdp)
 {
 	struct stat sb;
+	int rv;
 
 	/*
 	 * we may be running as root, so we have to be sure that link target
@@ -208,7 +211,21 @@ lnk_creat(ARCHD *arcn)
 		return(-1);
 	}
 
-	return(mk_link(arcn->ln_name, &sb, arcn->name, 0));
+	rv = mk_link(arcn->ln_name, &sb, arcn->name, 0);
+	if (fdp != NULL && rv == 0 && sb.st_size == 0 && arcn->skip > 0) {
+		/* request to write out file data late (broken archive) */
+		if (pmode)
+			set_pmode(arcn->name, 0600);
+		if ((*fdp = open(arcn->name, O_WRONLY | O_TRUNC)) == -1) {
+			rv = errno;
+			syswarn(1, rv, "Unable to re-open %s", arcn->name);
+			if (pmode)
+				set_pmode(arcn->name, sb.st_mode);
+		}
+		rv = 0;
+	} else if (fdp != NULL)
+		*fdp = -1;
+	return (rv);
 }
 
 /*

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.10 2007/10/23 20:07:42 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.11 2008/10/29 17:34:48 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -145,7 +145,7 @@ int bcpio_wr(ARCHD *);
 extern char *gnu_name_string, *gnu_link_string;
 int file_creat(ARCHD *);
 void file_close(ARCHD *, int);
-int lnk_creat(ARCHD *);
+int lnk_creat(ARCHD *, int *);
 int cross_lnk(ARCHD *);
 int chk_same(ARCHD *);
 int node_creat(ARCHD *);

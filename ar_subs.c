@@ -2,6 +2,8 @@
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2008
+ *	Thorsten Glaser <tg@mirbsd.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -49,7 +51,7 @@
 #include "options.h"
 
 __SCCSID("@(#)ar_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.6 2007/10/23 20:07:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.7 2008/10/29 17:34:48 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -310,9 +312,11 @@ extract(void)
 			 * header (as determined by the format).
 			 */
 			if (!to_stdout) {
-				if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG))
-					res = lnk_creat(arcn);
-				else
+				if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG)) {
+					res = lnk_creat(arcn, &fd);
+					if (fd != -1)
+						goto extdata;
+				} else
 					res = node_creat(arcn);
 			}
 
@@ -341,6 +345,7 @@ extract(void)
 		 * extract the file from the archive and skip over padding and
 		 * any unprocessed data
 		 */
+ extdata:
 		res = (*frmt->rd_data)(arcn, fd, &cnt);
 		if (fd != STDOUT_FILENO)
 			file_close(arcn, fd);
@@ -351,7 +356,7 @@ extract(void)
 		if (!res)
 			(void)rd_skip(cnt + arcn->pad);
 
-popd:
+ popd:
 		/*
 		 * if required, chdir around.
 		 */
@@ -927,7 +932,7 @@ copy(void)
 			 * create a link or special file
 			 */
 			if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG))
-				res = lnk_creat(arcn);
+				res = lnk_creat(arcn, NULL);
 			else
 				res = node_creat(arcn);
 			if (res < 0)
