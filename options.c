@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.26 2008/08/07 19:40:39 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.27 2008/10/29 17:00:07 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -380,7 +380,7 @@ pax_options(int argc, char **argv)
 			/*
 			 * verbose operation mode
 			 */
-			vflag = 1;
+			vflag++;
 			flg |= VF;
 			break;
 		case 'w':
@@ -1218,7 +1218,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * verbose operation mode
 				 */
-				vflag = 1;
+				vflag++;
 				break;
 			case 'z':
 				/*
