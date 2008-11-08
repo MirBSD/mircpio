@@ -1,9 +1,9 @@
-/**	$MirOS: src/bin/pax/tables.h,v 1.3 2007/10/23 20:07:42 tg Exp $ */
+/**	$MirOS: src/bin/pax/tables.h,v 1.4 2008/11/08 23:03:39 tg Exp $ */
 /*	$OpenBSD: tables.h,v 1.8 2006/08/05 23:05:13 ray Exp $	*/
 /*	$NetBSD: tables.h,v 1.3 1995/03/21 09:07:47 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
+ * Copyright (c) 2005 Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.

@@ -2,7 +2,7 @@
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006, 2007 Thorsten Glaser <tg@66h.42h.de>
+ * Copyright (c) 2005, 2006, 2007 Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -56,7 +56,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.27 2008/10/29 17:00:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.28 2008/11/08 23:03:37 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);

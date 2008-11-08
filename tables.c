@@ -2,7 +2,7 @@
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005 Thorsten Glaser <tg@66h.42h.de>
+ * Copyright (c) 2005 Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -49,7 +49,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.8 2007/10/23 20:07:42 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.9 2008/11/08 23:03:38 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
