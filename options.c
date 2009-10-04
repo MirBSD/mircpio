@@ -38,9 +38,6 @@
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#ifndef __INTERIX
-#include <sys/mtio.h>
-#endif
 #include <stdio.h>
 #include <string.h>
 #include <err.h>
@@ -55,8 +52,12 @@
 #include "tar.h"
 #include "extern.h"
 
+#if HAS_TAPE
+#include <sys/mtio.h>
+#endif
+
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.29 2009/09/17 07:24:00 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.30 2009/10/04 14:51:06 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);

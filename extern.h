@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.11 2008/10/29 17:34:48 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.12 2009/10/04 14:51:06 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -45,6 +45,13 @@
 #if defined(__GLIBC__)
 #include <time.h>
 #endif
+
+#if !defined(__INTERIX) && !defined(__APPLE__)
+#define HAS_TAPE	1
+#else
+#define HAS_TAPE	0
+#endif
+
 
 /*
  * ar_io.c

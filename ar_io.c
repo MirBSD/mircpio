@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_io.c,v 1.8 2007/02/17 04:52:39 tg Exp $ */
+/**	$MirOS: src/bin/pax/ar_io.c,v 1.9 2009/10/04 14:51:06 tg Exp $ */
 /*	$OpenBSD: ar_io.c,v 1.37 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
@@ -39,9 +39,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#ifndef __INTERIX
-#include <sys/mtio.h>
-#endif
 #include <sys/wait.h>
 #include <signal.h>
 #include <string.h>
@@ -55,8 +52,12 @@
 #include "options.h"
 #include "extern.h"
 
+#if HAS_TAPE
+#include <sys/mtio.h>
+#endif
+
 __SCCSID("@(#)ar_io.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.8 2007/02/17 04:52:39 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.9 2009/10/04 14:51:06 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -85,7 +86,7 @@ const char *gzip_program;		/* name of gzip program */
 static pid_t zpid = -1;			/* pid of child process */
 int force_one_volume;			/* 1 if we ignore volume changes */
 
-#ifndef __INTERIX
+#if HAS_TAPE
 static int get_phys(void);
 #endif
 extern sigset_t s_mask;
@@ -103,7 +104,7 @@ static void ar_start_gzip(int, int);
 int
 ar_open(const char *name)
 {
-#ifndef __INTERIX
+#if HAS_TAPE
 	struct mtget mb;
 #endif
 
@@ -183,7 +184,7 @@ ar_open(const char *name)
 	}
 
 	if (S_ISCHR(arsb.st_mode))
-#ifndef __INTERIX
+#if HAS_TAPE
 		artyp = ioctl(arfd, MTIOCGET, &mb) ? ISCHR : ISTAPE;
 #else
 		artyp = ISCHR;
@@ -731,7 +732,7 @@ ar_rdsync(void)
 	long fsbz;
 	off_t cpos;
 	off_t mpos;
-#ifndef __INTERIX
+#if HAS_TAPE
 	struct mtop mb;
 #endif
 
@@ -751,7 +752,7 @@ ar_rdsync(void)
 		did_io = 1;
 
 	switch (artyp) {
-#ifndef __INTERIX
+#if HAS_TAPE
 	case ISTAPE:
 		/*
 		 * if the last i/o was a successful data transfer, we assume
@@ -878,7 +879,7 @@ int
 ar_rev(off_t sksz)
 {
 	off_t cpos;
-#ifndef __INTERIX
+#if HAS_TAPE
 	struct mtop mb;
 #endif
 	int phyblk;
@@ -944,7 +945,7 @@ ar_rev(off_t sksz)
 			return(-1);
 		}
 		break;
-#ifndef __INTERIX
+#if HAS_TAPE
 	case ISTAPE:
 		/*
 		 * Calculate and move the proper number of PHYSICAL tape
@@ -999,7 +1000,7 @@ ar_rev(off_t sksz)
 	return(0);
 }
 
-#ifndef __INTERIX
+#if HAS_TAPE
 /*
  * get_phys()
  *	Determine the physical block size on a tape drive. We need the physical
