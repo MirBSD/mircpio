@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tar.c,v 1.4 2007/02/17 04:52:41 tg Exp $ */
+/**	$MirOS: src/bin/pax/tar.c,v 1.5 2009/10/04 14:54:56 tg Exp $ */
 /*	$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
@@ -49,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)tar.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.4 2007/02/17 04:52:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.5 2009/10/04 14:54:56 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -1217,7 +1217,7 @@ tar_dbgfld(const char *pfx, const char *sp, size_t len)
 			if (len == 0) {
 				*fbuf = 0;
 			} else {
-				paxwarn(0, fbuf);
+				paxwarn(0, "%s", fbuf);
 			}
 		} else
 			paxwarn(0, "tar_dbgfld: wrong call");
