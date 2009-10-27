@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.18 2008/11/08 23:03:35 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.19 2009/10/27 18:47:25 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 2005 Thorsten Glaser <tg@mirbsd.org>
@@ -61,7 +61,7 @@
 .\" .Dd must come before definition of .Mx, because when called
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
-.Dd $Mdocdate: November 8 2008 $
+.Dd $Mdocdate: October 27 2009 $
 .\"
 .\" Implement .Mx (MirBSD)
 .de Mx
@@ -223,6 +223,8 @@ to turn them off, or not, to turn them on:
 0x0010: Debug this option.
 .It Ar debug
 0x0020: Debug file header storage.
+.It Ar lncp
+0x0040: Extract hard links by copying if linking fails.
 .El
 .Pp
 This option is only implemented for the cpio, sv4cpio,
@@ -395,6 +397,9 @@ will continue.
 In the case where
 .Nm
 cannot create a link to a file,
+unless
+.Fl M Ar lncp
+is given,
 .Nm
 will not create a second copy of the file.
 .Pp

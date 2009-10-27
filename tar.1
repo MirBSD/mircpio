@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.10 2008/03/14 17:05:06 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.11 2009/10/27 18:47:27 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -60,7 +60,7 @@
 .\" .Dd must come before definition of .Mx, because when called
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
-.Dd $Mdocdate: March 14 2008 $
+.Dd $Mdocdate: October 27 2009 $
 .\"
 .\" Implement .Mx (MirBSD)
 .de Mx
@@ -243,6 +243,8 @@ for a comprehensive list and compatibility notes.
 0x0004: Zero out the file modification time.
 .It Ar uidgid
 0x0008: Set owner to 0:0 (root:wheel).
+.It Ar lncp
+0x0040: Extract hard links by copying if linking fails.
 .El
 .Pp
 This option is only implemented for the cpio, sv4cpio,
@@ -449,6 +451,9 @@ will continue.
 In the case where
 .Nm
 cannot create a link to a file,
+unless
+.Fl M Ar lncp
+is given,
 .Nm
 will not create a second copy of the file.
 .Pp

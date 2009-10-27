@@ -57,7 +57,7 @@
 #endif
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.30 2009/10/04 14:51:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.31 2009/10/27 18:47:26 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -1748,6 +1748,8 @@ process_M(const char *arg, void (*call_usage)(void))
 		k = ANON_VERBOSE;
 	} else if (!strncmp(arg, "debug", 5)) {
 		k = ANON_DEBUG;
+	} else if (!strncmp(arg, "lncp", 4)) {
+		k = ANON_LNCP;
 	} else
 		call_usage();
 	if (j)

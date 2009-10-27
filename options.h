@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/options.h,v 1.3 2006/07/16 16:14:50 tg Exp $ */
+/**	$MirOS: src/bin/pax/options.h,v 1.4 2009/10/27 18:47:26 tg Exp $ */
 /*	$OpenBSD: options.h,v 1.4 2003/06/13 17:51:14 millert Exp $	*/
 /*	$NetBSD: options.h,v 1.3 1995/03/21 09:07:32 cgd Exp $	*/
 
@@ -123,7 +123,8 @@
 #define	ANON_UIDGID	0x0008
 #define	ANON_VERBOSE	0x0010
 #define	ANON_DEBUG	0x0020
-#define	ANON_MAXVAL	0x003F
+#define	ANON_LNCP	0x0040
+#define	ANON_MAXVAL	0x007F
 extern int anonarch;
 void anonarch_init(void);
 
