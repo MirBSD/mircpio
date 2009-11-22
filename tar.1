@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.12 2009/11/22 15:55:24 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.13 2009/11/22 18:23:40 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -194,7 +194,7 @@ and
 must be contained within the first argument to
 .Nm
 and must not be prefixed by a hyphen
-.Pq Sq - .
+.Pq Sq \- .
 Option arguments, if any, are processed as subsequent arguments to
 .Nm
 and are processed in the order in which their corresponding option
@@ -291,7 +291,7 @@ option.
 Configure the archive normaliser.
 .Ar flag
 is either a number or a string, optionally prefixed with
-.Dq no-
+.Dq no\-
 to turn it off.
 See
 .Xr cpio 1
@@ -415,7 +415,7 @@ The optional trailing
 will cause the final result of a successful substitution to be written to
 standard error in the following format:
 .Pp
-.D1 Em original-pathname No >> Em new-pathname
+.D1 Em original-pathname No \*(Gt\*(Gt Em new-pathname
 .Pp
 File or archive member names that substitute to the empty string
 are not selected and will be skipped.
@@ -488,7 +488,7 @@ from a compressed archive named
 .Pa backup.tar.gz .
 Note that the glob pattern has been quoted to avoid expansion by the shell:
 .Pp
-.Dl $ tar tvzf backup.tar.gz '*.jpeg'
+.Dl $ tar tvzf backup.tar.gz \*(aq*.jpeg\*(aq
 .Pp
 For more detailed examples, see
 .Xr pax 1 .
