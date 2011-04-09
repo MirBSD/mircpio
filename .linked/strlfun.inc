@@ -1,5 +1,9 @@
+#if 0 /* this line is a comment in gmake */
+# @gmake: ignore from here
+ifeq (0,1)
+#endif
 /*-
- * Copyright (c) 2006, 2008
+ * Copyright (c) 2006, 2008, 2011
  *	Thorsten Glaser <tg@mirbsd.org>
  *
  * Provided that these terms and disclaimer and all copyright notices
@@ -28,30 +32,52 @@
  */
 
 #include <sys/types.h>
+#ifndef OUTSIDE_OF_LIBKERN
 #include <libckern.h>
+#endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.1 2008/08/01 16:35:22 tg Exp $");
+#ifndef __RCSID
+#define __RCSID(x)		static const char __rcsid[] = x
+#endif
+
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.2 2011/04/09 16:28:47 tg Exp $");
 
 #ifdef WIDEC
+#ifdef OUTSIDE_OF_LIBKERN
+#ifdef __WCHAR_TYPE__
+typedef __WCHAR_TYPE__ wchar_t;
+#else
+#include <wchar.h>
+#endif
+#endif
 /* wide character string functions */
-#define NUL		L'\0'
-#define char_t		wchar_t
-#define fn_len		wcslen
-#define	fn_cat		wcslcat
-#define fn_cpy		wcslcpy
+#define NUL			L'\0'
+#define char_t			wchar_t
+#define fn_len			wcslen
+#define	fn_cat			wcslcat
+#define fn_cpy			wcslcpy
 #else
 /* (multibyte) string functions */
-#define NUL		'\0'
-#define char_t		char
-#define fn_len		strlen
-#define	fn_cat		strlcat
-#define fn_cpy		strlcpy
+#define NUL			'\0'
+#define char_t			char
+#define fn_len			strlen
+#define	fn_cat			strlcat
+#define fn_cpy			strlcpy
 #endif
 
 #ifdef L_strxfrm
-#define strlcpy		strxfrm
-#define wcslcpy		wcsxfrm
+#define strlcpy			strxfrm
+#define wcslcpy			wcsxfrm
 #define L_strlcpy
+#endif
+
+#ifdef OUTSIDE_OF_LIBKERN
+extern size_t fn_len(const char_t *);
+#endif
+
+#ifndef __predict_true
+#define __predict_true(exp)	(exp)
+#define __predict_false(exp)	(exp)
 #endif
 
 #ifdef L_strlcat
@@ -131,3 +157,27 @@ fn_cpy(char_t *dst, const char_t *src, size_t siz)
 	return (s - src - 1);
 }
 #endif
+
+/* @gcc: ignore from here */
+#if 0
+# @gmake: end ignore
+endif
+
+LIB=		libstrlfun.a
+OBJS=		strlcpy.o strlcat.o wcslcpy.o wcslcat.o
+DEFS=		-DOUTSIDE_OF_LIBKERN
+DEFS_strlcpy.o=	-DL_strlcpy
+DEFS_strlcat.o=	-DL_strlcat
+DEFS_wcslcpy.o=	-DL_strlcpy -DWIDEC
+DEFS_wcslcat.o=	-DL_strlcat -DWIDEC
+
+all: $(LIB)
+
+$(LIB): $(OBJS)
+	ar rc $(LIB) $(OBJS)
+	-ranlib $(LIB)
+
+$(OBJS): strlfun.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) $(DEFS_$@) -c -o $@ strlfun.c
+
+#endif /* EOF for gmake and gcc */
