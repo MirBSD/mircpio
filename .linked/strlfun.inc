@@ -1,6 +1,5 @@
-#if 0 /* this line is a comment in gmake */
-# @gmake: ignore from here
-ifeq (0,1)
+#if 0 /* comment in gmake; next line ignored by gcc */
+ifeq (0,gmake ignores from here)
 #endif
 /*-
  * Copyright (c) 2006, 2008, 2011
@@ -40,7 +39,7 @@ ifeq (0,1)
 #define __RCSID(x)		static const char __rcsid[] = x
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.2 2011/04/09 16:28:47 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.3 2011/07/02 22:28:33 tg Exp $");
 
 #ifdef WIDEC
 #ifdef OUTSIDE_OF_LIBKERN
@@ -158,9 +157,7 @@ fn_cpy(char_t *dst, const char_t *src, size_t siz)
 }
 #endif
 
-/* @gcc: ignore from here */
-#if 0
-# @gmake: end ignore
+#if 0 /* gcc ignored from here; gmake stops ignoring */
 endif
 
 LIB=		libstrlfun.a
