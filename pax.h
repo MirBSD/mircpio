@@ -1,8 +1,9 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.7 2008/03/14 15:55:21 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.8 2011/08/16 13:57:14 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2011 Thorsten Glaser.
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -231,7 +232,7 @@ typedef struct oplist {
  * General Macros
  */
 #ifndef MIN
-#define	MIN(a,b) (((a)<(b))?(a):(b))
+#define MIN(a,b)	(((a)<(b))?(a):(b))
 #endif
 #ifdef __INTERIX
 #include <sys/mkdev.h>
@@ -239,9 +240,45 @@ typedef struct oplist {
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
 #ifdef __INTERIX
-#define	TODEV(x, y)	mkdev((x), (y))
+#define TODEV		mkdev
 #else
-#define TODEV(x, y)	makedev((x), (y))
+#define TODEV		makedev
+#endif
+
+#if !defined(__INTERIX) && !defined(__APPLE__)
+#define HAS_TAPE	1
+#else
+#define HAS_TAPE	0
+#endif
+
+#if defined(MirBSD) && (MirBSD >= 0x09A1) && \
+    defined(__ELF__) && defined(__GNUC__) && \
+    !defined(__llvm__) && !defined(__NWCC__)
+/*
+ * We got usable __IDSTRING __COPYRIGHT __RCSID __SCCSID macros
+ * which work for all cases; no need to redefine them using the
+ * "portable" macros from below when we might have the "better"
+ * gcc+ELF specific macros or other system dependent ones.
+ */
+#else
+#undef __IDSTRING
+#undef __IDSTRING_CONCAT
+#undef __IDSTRING_EXPAND
+#undef __COPYRIGHT
+#undef __RCSID
+#undef __SCCSID
+#define __IDSTRING_CONCAT(l,p)		__LINTED__ ## l ## _ ## p
+#define __IDSTRING_EXPAND(l,p)		__IDSTRING_CONCAT(l,p)
+#ifdef MKSH_DONT_EMIT_IDSTRING
+#define __IDSTRING(prefix, string)	/* nothing */
+#else
+#define __IDSTRING(prefix, string)				\
+	static const char __IDSTRING_EXPAND(__LINE__,prefix) []	\
+	    __attribute__((__used__)) = "@(""#)" #prefix ": " string
+#endif
+#define __COPYRIGHT(x)		__IDSTRING(copyright,x)
+#define __RCSID(x)		__IDSTRING(rcsid,x)
+#define __SCCSID(x)		__IDSTRING(sccsid,x)
 #endif
 
 /*

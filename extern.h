@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.13 2011/08/16 13:50:17 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.14 2011/08/16 13:57:14 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -44,12 +44,6 @@
 #include <sys/cdefs.h>
 #if defined(__GLIBC__)
 #include <time.h>
-#endif
-
-#if !defined(__INTERIX) && !defined(__APPLE__)
-#define HAS_TAPE	1
-#else
-#define HAS_TAPE	0
 #endif
 
 
@@ -322,3 +316,11 @@ void paxwarn(int, const char *, ...)
     __attribute__((__format__ (__printf__, 2, 3)));
 void syswarn(int, int, const char *, ...)
     __attribute__((__format__ (__printf__, 3, 4)));
+
+/*
+ * part of the OS
+ */
+#ifdef USE_LIBBSD
+size_t strlcat(char *, const char *, size_t);
+size_t strlcpy(char *, const char *, size_t);
+#endif
