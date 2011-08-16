@@ -50,6 +50,7 @@
 #include "options.h"
 #include "cpio.h"
 #include "tar.h"
+#include "ar.h"
 #include "extern.h"
 
 #if HAS_TAPE
@@ -57,7 +58,7 @@
 #endif
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.34 2011/08/16 13:50:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.35 2011/08/16 21:32:47 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -72,6 +73,7 @@ static OPLIST *ophead = NULL;	/* head for format specific options -x */
 static OPLIST *optail = NULL;	/* option tail */
 
 static int no_op(void);
+static int no_op_i(int);
 static void printflg(unsigned int);
 static int c_frmt(const void *, const void *);
 static off_t str_offt(char *);
@@ -103,69 +105,75 @@ static int get_line_error;
  *
  * 	name, blksz, hdsz, udev, hlk, blkagn, inhead, id, st_read,
  *	read, end_read, st_write, write, end_write, trail,
- *	rd_data, wr_data, options
+ *	rd_data, wr_data, options, is_uar
  */
 
 FSUB fsub[] = {
-/* 0: OLD BINARY CPIO */
+/* 0: UNIX ARCHIVER */
+	{"ar", 512, sizeof(HD_AR), 0, 0, 0, 0, uar_id, no_op,
+	uar_rd, uar_endrd, uar_stwr, uar_wr, no_op, uar_trail,
+	rd_wrfile, uar_wr_data, bad_opt, 1},
+
+/* 1: OLD BINARY CPIO */
 	{"bcpio", 5120, sizeof(HD_BCPIO), 1, 0, 0, 1, bcpio_id, cpio_strd,
 	bcpio_rd, bcpio_endrd, cpio_stwr, bcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 1: OLD OCTAL CHARACTER CPIO */
+/* 2: OLD OCTAL CHARACTER CPIO */
 	{"cpio", 5120, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, cpio_stwr, cpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 2: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
+/* 3: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
 	{"dist", 512, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, dist_stwr, cpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 3: SVR4 HEX CPIO */
+/* 4: SVR4 HEX CPIO */
 	{"sv4cpio", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, vcpio_id, cpio_strd,
 	vcpio_rd, vcpio_endrd, cpio_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 4: SVR4 HEX CPIO WITH CRC */
+/* 5: SVR4 HEX CPIO WITH CRC */
 	{"sv4crc", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, crc_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 5: OLD TAR */
+/* 6: OLD TAR */
 	{"tar", 10240, BLKMULT, 0, 1, BLKMULT, 0, tar_id, no_op,
-	tar_rd, tar_endrd, no_op, tar_wr, tar_endwr, tar_trail,
-	rd_wrfile, wr_rdfile, tar_opt},
+	tar_rd, tar_endrd, no_op_i, tar_wr, tar_endwr, tar_trail,
+	rd_wrfile, wr_rdfile, tar_opt, 0},
 
-/* 6: POSIX USTAR */
+/* 7: POSIX USTAR */
 	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 7: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
+/* 8: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
 	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4norm_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 8: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
+/* 9: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
 	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt},
+	rd_wrfile, wr_rdfile, bad_opt, 0},
 };
-#define	F_OCPIO	0	/* format when called as cpio -6 */
-#define	F_ACPIO	1	/* format when called as cpio -c */
-#define	F_NCPIO	3	/* format when called as tar -R */
-#define	F_CPIO	4	/* format when called as cpio or tar -S */
-#define F_OTAR	5	/* format when called as tar -o */
-#define F_TAR	6	/* format when called as tar */
-#define DEFLT	6	/* default write format from list above */
+#define	F_OCPIO	1	/* format when called as cpio -6 */
+#define	F_ACPIO	2	/* format when called as cpio -c */
+#define	F_NCPIO	4	/* format when called as tar -R */
+#define	F_CPIO	5	/* format when called as cpio or tar -S */
+#define F_OTAR	6	/* format when called as tar -o */
+#define F_TAR	7	/* format when called as tar */
+int F_UAR = 0;
+#define DEFLT	7	/* default write format from list above */
 
 /*
  * ford is the archive search order used by get_arc() to determine what kind
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-int ford[] = {6, 5, 4, 3, 1, 0, -1 };
+int ford[] = { 7, 6, 5, 4, 2, 1, -1 };
 
 /* normalise archives */
 int anonarch = 0;
@@ -659,8 +667,11 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "b:cef:hmopqruts:vwxzBC:HI:LM:OPRSXZ014578")) != -1) {
+	    "Ab:cef:hmopqruts:vwxzBC:HI:LM:OPRSXZ014578")) != -1) {
 		switch (c) {
+		case 'A':
+			Oflag = 5;
+			break;
 		case 'b':
 			/*
 			 * specify blocksize in 512-byte blocks
@@ -974,6 +985,9 @@ tar_options(int argc, char **argv)
 			break;
 		    case 4:
 			frmt = &(fsub[F_CPIO]);
+			break;
+		    case 5:
+			frmt = &(fsub[F_UAR]);
 			break;
 		    default:
 			tar_usage();
@@ -1625,6 +1639,12 @@ get_line(FILE *f)
 
 static int
 no_op(void)
+{
+	return(0);
+}
+
+static int
+no_op_i(int is_app __attribute__((__unused__)))
 {
 	return(0);
 }

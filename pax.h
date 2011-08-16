@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.8 2011/08/16 13:57:14 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.9 2011/08/16 21:32:48 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -187,7 +187,7 @@ typedef struct {
 				/* and MUST RETURN THE LENGTH OF THE TRAILER */
 				/* RECORD (so append knows how many bytes */
 				/* to move back to rewrite the trailer) */
-	int (*st_wr)(void);	/* initialize routine for write operations */
+	int (*st_wr)(int);	/* initialize routine for write operations */
 	int (*wr)(ARCHD *);	/* write archive header. Passed an ARCHD */
 				/* filled with the specs on the next file to */
 				/* archived. Returns a 1 if no file data is */
@@ -215,6 +215,7 @@ typedef struct {
 	int (*wr_data)(ARCHD *,	/* write/process file data to the archive */
 	    int, off_t *);
 	int (*options)(void);	/* process format specific options (-o) */
+	char is_uar;		/* is Unix Archiver (sequential, no trailer) */
 } FSUB;
 
 /*

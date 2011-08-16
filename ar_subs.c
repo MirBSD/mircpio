@@ -2,8 +2,8 @@
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2008
- *	Thorsten Glaser <tg@mirbsd.de>
+ * Copyright (c) 2008, 2011
+ *	Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -51,7 +51,7 @@
 #include "options.h"
 
 __SCCSID("@(#)ar_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.7 2008/10/29 17:34:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.8 2011/08/16 21:32:46 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -65,6 +65,7 @@ extern sigset_t s_mask;
 
 static char hdbuf[BLKMULT];		/* space for archive header on read */
 u_long flcnt;				/* number of files processed */
+int ar_do_keepopen = 0;			/* see append() below */
 
 /*
  * list()
@@ -415,7 +416,7 @@ wr_archive(ARCHD *arcn, int is_app)
 		if (is_app)
 			goto trailer;
 		return;
-	} else if (((*frmt->st_wr)() < 0))
+	} else if (((*frmt->st_wr)(is_app) < 0))
 		return;
 
 	wrf = frmt->wr;
@@ -624,6 +625,10 @@ append(void)
 	 */
 	if (((*frmt->options)() < 0) || ((*frmt->st_rd)() < 0))
 		return;
+
+	/* hack to allow appending to Unix Archiver libraries */
+	if (frmt->is_uar)
+		ar_do_keepopen = 1;
 
 	/*
 	 * if we only are adding members that are newer, we need to save the
@@ -1046,7 +1051,8 @@ next_head(ARCHD *arcn)
 			 * some kind of archive read problem, try to resync the
 			 * storage device, better give the user the bad news.
 			 */
-			if ((ret == 0) || (rd_sync() < 0)) {
+			if ((ret == 0) || (rd_sync() < 0) || frmt->is_uar) {
+ no_header:
 				paxwarn(1,"Premature end of file on archive read");
 				return(-1);
 			}
@@ -1081,6 +1087,9 @@ next_head(ARCHD *arcn)
 		 */
 		if ((*frmt->rd)(arcn, hdbuf) == 0)
 			break;
+
+		if (frmt->is_uar)
+			goto no_header;
 
 		if (!frmt->inhead) {
 			/*
@@ -1178,6 +1187,20 @@ get_arc(void)
 	res = BLKMULT;
 	hdsz = 0;
 	hdend = hdbuf;
+
+	/* try to verify against ar first */
+	if (buf_fill_internal(8) == 8) {
+		i = rd_wrbuf(hdend, 8);
+		if (i == 8 && uar_ismagic(hdbuf) == 0) {
+			extern int F_UAR;
+
+			frmt = &(fsub[F_UAR]);
+			return (0);
+		}
+		if (i > 0)
+			pback(hdend, i);
+	}
+
 	for (;;) {
 		for (;;) {
 			/*

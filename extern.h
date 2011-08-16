@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.14 2011/08/16 13:57:14 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.15 2011/08/16 21:32:47 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -48,6 +48,18 @@
 
 
 /*
+ * ar.c
+ */
+int uar_stwr(int);
+int uar_ismagic(char *);
+int uar_id(char *, int) __attribute__((__noreturn__));
+int uar_rd(ARCHD *, char *);
+int uar_wr(ARCHD *);
+int uar_wr_data(ARCHD *, int, off_t *);
+off_t uar_endrd(void);
+int uar_trail(ARCHD *, char *, int, int *) __attribute__((__noreturn__));
+
+/*
  * ar_io.c
  */
 extern const char *arcname;
@@ -64,6 +76,8 @@ int ar_rdsync(void);
 int ar_fow(off_t, off_t *);
 int ar_rev(off_t );
 int ar_next(void);
+extern int ar_do_keepopen;
+int ar_next_keepopen(void);
 
 /*
  * ar_subs.c
@@ -100,6 +114,7 @@ int wr_rdfile(ARCHD *, int, off_t *);
 int rd_wrfile(ARCHD *, int, off_t *);
 void cp_file(ARCHD *, int, int);
 int buf_fill(void);
+int buf_fill_internal(int);
 int buf_flush(int);
 
 /*
@@ -123,17 +138,17 @@ int cpio_endwr(void);
 int cpio_id(char *, int);
 int cpio_rd(ARCHD *, char *);
 off_t cpio_endrd(void);
-int cpio_stwr(void);
-int dist_stwr(void);
+int cpio_stwr(int);
+int dist_stwr(int);
 int cpio_wr(ARCHD *);
 int vcpio_id(char *, int);
 int crc_id(char *, int);
 int crc_strd(void);
 int vcpio_rd(ARCHD *, char *);
 off_t vcpio_endrd(void);
-int crc_stwr(void);
-int v4root_stwr(void);
-int v4norm_stwr(void);
+int crc_stwr(int);
+int v4root_stwr(int);
+int v4norm_stwr(int);
 int vcpio_wr(ARCHD *);
 int bcpio_id(char *, int);
 int bcpio_rd(ARCHD *, char *);
@@ -300,7 +315,7 @@ int tar_opt(void);
 int tar_rd(ARCHD *, char *);
 int tar_wr(ARCHD *);
 int ustar_strd(void);
-int ustar_stwr(void);
+int ustar_stwr(int);
 int ustar_id(char *, int);
 int ustar_rd(ARCHD *, char *);
 int ustar_wr(ARCHD *);

@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.6 2008/05/07 13:50:21 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.7 2011/08/16 21:32:45 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 
 # To install on versions prior to BSD 4.4 the following may have to be
@@ -13,8 +13,8 @@
 #
 
 PROG=   pax
-SRCS=	ar_io.c ar_subs.c buf_subs.c cache.c cpio.c file_subs.c ftree.c\
-	gen_subs.c getoldopt.c options.c pat_rep.c pax.c sel_subs.c tables.c\
+SRCS=	ar.c ar_io.c ar_subs.c buf_subs.c cache.c cpio.c file_subs.c ftree.c \
+	gen_subs.c getoldopt.c options.c pat_rep.c pax.c sel_subs.c tables.c \
 	tar.c tty_subs.c
 MAN=	pax.1 tar.1 cpio.1
 LINKS=	${BINDIR}/pax ${BINDIR}/tar \

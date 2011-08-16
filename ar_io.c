@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_io.c,v 1.9 2009/10/04 14:51:06 tg Exp $ */
+/**	$MirOS: src/bin/pax/ar_io.c,v 1.10 2011/08/16 21:32:45 tg Exp $ */
 /*	$OpenBSD: ar_io.c,v 1.37 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
@@ -57,7 +57,7 @@
 #endif
 
 __SCCSID("@(#)ar_io.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.9 2009/10/04 14:51:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.10 2011/08/16 21:32:45 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -69,7 +69,7 @@ __RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.9 2009/10/04 14:51:06 tg Exp $");
 #define APP_MODE	O_RDWR		/* mode for append */
 #define STDO		"<STDOUT>"	/* pseudo name for stdout */
 #define STDN		"<STDIN>"	/* pseudo name for stdin */
-static int arfd = -1;			/* archive file descriptor */
+int arfd = -1;				/* archive file descriptor */
 static int artyp = ISREG;		/* archive type: file/FIFO/tape */
 static int arvol = 1;			/* archive volume number */
 static int lstrval = -1;		/* return value from last i/o */
@@ -592,7 +592,7 @@ ar_read(char *buf, int cnt)
 	lstrval = res;
 	if (res < 0)
 		syswarn(1, errno, "Failed read on archive volume %d", arvol);
-	else
+	else if (!frmt || !frmt->is_uar)
 		paxwarn(0, "End of archive volume %d reached", arvol);
 	return(res);
 }

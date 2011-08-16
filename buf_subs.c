@@ -46,7 +46,7 @@
 #include "extern.h"
 
 __SCCSID("@(#)buf_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.2 2007/02/17 04:52:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.3 2011/08/16 21:32:46 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -459,7 +459,22 @@ rd_skip(off_t skcnt)
 void
 wr_fin(void)
 {
-	if (bufpt > buf) {
+	if (frmt->is_uar) {
+		/*XXX breaks tape/file/stream abstraction */
+		extern int arfd;
+
+		char *bufbt = buf;
+		ssize_t n;
+
+		while (bufpt > bufbt) {
+			n = write(arfd, bufbt, bufpt - bufbt);
+			if (n < 0) {
+				syswarn(1, errno, "Could not finish writing");
+				return;
+			}
+			bufbt += n;
+		}
+	} else if (bufpt > buf) {
 		memset(bufpt, 0, bufend - bufpt);
 		bufpt = bufend;
 		(void)buf_flush(blksz);
@@ -584,8 +599,8 @@ wr_skip(off_t skcnt)
 /*
  * wr_rdfile()
  *	fill write buffer with the contents of a file. We are passed an	open
- *	file descriptor to the file an the archive structure that describes the
- *	file we are storing. The variable "left" is modified to contain the
+ *	file descriptor to the file and the archive structure that describes
+ *	the file we are storing. The variable "left" is modified to contain the
  *	number of bytes of the file we were NOT able to write to the archive.
  *	it is important that we always write EXACTLY the number of bytes that
  *	the format specific write routine told us to. The file can also get
@@ -834,6 +849,12 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 int
 buf_fill(void)
 {
+	return (buf_fill_internal(blksz));
+}
+/*XXX exposure of this breaks block alignment, use only in ar */
+int
+buf_fill_internal(int numb)
+{
 	int cnt;
 	static int fini = 0;
 
@@ -845,7 +866,7 @@ buf_fill(void)
 		 * try to fill the buffer. on error the next archive volume is
 		 * opened and we try again.
 		 */
-		if ((cnt = ar_read(buf, blksz)) > 0) {
+		if ((cnt = ar_read(buf, numb)) > 0) {
 			bufpt = buf;
 			bufend = buf + cnt;
 			rdcnt += cnt;
@@ -857,7 +878,7 @@ buf_fill(void)
 		 */
 		if (cnt < 0)
 			break;
-		if (ar_next() < 0) {
+		if (ar_do_keepopen || ar_next() < 0) {
 			fini = 1;
 			return(0);
 		}
@@ -984,4 +1005,28 @@ buf_flush(int bufcnt)
 	 */
 	exit_val = 1;
 	return(-1);
+}
+
+/*
+ * wr_rdfile replacement for the Unix Archiver (padding)
+ */
+int
+uar_wr_data(ARCHD *arcn, int ifd, off_t *left)
+{
+	int cnt;
+
+	if (wr_rdfile(arcn, ifd, left) < 0)
+		return (-1);
+	if (!arcn->pad)
+		return (0);
+	/*XXX arcn->pad == 1 */
+	arcn->pad = 0;
+	cnt = bufend - bufpt;
+	if ((cnt <= 0) && ((cnt = buf_flush(blksz)) < 0)) {
+		/* *left == 0 */
+		*left = 1;
+		return (-1);
+	}
+	*bufpt++ = '\n';
+	return (0);
 }

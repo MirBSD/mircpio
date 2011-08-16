@@ -1,6 +1,8 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.16 2011/08/16 14:17:24 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.17 2011/08/16 21:32:48 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
+.\" Copyright (c) 2005, 2008, 2009, 2011
+.\"	Thorsten Glaser <tg@mirbsd.org>
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
 .\"
@@ -23,9 +25,6 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.\"-
-.\" Copyright (c) 2008, 2009
-.\"	Thorsten “mirabilos” Glaser <tg@mirbsd.org>
 .\"-
 .\" Try to make GNU groff and AT&T nroff more compatible
 .\" * ` generates ‘ in gnroff, so use \`
@@ -172,7 +171,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578befHhLmOoPRSpqsvwXZz
+.No { Cm crtux No } Op Cm 014578AbefHhLmOoPRSpqsvwXZz
 .Sm on
 .Bk -words
 .Op Ar blocking-factor | archive | replstr
@@ -183,7 +182,7 @@
 .Pp
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
-.Op Fl 014578eHhLmOoPpqRSvwXZz
+.Op Fl 014578AeHhLmOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
@@ -266,6 +265,8 @@ The file mode is subject to modification by the
 In addition to the flags mentioned above, any of the following
 flags may be used:
 .Bl -tag -width Ds
+.It Fl A
+Write Unix Archiver libraries instead of tape archives.
 .It Fl b Ar blocking-factor
 Set blocking factor to use for the archive.
 .Nm
@@ -304,42 +305,56 @@ option.
 .It Fl M Ar flag
 Configure the archive normaliser.
 .Ar flag
-is either a number or a string, optionally prefixed with
+is either a numeric value compatible to
+.Xr strtonum 3
+which is directly stored in the flags word, or
+one of the following values, optionally prefixed with
 .Dq no\-
-to turn it off.
-See
-.Xr \*(nc 1
-for a comprehensive list and compatibility notes.
+to turn them off:
 .Pp
 .Bl -tag -width xxxxxx -compact
 .It Ar inodes
 0x0001: Serialise inodes, zero device info.
+.br
+(cpio, sv4cpio, sv4crc)
 .It Ar links
 0x0002: Store content of hard links only once.
+.br
+(cpio, sv4cpio, sv4crc)
 .It Ar mtime
 0x0004: Zero out the file modification time.
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
 .It Ar uidgid
 0x0008: Set owner to 0:0 (root:wheel).
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
+.It Ar verb
+0x0010: Debug this option.
+.It Ar debug
+0x0020: Debug file header storage.
 .It Ar lncp
-0x0040: Extract hard links by copying if linking fails.
+0x0040: Extract hard links by copy if link fails.
 .It Ar numid
 0x0080: Use only numeric uid and gid values.
+.br
+(ustar)
 .It Ar gslash
 0x0100: Append a slash after directory names.
+.br
+(ustar)
+.It Ar set
+0x0003: Keep ownership and mtime intact.
+.It Ar dist
+0x008B: Clean everything except mtime.
+.It Ar norm
+0x008F: Clean everything.
+.It Ar root
+0x0089: Clean owner and device information.
 .El
 .Pp
-This option is only implemented for the cpio, sv4cpio,
+This option is only implemented for the ar, cpio, sv4cpio,
 sv4crc, and ustar file format writing routines.
-For the ustar format, the
-.Ar inodes
-and
-.Ar links
-specifiers are ignored.
-For all formats except ustar, the
-.Ar numid
-and
-.Ar gslash
-specifiers are ignored.
 .It Fl m
 Do not preserve modification time.
 .It Fl O
@@ -557,12 +572,14 @@ or error,
 may have only partially created the archive, which may violate the
 specific archive format specification.
 .Sh SEE ALSO
+.Xr ar 1 ,
 .Xr cpio 1 ,
 .ie \ng==1 \{\
 .Xr mircpio 1 ,
 .Xr mirpax 1 ,
 .Xr pax 1 ,
-.Xr tar 1
+.Xr tar 1 ,
+.Xr deb 5
 .\}
 .el \{\
 .Xr pax 1

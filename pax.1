@@ -1,8 +1,9 @@
-.\"	$MirOS: src/bin/pax/pax.1,v 1.15 2011/08/16 14:17:24 tg Exp $
+.\"	$MirOS: src/bin/pax/pax.1,v 1.16 2011/08/16 21:32:48 tg Exp $
 .\"	$OpenBSD: pax.1,v 1.52 2007/05/31 19:19:15 jmc Exp $
 .\"	$NetBSD: pax.1,v 1.3 1995/03/21 09:07:37 cgd Exp $
 .\"
-.\" Copyright (c) 2005, 2006, 2009 Thorsten Glaser.
+.\" Copyright (c) 2005, 2009, 2011
+.\"	Thorsten Glaser <tg@mirbsd.org>
 .\" Copyright (c) 1992 Keith Muller.
 .\" Copyright (c) 1992, 1993
 .\"	The Regents of the University of California.  All rights reserved.
@@ -599,42 +600,57 @@ whenever possible.
 .It Fl M Ar flag
 Configure the archive normaliser.
 .Ar flag
-is either a number or a string, optionally prefixed with
+is either a numeric value compatible to
+.Xr strtonum 3
+which is directly stored in the flags word, or
+one of the following values, optionally prefixed with
 .Dq no\-
-to turn it off.
-See
-.Xr \*(nc 1
-for a comprehensive list and compatibility notes.
+to turn them off:
 .Pp
 .Bl -tag -width xxxxxx -compact
 .It Ar inodes
 0x0001: Serialise inodes, zero device info.
+.br
+(cpio, sv4cpio, sv4crc)
 .It Ar links
 0x0002: Store content of hard links only once.
+.br
+(cpio, sv4cpio, sv4crc)
 .It Ar mtime
 0x0004: Zero out the file modification time.
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
 .It Ar uidgid
 0x0008: Set owner to 0:0 (root:wheel).
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
+.It Ar verb
+0x0010: Debug this option.
+.It Ar debug
+0x0020: Debug file header storage.
 .It Ar lncp
-0x0040: Extract hard links by copying if linking fails.
+0x0040: Extract hard links by copy if link fails.
 .It Ar numid
 0x0080: Use only numeric uid and gid values.
+.br
+(ustar)
 .It Ar gslash
 0x0100: Append a slash after directory names.
+.br
+(ustar)
+.It Ar set
+0x0003: Keep ownership and mtime intact.
+.It Ar dist
+0x008B: Clean everything except mtime.
+.It Ar norm
+0x008F: Clean everything.
+.It Ar root
+0x0089: Clean owner and device information.
 .El
 .Pp
-This option is only implemented for the cpio, sv4cpio,
+This option is only implemented for the ar, cpio, sv4cpio,
 sv4crc, and ustar file format writing routines.
-For the ustar format, the
-.Ar inodes
-and
-.Ar links
-specifiers are ignored.
-For all formats except ustar, the
-.Ar numid
-and
-.Ar gslash
-specifiers are ignored.
+.Pp
 TODO: The
 .Nm \*(nm
 frontend should be using the
@@ -1040,6 +1056,14 @@ Specify the output archive format, with the default format being
 .Nm
 currently supports the following formats:
 .Bl -tag -width "sv4cpio"
+.It Cm ar
+The Unix Archiver library format.
+This format matches APT repositories and the BSD
+.Xr ar 1
+specification, not GNU binutils or SYSV systems.
+See
+.Xr ar 5
+on some operating systems for more information.
 .It Cm bcpio
 The old binary cpio format.
 The default blocksize for this format is 5120 bytes.
@@ -1318,8 +1342,10 @@ and when
 .Nm
 completes it will exit with a non-zero exit status.
 .Sh SEE ALSO
+.Xr ar 1 ,
 .Xr cpio 1 ,
 .if \ng==1 \{\
+.Xr deb 5 ,
 .Xr mircpio 1 ,
 .Xr mirtar 1 ,
 .Xr pax 1 ,
@@ -1350,4 +1376,4 @@ Keith Muller at the University of California, San Diego.
 .Pp
 .Mx
 extensions by
-.An Thorsten Glaser Aq tg@mirbsd.de .
+.An Thorsten Glaser Aq tg@mirbsd.org .
