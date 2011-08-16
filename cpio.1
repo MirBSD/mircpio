@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.23 2011/08/16 13:45:00 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.24 2011/08/16 14:17:23 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 2005, 2009 Thorsten Glaser <tg@mirbsd.org>
@@ -148,13 +148,27 @@
 ..
 .\}
 .\"-
-.Dt CPIO 1
+.ie \ng==1 \{\
+.	ds nc mircpio
+.	ds np mirpax
+.	ds nt mirtar
+.	ds nm mircpio
+.	Dt MIRCPIO 1
+.\}
+.el \{\
+.	ds nc cpio
+.	ds np pax
+.	ds nt tar
+.	ds nm cpio
+.	Dt CPIO 1
+.\}
+.\"-
 .Os MirBSD
 .Sh NAME
-.Nm cpio
+.Nm \*(nm
 .Nd copy file archives in and out
 .Sh SYNOPSIS
-.Nm cpio
+.Nm \*(nm
 .Fl o
 .Op Fl AaBcLvZz
 .Op Fl C Ar bytes
@@ -164,7 +178,7 @@
 .Op Fl O Ar archive
 .Ar \*(Lt name-list
 .Op Ar \*(Gt archive
-.Nm cpio
+.Nm \*(nm
 .Fl i
 .Op Fl 6BbcdfmrSstuvZz
 .Op Fl C Ar bytes
@@ -174,7 +188,7 @@
 .Op Fl I Ar archive
 .Op Ar pattern ...
 .Op Ar \*(Lt archive
-.Nm cpio
+.Nm \*(nm
 .Fl p
 .Op Fl adLlmuv
 .Ar destination-directory
@@ -183,7 +197,7 @@
 The
 .Nm
 command copies files to and from a
-.Nm
+.Nm cpio
 archive.
 .Pp
 The options are as follows:
@@ -486,6 +500,11 @@ or error,
 may have only partially created the archive, which may violate the
 specific archive format specification.
 .Sh SEE ALSO
+.if \ng==1 \{\
+.Xr cpio 1 ,
+.Xr mirpax 1 ,
+.Xr mirtar 1 ,
+.\}
 .Xr pax 1 ,
 .Xr tar 1
 .Sh AUTHORS
@@ -511,7 +530,7 @@ and
 options are currently not implemented.
 .Sh CAVEATS
 The backwards-compatible format options are not available in the
-.Xr pax 1
+.Xr \*(np 1
 front-end.
 .Pp
 The

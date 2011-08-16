@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.15 2011/08/16 13:45:01 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.16 2011/08/16 14:17:24 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
@@ -150,13 +150,27 @@
 ..
 .\}
 .\"-
-.Dt TAR 1
+.ie \ng==1 \{\
+.	ds nc mircpio
+.	ds np mirpax
+.	ds nt mirtar
+.	ds nm mirtar
+.	Dt MIRTAR 1
+.\}
+.el \{\
+.	ds nc cpio
+.	ds np pax
+.	ds nt tar
+.	ds nm tar
+.	Dt TAR 1
+.\}
+.\"-
 .Os MirBSD
 .Sh NAME
-.Nm tar
+.Nm \*(nm
 .Nd tape archiver
 .Sh SYNOPSIS
-.Nm tar
+.Nm \*(nm
 .Sm off
 .No { Cm crtux No } Op Cm 014578befHhLmOoPRSpqsvwXZz
 .Sm on
@@ -167,7 +181,7 @@
 .Op Ar file ...
 .Ek
 .Pp
-.Nm tar
+.Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Op Fl 014578eHhLmOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
@@ -294,7 +308,7 @@ is either a number or a string, optionally prefixed with
 .Dq no\-
 to turn it off.
 See
-.Xr cpio 1
+.Xr \*(nc 1
 for a comprehensive list and compatibility notes.
 .Pp
 .Bl -tag -width xxxxxx -compact
@@ -469,7 +483,7 @@ Create an archive on the default tape drive, containing the files named
 and
 .Pa sekve :
 .Pp
-.Dl $ tar c bonvole sekve
+.Dl $ \*(nm c bonvole sekve
 .Pp
 Output a
 .Xr gzip 1
@@ -480,7 +494,7 @@ and
 to a file called
 .Pa foriru.tar.gz :
 .Pp
-.Dl $ tar zcf foriru.tar.gz bonvole sekve
+.Dl $ \*(nm zcf foriru.tar.gz bonvole sekve
 .Pp
 Verbosely create an archive, called
 .Pa backup.tar.gz ,
@@ -489,7 +503,7 @@ of all files matching the shell
 function
 .Pa *.c :
 .Pp
-.Dl $ tar zcvf backup.tar.gz *.c
+.Dl $ \*(nm zcvf backup.tar.gz *.c
 .Pp
 Verbosely list, but do not extract, all files ending in
 .Pa .jpeg
@@ -497,10 +511,10 @@ from a compressed archive named
 .Pa backup.tar.gz .
 Note that the glob pattern has been quoted to avoid expansion by the shell:
 .Pp
-.Dl $ tar tvzf backup.tar.gz \*(aq*.jpeg\*(aq
+.Dl $ \*(nm tvzf backup.tar.gz \*(aq*.jpeg\*(aq
 .Pp
 For more detailed examples, see
-.Xr pax 1 .
+.Xr \*(np 1 .
 .Sh DIAGNOSTICS
 .Nm
 will exit with one of the following values:
@@ -544,7 +558,15 @@ may have only partially created the archive, which may violate the
 specific archive format specification.
 .Sh SEE ALSO
 .Xr cpio 1 ,
+.ie \ng==1 \{\
+.Xr mircpio 1 ,
+.Xr mirpax 1 ,
+.Xr pax 1 ,
+.Xr tar 1
+.\}
+.el \{\
 .Xr pax 1
+.\}
 .Sh HISTORY
 A
 .Nm
