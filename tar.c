@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tar.c,v 1.6 2011/08/16 13:27:03 tg Exp $ */
+/**	$MirOS: src/bin/pax/tar.c,v 1.7 2011/08/16 13:45:02 tg Exp $ */
 /*	$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
@@ -49,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)tar.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.6 2011/08/16 13:27:03 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.7 2011/08/16 13:45:02 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -936,6 +936,15 @@ ustar_wr(ARCHD *arcn)
 	    ((size_t)arcn->ln_nlen > sizeof(hd->linkname))) {
 		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
 		return(1);
+	}
+
+	/*
+	 * if -M gslash: append a slash if directory
+	 */
+	if ((anonarch & ANON_DIRSLASH) && arcn->type == PAX_DIR &&
+	    (size_t)arcn->nlen < (sizeof(arcn->name) - 1)) {
+		arcn->name[arcn->nlen++] = '/';
+		arcn->name[arcn->nlen] = '\0';
 	}
 
 	/*
