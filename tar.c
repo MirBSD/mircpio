@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tar.c,v 1.5 2009/10/04 14:54:56 tg Exp $ */
+/**	$MirOS: src/bin/pax/tar.c,v 1.6 2011/08/16 13:27:03 tg Exp $ */
 /*	$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
@@ -49,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)tar.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.5 2009/10/04 14:54:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.6 2011/08/16 13:27:03 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -803,10 +803,12 @@ ustar_rd(ARCHD *arcn, char *buf)
 	 * the posix spec wants).
 	 */
 	hd->gname[sizeof(hd->gname) - 1] = '\0';
-	if (gid_name(hd->gname, &(arcn->sb.st_gid)) < 0)
+	if ((anonarch & ANON_NUMID) ||
+	    (gid_name(hd->gname, &(arcn->sb.st_gid)) < 0))
 		arcn->sb.st_gid = (gid_t)asc_ul(hd->gid, sizeof(hd->gid), OCT);
 	hd->uname[sizeof(hd->uname) - 1] = '\0';
-	if (uid_name(hd->uname, &(arcn->sb.st_uid)) < 0)
+	if ((anonarch & ANON_NUMID) ||
+	    (uid_name(hd->uname, &(arcn->sb.st_uid)) < 0))
 		arcn->sb.st_uid = (uid_t)asc_ul(hd->uid, sizeof(hd->uid), OCT);
 
 	/*
@@ -1078,8 +1080,10 @@ ustar_wr(ARCHD *arcn)
 	if (ul_oct((u_long)arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3) ||
 	    ul_oct(t_mtime,hd->mtime,sizeof(hd->mtime),3))
 		goto out;
-	strncpy(hd->uname, name_uid(t_uid, 0), sizeof(hd->uname));
-	strncpy(hd->gname, name_gid(t_gid, 0), sizeof(hd->gname));
+#define name_id(x) ((anonarch & ANON_NUMID) ? "" : (const char *)(x))
+	strncpy(hd->uname, name_id(name_uid(t_uid, 0)), sizeof(hd->uname));
+	strncpy(hd->gname, name_id(name_gid(t_gid, 0)), sizeof(hd->gname));
+#undef name_id
 
 	/*
 	 * calculate and store the checksum write the header to the archive

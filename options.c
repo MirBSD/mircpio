@@ -57,7 +57,7 @@
 #endif
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.31 2009/10/27 18:47:26 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.32 2011/08/16 13:27:01 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -1735,13 +1735,13 @@ process_M(const char *arg, void (*call_usage)(void))
 	} else if (!strncmp(arg, "link", 4)) {
 		k = ANON_HARDLINKS;
 	} else if (!strncmp(arg, "norm", 4)) {
-		k = ANON_UIDGID | ANON_INODES
-		    | ANON_MTIME | ANON_HARDLINKS;
+		k = ANON_UIDGID | ANON_INODES | ANON_NUMID |
+		    ANON_MTIME | ANON_HARDLINKS;
 	} else if (!strncmp(arg, "root", 4)) {
-		k = ANON_UIDGID | ANON_INODES;
+		k = ANON_UIDGID | ANON_INODES | ANON_NUMID;
 	} else if (!strncmp(arg, "dist", 4)) {
-		k = ANON_UIDGID | ANON_INODES
-		    | ANON_HARDLINKS;
+		k = ANON_UIDGID | ANON_INODES | ANON_NUMID |
+		    ANON_HARDLINKS;
 	} else if (!strncmp(arg, "set", 3)) {
 		k = ANON_INODES | ANON_HARDLINKS;
 	} else if (!strncmp(arg, "v", 1)) {
@@ -1750,6 +1750,8 @@ process_M(const char *arg, void (*call_usage)(void))
 		k = ANON_DEBUG;
 	} else if (!strncmp(arg, "lncp", 4)) {
 		k = ANON_LNCP;
+	} else if (!strncmp(arg, "numid", 5)) {
+		k = ANON_NUMID;
 	} else
 		call_usage();
 	if (j)
