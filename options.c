@@ -57,7 +57,7 @@
 #endif
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.33 2011/08/16 13:45:00 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.34 2011/08/16 13:50:18 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -77,13 +77,13 @@ static int c_frmt(const void *, const void *);
 static off_t str_offt(char *);
 static char *get_line(FILE *fp);
 static void pax_options(int, char **);
-static void pax_usage(void) __attribute__((noreturn));
+static void pax_usage(void) __attribute__((__noreturn__));
 static void tar_set_action(int);
 static void tar_options(int, char **);
-static void tar_usage(void) __attribute__((noreturn));
+static void tar_usage(void) __attribute__((__noreturn__));
 static void cpio_set_action(int);
 static void cpio_options(int, char **);
-static void cpio_usage(void) __attribute__((noreturn));
+static void cpio_usage(void) __attribute__((__noreturn__));
 int mkpath(char *);
 
 static void process_M(const char *, void (*)(void));

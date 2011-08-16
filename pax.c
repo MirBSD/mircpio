@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.c,v 1.7 2007/02/17 04:52:41 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.c,v 1.8 2011/08/16 13:50:18 tg Exp $ */
 /*	$OpenBSD: pax.c,v 1.28 2005/08/04 10:02:44 mpf Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
@@ -54,10 +54,10 @@
 __COPYRIGHT("@(#) Copyright (c) 1992, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n");
 __SCCSID("@(#)pax.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.7 2007/02/17 04:52:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.8 2011/08/16 13:50:18 tg Exp $");
 
 static int gen_init(void);
-static void sig_cleanup(int) __attribute__((noreturn));
+static void sig_cleanup(int) __attribute__((__noreturn__));
 
 /*
  * PAX main routines, general globals and some simple start up routines

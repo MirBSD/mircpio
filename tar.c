@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/tar.c,v 1.7 2011/08/16 13:45:02 tg Exp $ */
+/**	$MirOS: src/bin/pax/tar.c,v 1.8 2011/08/16 13:50:18 tg Exp $ */
 /*	$OpenBSD: tar.c,v 1.41 2006/03/04 20:24:55 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
@@ -49,7 +49,7 @@
 #include "options.h"
 
 __SCCSID("@(#)tar.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.7 2011/08/16 13:45:02 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.8 2011/08/16 13:50:18 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -116,8 +116,8 @@ tar_endrd(void)
  */
 
 int
-tar_trail(ARCHD *ignore __attribute__((unused)), char *buf, int in_resync,
-    int *cnt)
+tar_trail(ARCHD *ignore __attribute__((__unused__)), char *buf,
+    int in_resync, int *cnt)
 {
 	int i;
 

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.12 2009/10/04 14:51:06 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.13 2011/08/16 13:50:17 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -316,9 +316,9 @@ int ustar_wr(ARCHD *);
  */
 int tty_init(void);
 void tty_prnt(const char *, ...)
-    __attribute__((format (printf, 1, 2)));
+    __attribute__((__format__ (__printf__, 1, 2)));
 int tty_read(char *, int);
 void paxwarn(int, const char *, ...)
-    __attribute__((format (printf, 2, 3)));
+    __attribute__((__format__ (__printf__, 2, 3)));
 void syswarn(int, int, const char *, ...)
-    __attribute__((format (printf, 3, 4)));
+    __attribute__((__format__ (__printf__, 3, 4)));
