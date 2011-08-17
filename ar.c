@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <err.h>
 #include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@
 #include "options.h"
 #include "ar.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.1 2011/08/16 21:32:45 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.2 2011/08/17 08:55:28 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
