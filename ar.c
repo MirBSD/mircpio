@@ -40,7 +40,7 @@
 #include "options.h"
 #include "ar.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.3 2011/08/17 09:46:20 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.4 2011/08/17 10:42:26 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -241,6 +241,8 @@ uar_wr(ARCHD *arcn)
 	/* find out basename */
 	if ((extname = strrchr(arcn->name, '/')) == NULL)
 		extname = arcn->name;
+	else
+		++extname;
 
 	t_uid = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
