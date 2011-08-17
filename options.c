@@ -58,7 +58,7 @@
 #endif
 
 __SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.36 2011/08/17 08:10:35 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.37 2011/08/17 10:47:48 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -667,7 +667,7 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "Ab:cef:hmopqruts:vwxzBC:HI:LM:OPRSXZ014578")) != -1) {
+	    "014578ABb:cC:ef:HhI:LmM:OoPpqRrSs:tuvwXxZz")) != -1) {
 		switch (c) {
 		case 'A':
 			Oflag = 5;
@@ -1681,10 +1681,10 @@ void
 tar_usage(void)
 {
 	(void)fputs(
-	    "usage: tar {crtux}[014578befHhLmOoPpqRSsvwXZz]\n"
+	    "usage: tar {crtux}[014578AbefHhLmOoPpqRSsvwXZz]\n"
 	    "\t  [blocking-factor | archive | replstr] [-C directory] [-I file]\n"
 	    "\t  [file ...]\n"
-	    "       tar {-crtux} [-014578eHhLmOoPpqRSvwXZz] [-b blocking-factor] [-M flag]\n"
+	    "       tar {-crtux} [-014578AeHhLmOoPpqRSvwXZz] [-b blocking-factor] [-M flag]\n"
 	    "\t  [-C directory] [-f archive] [-I file] [-s replstr] [file ...]\n",
 	    stderr);
 	exit(1);
