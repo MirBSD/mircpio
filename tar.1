@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.17 2011/08/16 21:32:48 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.18 2011/08/17 09:03:58 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011
@@ -78,7 +78,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: August 16 2011 $
+.Dd $Mdocdate: August 17 2011 $
 .\"
 .\" Check which macro package we use
 .\"
@@ -166,8 +166,14 @@
 .\"-
 .Os MirBSD
 .Sh NAME
-.Nm \*(nm
+.ie \ng==1 \{\
+.Nm mirtar
 .Nd tape archiver
+.\}
+.el \{\
+.Nm tar
+.Nd tape archiver
+.\}
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off

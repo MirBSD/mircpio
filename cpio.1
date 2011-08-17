@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.25 2011/08/16 21:32:46 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.26 2011/08/17 09:03:58 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
 .\"
 .\" Copyright (c) 2005, 2009, 2011
@@ -78,7 +78,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: August 16 2011 $
+.Dd $Mdocdate: August 17 2011 $
 .\"
 .\" Check which macro package we use
 .\"
@@ -166,8 +166,14 @@
 .\"-
 .Os MirBSD
 .Sh NAME
-.Nm \*(nm
+.ie \ng==1 \{\
+.Nm mircpio
 .Nd copy file archives in and out
+.\}
+.el \{\
+.Nm cpio
+.Nd copy file archives in and out
+.\}
 .Sh SYNOPSIS
 .Nm \*(nm
 .Fl o
