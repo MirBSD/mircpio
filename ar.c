@@ -40,7 +40,7 @@
 #include "options.h"
 #include "ar.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.2 2011/08/17 08:55:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.3 2011/08/17 09:46:20 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -249,7 +249,7 @@ uar_wr(ARCHD *arcn)
 
 	if (sizeof(time_t) > 4 && t_mtime > (time_t)999999999999ULL) {
 		paxwarn(1, "%s overflow for %s", "mtime", arcn->org_name);
-		t_mtime = (time_t)999999999999UL;
+		t_mtime = (time_t)999999999999ULL;
 	}
 	if (t_uid > 999999UL) {
 		paxwarn(1, "%s overflow for %s", "uid", arcn->org_name);
