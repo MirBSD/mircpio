@@ -1,4 +1,4 @@
-/*	$OpenBSD: options.c,v 1.67 2007/02/24 09:50:55 jmc Exp $	*/
+/*	$OpenBSD: options.c,v 1.74 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)options.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: options.c,v 1.67 2007/02/24 09:50:55 jmc Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -88,6 +80,7 @@ static int getline_error;
 
 #define GZIP_CMD	"gzip"		/* command to run as gzip */
 #define COMPRESS_CMD	"compress"	/* command to run as compress */
+#define BZIP2_CMD	"bzip2"		/* command to run as bzip2 */
 
 /*
  *	Format specific routine table - MUST BE IN SORTED ORDER BY NAME
@@ -199,7 +192,7 @@ pax_options(int argc, char **argv)
 	/*
 	 * process option flags
 	 */
-	while ((c=getopt(argc,argv,"ab:cdf:iklno:p:rs:tuvwx:zB:DE:G:HLOPT:U:XYZ0"))
+	while ((c=getopt(argc,argv,"ab:cdf:ijklno:p:rs:tuvwx:zB:DE:G:HLOPT:U:XYZ0"))
 	    != -1) {
 		switch (c) {
 		case 'a':
@@ -245,6 +238,12 @@ pax_options(int argc, char **argv)
 			 */
 			iflag = 1;
 			flg |= IF;
+			break;
+		case 'j':
+			/*
+			 * use bzip2.  Non standard option.
+			 */
+			gzip_program = BZIP2_CMD;
 			break;
 		case 'k':
 			/*
@@ -621,7 +620,7 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "b:cef:hmopqruts:vwxzBC:HI:LOPXZ014578")) != -1) {
+	    "b:cef:hjmopqruts:vwxzBC:HI:LNOPXZ014578")) != -1) {
 		switch (c) {
 		case 'b':
 			/*
@@ -665,6 +664,12 @@ tar_options(int argc, char **argv)
 			 * follow symlinks
 			 */
 			Lflag = 1;
+			break;
+		case 'j':
+			/*
+			 * use bzip2.  Non standard option.
+			 */
+			gzip_program = BZIP2_CMD;
 			break;
 		case 'm':
 			/*
@@ -756,14 +761,20 @@ tar_options(int argc, char **argv)
 			break;
 		case 'I':
 			if (++nincfiles > incfiles_max) {
-				incfiles_max = nincfiles + 3;
-				incfiles = realloc(incfiles,
-				    sizeof(*incfiles) * incfiles_max);
-				if (incfiles == NULL) {
+				size_t n = nincfiles + 3;
+				struct incfile *p;
+
+				p = realloc(incfiles,
+				    sizeof(*incfiles) * n);
+				if (p == NULL) {
+					free(incfiles);
+					incfiles = NULL;
 					paxwarn(0, "Unable to allocate space "
 					    "for option list");
 					exit(1);
 				}
+				incfiles = p;
+				incfiles_max = n;
 			}
 			incfiles[nincfiles - 1].file = optarg;
 			incfiles[nincfiles - 1].dir = chdname;
@@ -773,6 +784,10 @@ tar_options(int argc, char **argv)
 			 * follow symlinks
 			 */
 			Lflag = 1;
+			break;
+		case 'N':
+			/* numeric uid and gid only */
+			Nflag = 1;
 			break;
 		case 'P':
 			/*
@@ -1038,7 +1053,7 @@ cpio_options(int argc, char **argv)
 	dflag = 1;
 	act = -1;
 	nodirs = 1;
-	while ((c=getopt(argc,argv,"abcdfiklmoprstuvzABC:E:F:H:I:LO:SZ6")) != -1)
+	while ((c=getopt(argc,argv,"abcdfijklmoprstuvzABC:E:F:H:I:LO:SZ6")) != -1)
 		switch (c) {
 			case 'a':
 				/*
@@ -1074,6 +1089,12 @@ cpio_options(int argc, char **argv)
 				 * restore an archive
 				 */
 				act = EXTRACT;
+				break;
+			case 'j':
+				/*
+				 * use bzip2.  Non standard option.
+				 */
+				gzip_program = BZIP2_CMD;
 				break;
 			case 'k':
 				break;
@@ -1396,6 +1417,7 @@ opt_add(const char *str)
 			free(dstr);
 			return(-1);
 		}
+		dstr = NULL;	/* parts of string going onto the OPLIST */
 		*pt++ = '\0';
 		opt->name = frpt;
 		opt->value = pt;
@@ -1411,6 +1433,7 @@ opt_add(const char *str)
 		optail->fow = opt;
 		optail = opt;
 	}
+	free(dstr);
 	return(0);
 }
 
@@ -1536,16 +1559,15 @@ void
 pax_usage(void)
 {
 	(void)fputs(
-	    "usage: pax [-0cdnOvz] [-E limit] [-f archive] [-G group] [-s replstr]\n"
-	    "\t  [-T range] [-U user] [pattern ...]\n"
-	    "       pax -r [-0cDdiknOuvYZz] [-E limit] [-f archive] [-G group]\n"
-	    "\t  [-o options] [-p string] [-s replstr] [-T range]\n"
-	    "\t  [-U user] [pattern ...]\n"
-	    "       pax -w [-0adHiLOPtuvXz] [-B bytes] [-b blocksize] [-f archive]\n"
-	    "\t  [-G group] [-o options] [-s replstr]\n"
-	    "\t  [-T range] [-U user] [-x format] [file ...]\n"
+	    "usage: pax [-0cdjnOvz] [-E limit] [-f archive] [-G group] [-s replstr]\n"
+	    "           [-T range] [-U user] [pattern ...]\n"
+	    "       pax -r [-0cDdijknOuvYZz] [-E limit] [-f archive] [-G group] [-o options]\n"
+	    "           [-p string] [-s replstr] [-T range] [-U user] [pattern ...]\n"
+	    "       pax -w [-0adHijLOPtuvXz] [-B bytes] [-b blocksize] [-f archive]\n"
+	    "           [-G group] [-o options] [-s replstr] [-T range] [-U user]\n"
+	    "           [-x format] [file ...]\n"
 	    "       pax -rw [-0DdHikLlnOPtuvXYZ] [-G group] [-p string] [-s replstr]\n"
-	    "\t  [-T range] [-U user] [file ...] directory\n",
+	    "           [-T range] [-U user] [file ...] directory\n",
 	    stderr);
 	exit(1);
 }
@@ -1559,11 +1581,11 @@ void
 tar_usage(void)
 {
 	(void)fputs(
-	    "usage: tar {crtux}[014578befHhLmOoPpqsvwXZz]\n"
-	    "\t  [blocking-factor | archive | replstr] [-C directory] [-I file]\n"
-	    "\t  [file ...]\n"
-	    "       tar {-crtux} [-014578eHhLmOoPpqvwXZz] [-b blocking-factor]\n"
-	    "\t  [-C directory] [-f archive] [-I file] [-s replstr] [file ...]\n",
+	    "usage: tar {crtux}[014578befHhjLmNOoPpqsvwXZz]\n"
+	    "           [blocking-factor | archive | replstr] [-C directory] [-I file]\n"
+	    "           [file ...]\n"
+	    "       tar {-crtux} [-014578eHhjLmNOoPpqvwXZz] [-b blocking-factor]\n"
+	    "           [-C directory] [-f archive] [-I file] [-s replstr] [file ...]\n",
 	    stderr);
 	exit(1);
 }
@@ -1576,10 +1598,12 @@ tar_usage(void)
 void
 cpio_usage(void)
 {
-	(void)fputs("usage: cpio -o [-AaBcLvZz] [-C bytes] [-F archive] [-H format]\n", stderr);
-	(void)fputs("               [-O archive] < name-list [> archive]\n", stderr);
-	(void)fputs("       cpio -i [-6BbcdfmrSstuvZz] [-C bytes] [-E file] [-F archive]\n", stderr);
-	(void)fputs("               [-H format] [-I archive] [pattern...] [< archive]\n", stderr);
-	(void)fputs("       cpio -p [-adLlmuv] destination-directory < name-list\n", stderr);
+	(void)fputs(
+	    "usage: cpio -o [-AaBcjLvZz] [-C bytes] [-F archive] [-H format]\n"
+	    "            [-O archive] < name-list [> archive]\n"
+	    "       cpio -i [-6BbcdfjmrSstuvZz] [-C bytes] [-E file] [-F archive] [-H format]\n"
+	    "            [-I archive] [pattern ...] [< archive]\n"
+	    "       cpio -p [-adLlmuv] destination-directory < name-list\n",
+	    stderr);
 	exit(1);
 }

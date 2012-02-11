@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
+.\"	$OpenBSD: cpio.1,v 1.34 2011/09/03 22:59:08 jmc Exp $
 .\"
 .\" Copyright (c) 1997 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -23,9 +23,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\"	$OpenBSD: cpio.1,v 1.26 2007/05/31 19:19:15 jmc Exp $
-.\"
-.Dd $Mdocdate: October 23 2007 $
+.Dd $Mdocdate: February 11 2012 $
 .Dt CPIO 1
 .Os
 .Sh NAME
@@ -34,28 +32,28 @@
 .Sh SYNOPSIS
 .Nm cpio
 .Fl o
-.Op Fl AaBcLvZz
+.Op Fl AaBcjLvZz
 .Op Fl C Ar bytes
 .Op Fl F Ar archive
 .Op Fl H Ar format
 .Op Fl O Ar archive
-.Ar \*(Lt name-list
-.Op Ar \*(Gt archive
+.No \*(Lt Ar name-list
+.Op \*(Gt Ar archive
 .Nm cpio
 .Fl i
-.Op Fl 6BbcdfmrSstuvZz
+.Op Fl 6BbcdfjmrSstuvZz
 .Op Fl C Ar bytes
 .Op Fl E Ar file
 .Op Fl F Ar archive
 .Op Fl H Ar format
 .Op Fl I Ar archive
 .Op Ar pattern ...
-.Op Ar \*(Lt archive
+.Op \*(Lt Ar archive
 .Nm cpio
 .Fl p
 .Op Fl adLlmuv
 .Ar destination-directory
-.Ar \*(Lt name-list
+.No \*(Lt Ar name-list
 .Sh DESCRIPTION
 The
 .Nm
@@ -109,6 +107,9 @@ Old tar format.
 .It Ar ustar
 POSIX ustar format.
 .El
+.It Fl j
+Compress archive using the bzip2 format.
+The bzip2 utility must be installed separately.
 .It Fl L
 Follow symbolic links.
 .It Fl O Ar archive
@@ -181,6 +182,9 @@ Old tar format.
 .It Ar ustar
 POSIX ustar format.
 .El
+.It Fl j
+Uncompress archive using the bzip2 format.
+The bzip2 utility must be installed separately.
 .It Fl m
 Restore modification times on files.
 .It Fl r
@@ -239,16 +243,18 @@ List filenames as they are copied.
 .It Ev TMPDIR
 Path in which to store temporary files.
 .El
-.Sh ERRORS
+.Sh EXIT STATUS
+The
 .Nm
-will exit with one of the following values:
-.Bl -tag -width 2n
+utility exits with one of the following values:
+.Pp
+.Bl -tag -width Ds -offset indent -compact
 .It 0
 All files were processed successfully.
 .It 1
 An error occurred.
 .El
-.Pp
+.Sh DIAGNOSTICS
 Whenever
 .Nm
 cannot create a file or a link when extracting an archive or cannot
@@ -286,14 +292,13 @@ Keith Muller at the University of California, San Diego.
 Different file formats have different maximum file sizes.
 It is recommended that a format such as cpio or ustar
 be used for larger files.
-.Pp
-.Bl -column "File format" "Maximum file size" -offset indent -compact
+.Bl -column "File format" "Maximum file size" -offset indent
 .It Sy "File format" Ta Sy "Maximum file size"
-.It bcpio Ta 4 Gigabytes
-.It sv4cpio Ta 4 Gigabytes
-.It cpio Ta 8 Gigabytes
-.It tar Ta 8 Gigabytes
-.It ustar Ta 8 Gigabytes
+.It bcpio Ta "4 Gigabytes"
+.It sv4cpio Ta "4 Gigabytes"
+.It cpio Ta "8 Gigabytes"
+.It tar Ta "8 Gigabytes"
+.It ustar Ta "8 Gigabytes"
 .El
 .Sh BUGS
 The
