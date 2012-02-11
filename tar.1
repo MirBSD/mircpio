@@ -1,7 +1,7 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.18 2011/08/17 09:03:58 tg Exp $
-.\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.19 2012/02/11 23:37:52 tg Exp $
+.\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
 .\"
-.\" Copyright (c) 2005, 2008, 2009, 2011
+.\" Copyright (c) 2005, 2008, 2009, 2011, 2012
 .\"	Thorsten Glaser <tg@mirbsd.org>
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -78,7 +78,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: August 17 2011 $
+.Dd $Mdocdate: February 11 2012 $
 .\"
 .\" Check which macro package we use
 .\"
@@ -177,25 +177,26 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578AbefHhLmOoPRSpqsvwXZz
+.No { Cm crtux No } Op Cm 014578AbefHhjLmNOoPRSpqsvwXZz
 .Sm on
 .Bk -words
 .Op Ar blocking-factor | archive | replstr
 .Op Fl C Ar directory
 .Op Fl I Ar file
-.Op Ar file ...
+.Op Ar
 .Ek
-.Pp
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
-.Op Fl 014578AeHhLmOoPpqRSvwXZz
+.Bk -words
+.Op Fl 014578AeHhjLmNOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
 .Op Fl I Ar file
 .Op Fl M Ar flag
 .Op Fl s Ar replstr
-.Op Ar file ...
+.Op Ar
+.Ek
 .Sh DESCRIPTION
 The
 .Nm
@@ -304,6 +305,8 @@ link ultimately points to.
 .It Fl I Ar file
 This is a positional argument which reads the names of files to
 archive or extract from the given file, one per line.
+.It Fl j
+Use the bzip2 utility to compress the archive.
 .It Fl L
 Synonym for the
 .Fl h
@@ -363,13 +366,16 @@ This option is only implemented for the ar, cpio, sv4cpio,
 sv4crc, and ustar file format writing routines.
 .It Fl m
 Do not preserve modification time.
+.It Fl N
+Same as
+.Fl M Ar numid .
 .It Fl O
 If reading, extract files to standard output.
 .br
 If writing, write old-style (non-POSIX) archives.
 .It Fl o
 Don't write directory information that the older (V7) style
-.Nm
+.Nm tar
 is unable to decode.
 This implies the
 .Fl O
@@ -474,11 +480,13 @@ extracting files in an archive.
 .It Fl X
 Do not cross mount points in the file system.
 .It Fl Z
-Compress archive using
-.Xr compress 1 .
+Use the
+.Xr compress 1
+utility to compress the archive.
 .It Fl z
-Compress archive using
-.Xr gzip 1 .
+Use the
+.Xr gzip 1
+utility to compress the archive.
 .El
 .Pp
 The options
@@ -497,6 +505,17 @@ Default tape device to use instead of
 .Bl -tag -width "/dev/rst0"
 .It Pa /dev/rst0
 default archive name
+.El
+.Sh EXIT STATUS
+The
+.Nm
+utility exits with one of the following values:
+.Pp
+.Bl -tag -width Ds -offset indent -compact
+.It 0
+All files were processed successfully.
+.It 1
+An error occurred.
 .El
 .Sh EXAMPLES
 Create an archive on the default tape drive, containing the files named
@@ -537,15 +556,6 @@ Note that the glob pattern has been quoted to avoid expansion by the shell:
 For more detailed examples, see
 .Xr \*(np 1 .
 .Sh DIAGNOSTICS
-.Nm
-will exit with one of the following values:
-.Bl -tag -width 2n -offset indent
-.It 0
-All files were processed successfully.
-.It 1
-An error occurred.
-.El
-.Pp
 Whenever
 .Nm
 cannot create a file or a link when extracting an archive or cannot
@@ -592,21 +602,18 @@ specific archive format specification.
 .\}
 .Sh HISTORY
 A
-.Nm
+.Nm tar
 command first appeared in
 .At v7 .
 .Sh AUTHORS
 Keith Muller at the University of California, San Diego.
+.Pp
+.Mx
+extensions by
+.An Thorsten Glaser Aq tg@mirbsd.org .
 .Sh CAVEATS
-The
-.Fl L
-flag is not portable to other versions of
-.Nm
-where it may have a different meaning.
-The
-.Fl R ,
-.Fl S ,
-and
-.Fl M
-options are extensions specific to
-.Mx .
+The flags
+.Fl AjLMNRS
+are not portable to other implementations of
+.Nm tar
+where they may have a different meaning.
