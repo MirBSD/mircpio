@@ -1,4 +1,4 @@
-.\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
+.\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -23,9 +23,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\"	$OpenBSD: tar.1,v 1.48 2007/05/31 19:19:15 jmc Exp $
-.\"
-.Dd $Mdocdate: October 23 2007 $
+.Dd $Mdocdate: February 11 2012 $
 .Dt TAR 1
 .Os
 .Sh NAME
@@ -34,24 +32,25 @@
 .Sh SYNOPSIS
 .Nm tar
 .Sm off
-.No { Cm crtux No } Op Cm 014578befHhLmOoPpqsvwXZz
+.No { Cm crtux No } Op Cm 014578befHhjLmNOoPpqsvwXZz
 .Sm on
 .Bk -words
 .Op Ar blocking-factor | archive | replstr
 .Op Fl C Ar directory
 .Op Fl I Ar file
-.Op Ar file ...
+.Op Ar
 .Ek
-.Pp
 .Nm tar
 .No { Ns Fl crtux Ns }
-.Op Fl 014578eHhLmOoPpqvwXZz
+.Bk -words
+.Op Fl 014578eHhjLmNOoPpqvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
 .Op Fl I Ar file
 .Op Fl s Ar replstr
-.Op Ar file ...
+.Op Ar
+.Ek
 .Sh DESCRIPTION
 The
 .Nm
@@ -158,12 +157,18 @@ link ultimately points to.
 .It Fl I Ar file
 This is a positional argument which reads the names of files to
 archive or extract from the given file, one per line.
+.It Fl j
+Compress archive using bzip2.
+The bzip2 utility must be installed separately.
 .It Fl L
 Synonym for the
 .Fl h
 option.
 .It Fl m
 Do not preserve modification time.
+.It Fl N
+Use only the numeric UID and GID values when creating or extracting an
+archive.
 .It Fl O
 Write old-style (non-POSIX) archives.
 .It Fl o
@@ -289,6 +294,17 @@ Default tape device to use instead of
 .It Pa /dev/rst0
 default archive name
 .El
+.Sh EXIT STATUS
+The
+.Nm
+utility exits with one of the following values:
+.Pp
+.Bl -tag -width Ds -offset indent -compact
+.It 0
+All files were processed successfully.
+.It 1
+An error occurred.
+.El
 .Sh EXAMPLES
 Create an archive on the default tape drive, containing the files named
 .Pa bonvole
@@ -328,15 +344,6 @@ Note that the glob pattern has been quoted to avoid expansion by the shell:
 For more detailed examples, see
 .Xr pax 1 .
 .Sh DIAGNOSTICS
-.Nm
-will exit with one of the following values:
-.Bl -tag -width 2n -offset indent
-.It 0
-All files were processed successfully.
-.It 1
-An error occurred.
-.El
-.Pp
 Whenever
 .Nm
 cannot create a file or a link when extracting an archive or cannot
@@ -377,7 +384,9 @@ command first appeared in
 Keith Muller at the University of California, San Diego.
 .Sh CAVEATS
 The
+.Fl j
+and
 .Fl L
-flag is not portable to other versions of
+flags are not portable to other versions of
 .Nm
-where it may have a different meaning.
+where they may have a different meaning.
