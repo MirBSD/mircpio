@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.20 2012/02/12 00:04:33 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.21 2012/02/12 01:48:21 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012
@@ -156,6 +156,13 @@
 .	ds nm mirtar
 .	Dt MIRTAR 1
 .\}
+.el .ie \ng==2 \{\
+.	ds nc paxcpio
+.	ds np pax
+.	ds nt paxtar
+.	ds nm paxtar
+.	Dt PAXTAR 1
+.\}
 .el \{\
 .	ds nc cpio
 .	ds np pax
@@ -167,6 +174,10 @@
 .Os MirBSD
 .Sh NAME
 .ie \ng==1 \{\
+.Nm mirtar
+.Nd tape archiver
+.\}
+.el .ie \ng==2 \{\
 .Nm mirtar
 .Nd tape archiver
 .\}
@@ -596,6 +607,12 @@ specific archive format specification.
 .Xr mircpio 1 ,
 .Xr mirpax 1 ,
 .Xr pax 1 ,
+.Xr tar 1 ,
+.Xr deb 5
+.\}
+.el .ie \ng==2 \{\
+.Xr pax 1 ,
+.Xr paxcpio 1 ,
 .Xr tar 1 ,
 .Xr deb 5
 .\}

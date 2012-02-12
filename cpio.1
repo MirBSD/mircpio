@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.29 2012/02/12 00:04:32 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.30 2012/02/12 01:48:20 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.34 2011/09/03 22:59:08 jmc Exp $
 .\"
 .\" Copyright (c) 2005, 2009, 2011, 2012
@@ -156,6 +156,13 @@
 .	ds nm mircpio
 .	Dt MIRCPIO 1
 .\}
+.el .ie \ng==2 \{\
+.	ds nc paxcpio
+.	ds np pax
+.	ds nt paxtar
+.	ds nm paxcpio
+.	Dt PAXCPIO 1
+.\}
 .el \{\
 .	ds nc cpio
 .	ds np pax
@@ -168,6 +175,10 @@
 .Sh NAME
 .ie \ng==1 \{\
 .Nm mircpio
+.Nd copy file archives in and out
+.\}
+.el .ie \ng==2 \{\
+.Nm paxcpio
 .Nd copy file archives in and out
 .\}
 .el \{\
@@ -531,7 +542,15 @@ specific archive format specification.
 .Xr mirpax 1 ,
 .Xr mirtar 1 ,
 .\}
+.ie \ng==2 \{\
+.Xr cpio 1 ,
+.Xr deb 5 ,
 .Xr pax 1 ,
+.Xr paxtar 1 ,
+.\}
+.el \{\
+.Xr pax 1 ,
+.\}
 .Xr tar 1
 .Sh AUTHORS
 Keith Muller at the University of California, San Diego.
