@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/cache.h,v 1.2 2012/02/12 00:27:15 tg Exp $ */
 /*	$OpenBSD: cache.h,v 1.4 2003/10/20 06:22:27 jmc Exp $	*/
 /*	$NetBSD: cache.h,v 1.3 1995/03/21 09:07:12 cgd Exp $	*/
 

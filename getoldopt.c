@@ -1,4 +1,4 @@
-/*	$OpenBSD: getoldopt.c,v 1.8 2003/07/02 21:19:33 deraadt Exp $	*/
+/*	$OpenBSD: getoldopt.c,v 1.9 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: getoldopt.c,v 1.3 1995/03/21 09:07:28 cgd Exp $	*/
 
 /*
@@ -18,7 +18,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.3 2011/08/16 13:57:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.4 2012/02/12 00:27:16 tg Exp $");
 
 int
 getoldopt(int argc, char **argv, const char *optstring)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf_subs.c,v 1.21 2005/11/09 19:59:06 otto Exp $	*/
+/*	$OpenBSD: buf_subs.c,v 1.23 2009/12/22 12:09:36 jasper Exp $	*/
 /*	$NetBSD: buf_subs.c,v 1.5 1995/03/21 09:07:08 cgd Exp $	*/
 
 /*-
@@ -45,8 +45,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__SCCSID("@(#)buf_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.3 2011/08/16 21:32:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.4 2012/02/12 00:27:14 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -966,7 +965,7 @@ buf_flush(int bufcnt)
 		} else if (cnt > 0) {
 			/*
 			 * Oh drat we got a partial write!
-			 * if format doesnt care about alignment let it go,
+			 * if format does not care about alignment let it go,
 			 * we warned the user in ar_write().... but this means
 			 * the last record on this volume violates pax spec....
 			 */

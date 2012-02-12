@@ -1,5 +1,5 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.15 2011/08/16 21:32:47 tg Exp $ */
-/*	$OpenBSD: extern.h,v 1.32 2006/11/17 08:38:04 otto Exp $	*/
+/**	$MirOS: src/bin/pax/extern.h,v 1.16 2012/02/12 00:27:15 tg Exp $ */
+/*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -184,6 +184,7 @@ int set_crc(ARCHD *, int);
 int ftree_start(void);
 int ftree_add(char *, int);
 void ftree_sel(ARCHD *);
+void ftree_skipped_newer(void);
 void ftree_chk(void);
 int next_file(ARCHD *);
 

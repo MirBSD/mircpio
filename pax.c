@@ -1,8 +1,9 @@
-/**	$MirOS: src/bin/pax/pax.c,v 1.8 2011/08/16 13:50:18 tg Exp $ */
-/*	$OpenBSD: pax.c,v 1.28 2005/08/04 10:02:44 mpf Exp $	*/
+/*	$OpenBSD: pax.c,v 1.32 2011/05/26 14:42:06 deraadt Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
+ * Copyright (c) 2012
+ *	Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -51,10 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__COPYRIGHT("@(#) Copyright (c) 1992, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n");
-__SCCSID("@(#)pax.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.8 2011/08/16 13:50:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.9 2012/02/12 00:27:17 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -303,7 +301,7 @@ main(int argc, char **argv)
 static void
 sig_cleanup(int which_sig)
 {
-	/* XXX signal races */
+	char errbuf[80];
 
 	/*
 	 * restore modes and times for any dirs we may have created
@@ -311,16 +309,21 @@ sig_cleanup(int which_sig)
 	 * will clearly see the message on a line by itself.
 	 */
 	vflag = vfpart = 1;
-	if (which_sig == SIGXCPU)
-		paxwarn(0, "Cpu time limit reached, cleaning up.");
-	else
-		paxwarn(0, "Signal caught, cleaning up.");
 
-	ar_close();
-	proc_dir();
+	/* paxwarn() uses stdio; fake it as well as we can */
+	if (which_sig == SIGXCPU)
+		strlcpy(errbuf, "Cpu time limit reached, cleaning up.",
+		    sizeof errbuf);
+	else
+		strlcpy(errbuf, "Signal caught, cleaning up.",
+		    sizeof errbuf);
+	(void) write(STDERR_FILENO, errbuf, strlen(errbuf));
+
+	ar_close();			/* XXX signal race */
+	proc_dir();			/* XXX signal race */
 	if (tflag)
-		atdir_end();
-	exit(1);
+		atdir_end();		/* XXX signal race */
+	_exit(1);
 }
 
 /*
@@ -397,29 +400,29 @@ gen_init(void)
 	n_hand.sa_flags = 0;
 	n_hand.sa_handler = sig_cleanup;
 
-	if ((sigaction(SIGHUP, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGHUP, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGHUP, &o_hand, &o_hand) < 0))
+	    (sigaction(SIGHUP, &o_hand, &o_hand) < 0)))
 		goto out;
 
-	if ((sigaction(SIGTERM, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGTERM, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGTERM, &o_hand, &o_hand) < 0))
+	    (sigaction(SIGTERM, &o_hand, &o_hand) < 0)))
 		goto out;
 
-	if ((sigaction(SIGINT, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGINT, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGINT, &o_hand, &o_hand) < 0))
+	    (sigaction(SIGINT, &o_hand, &o_hand) < 0)))
 		goto out;
 
-	if ((sigaction(SIGQUIT, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGQUIT, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGQUIT, &o_hand, &o_hand) < 0))
+	    (sigaction(SIGQUIT, &o_hand, &o_hand) < 0)))
 		goto out;
 
-	if ((sigaction(SIGXCPU, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGXCPU, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGXCPU, &o_hand, &o_hand) < 0))
+	    (sigaction(SIGXCPU, &o_hand, &o_hand) < 0)))
 		goto out;
 
 	n_hand.sa_handler = SIG_IGN;

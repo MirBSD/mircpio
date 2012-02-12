@@ -1,8 +1,8 @@
-/*	$OpenBSD: ar_subs.c,v 1.31 2006/11/17 08:38:04 otto Exp $	*/
+/*	$OpenBSD: ar_subs.c,v 1.33 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2008, 2011
+ * Copyright (c) 2008, 2011, 2012
  *	Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -50,8 +50,7 @@
 #include "extern.h"
 #include "options.h"
 
-__SCCSID("@(#)ar_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.8 2011/08/16 21:32:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.9 2012/02/12 00:27:14 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -447,8 +446,10 @@ wr_archive(ARCHD *arcn, int is_app)
 			 */
 			if ((res = chk_ftime(arcn)) < 0)
 				break;
-			if (res > 0)
+			if (res > 0) {
+				ftree_skipped_newer();
 				continue;
+			}
 		}
 
 		/*
@@ -863,6 +864,7 @@ copy(void)
 			*dest_pt = '\0';
 
 			if (res == 0) {
+				ftree_skipped_newer();
 				if (uflag && Dflag) {
 					if ((arcn->sb.st_mtime<=sb.st_mtime) &&
 					    (arcn->sb.st_ctime<=sb.st_ctime))

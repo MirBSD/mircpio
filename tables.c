@@ -1,4 +1,4 @@
-/*	$OpenBSD: tables.c,v 1.25 2007/09/02 15:19:08 deraadt Exp $	*/
+/*	$OpenBSD: tables.c,v 1.26 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
@@ -48,8 +48,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__SCCSID("@(#)tables.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.9 2008/11/08 23:03:38 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.10 2012/02/12 00:27:18 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax

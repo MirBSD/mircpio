@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/cache.c,v 1.4 2007/02/17 04:52:40 tg Exp $ */
-/*	$OpenBSD: cache.c,v 1.17 2004/03/16 03:28:34 tedu Exp $	*/
+/*	$OpenBSD: cache.c,v 1.19 2009/12/22 12:09:36 jasper Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
 /*-
@@ -48,8 +47,7 @@
 #include "cache.h"
 #include "extern.h"
 
-__SCCSID("@(#)cache.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.4 2007/02/17 04:52:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.5 2012/02/12 00:27:15 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -274,7 +272,7 @@ name_gid(gid_t gid, int frc)
 	if ((gr = getgrgid(gid)) == NULL) {
 		/*
 		 * no match for this gid in the local group file, put in
-		 * a string that is the gid in numberic format
+		 * a string that is the gid in numeric format
 		 */
 		if (ptr == NULL)
 			return("");

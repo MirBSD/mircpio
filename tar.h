@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/tar.h,v 1.2 2012/02/12 00:27:18 tg Exp $ */
 /*	$OpenBSD: tar.h,v 1.7 2003/06/02 23:32:09 millert Exp $	*/
 /*	$NetBSD: tar.h,v 1.3 1995/03/21 09:07:51 cgd Exp $	*/
 

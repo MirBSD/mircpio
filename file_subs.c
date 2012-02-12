@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/file_subs.c,v 1.14 2009/10/27 18:47:26 tg Exp $ */
-/*	$OpenBSD: file_subs.c,v 1.30 2005/11/09 19:59:06 otto Exp $	*/
+/*	$OpenBSD: file_subs.c,v 1.32 2009/12/22 12:08:30 jasper Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -55,8 +54,7 @@
 #include "options.h"
 #include "extern.h"
 
-__SCCSID("@(#)file_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.14 2009/10/27 18:47:26 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.15 2012/02/12 00:27:16 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -1082,7 +1080,7 @@ file_flush(int fd, char *fname, int isempt)
 
 /*
  * rdfile_close()
- *	close a file we have beed reading (to copy or archive). If we have to
+ *	close a file we have been reading (to copy or archive). If we have to
  *	reset access time (tflag) do so (the times are stored in arcn).
  */
 

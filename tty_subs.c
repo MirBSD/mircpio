@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty_subs.c,v 1.12 2003/06/02 23:32:09 millert Exp $	*/
+/*	$OpenBSD: tty_subs.c,v 1.14 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: tty_subs.c,v 1.5 1995/03/21 09:07:52 cgd Exp $	*/
 
 /*-
@@ -47,8 +47,7 @@
 #include "extern.h"
 #include <stdarg.h>
 
-__SCCSID("@(#)tty_subs.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.2 2007/02/17 04:52:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.3 2012/02/12 00:27:19 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user
@@ -117,17 +116,13 @@ tty_prnt(const char *fmt, ...)
 int
 tty_read(char *str, int len)
 {
-	char *pt;
-
-	if ((--len <= 0) || (ttyinf == NULL) || (fgets(str,len,ttyinf) == NULL))
+	if (ttyinf == NULL || fgets(str, len, ttyinf) == NULL)
 		return(-1);
-	*(str + len) = '\0';
 
 	/*
 	 * strip off that trailing newline
 	 */
-	if ((pt = strchr(str, '\n')) != NULL)
-		*pt = '\0';
+	str[strcspn(str, "\n")] = '\0';
 	return(0);
 }
 

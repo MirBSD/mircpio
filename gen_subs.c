@@ -1,4 +1,4 @@
-/*	$OpenBSD: gen_subs.c,v 1.19 2007/04/04 21:55:10 millert Exp $	*/
+/*	$OpenBSD: gen_subs.c,v 1.20 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -52,8 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__SCCSID("@(#)gen_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.9 2008/03/14 15:55:21 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.10 2012/02/12 00:27:16 tg Exp $");
 
 #ifdef __GLIBC__
 void strmode(mode_t, char *);

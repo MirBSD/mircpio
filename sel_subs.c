@@ -1,4 +1,4 @@
-/*	$OpenBSD: sel_subs.c,v 1.18 2004/04/16 22:50:23 deraadt Exp $	*/
+/*	$OpenBSD: sel_subs.c,v 1.20 2009/11/12 20:17:03 deraadt Exp $	*/
 /*	$NetBSD: sel_subs.c,v 1.5 1995/03/21 09:07:42 cgd Exp $	*/
 
 /*-
@@ -48,8 +48,7 @@
 #include "sel_subs.h"
 #include "extern.h"
 
-__SCCSID("@(#)sel_subs.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.3 2008/03/14 15:55:21 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.4 2012/02/12 00:27:17 tg Exp $");
 
 static int str_sec(const char *, time_t *);
 static int usr_match(ARCHD *);
@@ -386,6 +385,7 @@ trng_add(char *str)
 			default:
 				paxwarn(1, "Bad option %c with time range %s",
 				    *flgpt, str);
+				(void)free((char *)pt);
 				goto out;
 			}
 			++flgpt;

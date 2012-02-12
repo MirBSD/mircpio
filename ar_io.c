@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/ar_io.c,v 1.10 2011/08/16 21:32:45 tg Exp $ */
-/*	$OpenBSD: ar_io.c,v 1.37 2005/08/04 10:02:44 mpf Exp $	*/
+/*	$OpenBSD: ar_io.c,v 1.39 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
@@ -56,8 +55,7 @@
 #include <sys/mtio.h>
 #endif
 
-__SCCSID("@(#)ar_io.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.10 2011/08/16 21:32:45 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.11 2012/02/12 00:27:14 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -1305,7 +1303,7 @@ ar_start_gzip(int fd, int wr)
 		close(fds[0]);
 		close(fds[1]);
 		if (execlp(gzip_program, gzip_program, gzip_flags, NULL) < 0)
-			err(1, "could not exec");
+			err(1, "could not exec %s", gzip_program);
 		/* NOTREACHED */
 	}
 }

@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/cpio.h,v 1.4 2012/02/12 00:27:15 tg Exp $ */
 /*	$OpenBSD: cpio.h,v 1.4 2003/06/02 23:32:08 millert Exp $	*/
 /*	$NetBSD: cpio.h,v 1.3 1995/03/21 09:07:15 cgd Exp $	*/
 

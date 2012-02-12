@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/cpio.c,v 1.15 2011/08/16 21:32:47 tg Exp $ */
-/*	$OpenBSD: cpio.c,v 1.17 2004/04/16 22:50:23 deraadt Exp $	*/
+/*	$OpenBSD: cpio.c,v 1.19 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
@@ -48,8 +47,7 @@
 #include "extern.h"
 #include "options.h"
 
-__SCCSID("@(#)cpio.c	8.1 (Berkeley) 5/31/93");
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.15 2011/08/16 21:32:47 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.16 2012/02/12 00:27:15 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -151,7 +149,7 @@ com_rd(ARCHD *arcn)
 }
 
 /*
- * cpio_end_wr()
+ * cpio_endwr()
  *	write the special file with the name trailer in the proper format
  * Return:
  *	result of the write of the trailer from the cpio specific write func

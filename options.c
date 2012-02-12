@@ -58,8 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__SCCSID("@(#)options.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.39 2012/02/12 00:14:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.40 2012/02/12 00:27:16 tg Exp $");
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);

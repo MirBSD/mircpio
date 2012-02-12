@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/pat_rep.h,v 1.2 2012/02/12 00:27:17 tg Exp $ */
 /*	$OpenBSD: pat_rep.h,v 1.4 2003/06/02 23:32:08 millert Exp $	*/
 /*	$NetBSD: pat_rep.h,v 1.3 1995/03/21 09:07:35 cgd Exp $	*/
 

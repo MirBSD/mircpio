@@ -1,4 +1,4 @@
-/*	$OpenBSD: pat_rep.c,v 1.30 2005/08/05 08:30:10 djm Exp $	*/
+/*	$OpenBSD: pat_rep.c,v 1.31 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: pat_rep.c,v 1.4 1995/03/21 09:07:33 cgd Exp $	*/
 
 /*-
@@ -47,8 +47,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__SCCSID("@(#)pat_rep.c	8.2 (Berkeley) 4/18/94");
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.2 2007/02/17 04:52:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.3 2012/02/12 00:27:17 tg Exp $");
 
 /*
  * routines to handle pattern matching, name modification (regular expression

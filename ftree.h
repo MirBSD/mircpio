@@ -1,3 +1,4 @@
+/**	$MirOS: src/bin/pax/ftree.h,v 1.2 2012/02/12 00:27:16 tg Exp $ */
 /*	$OpenBSD: ftree.h,v 1.5 2008/05/06 06:54:28 henning Exp $	*/
 /*	$NetBSD: ftree.h,v 1.3 1995/03/21 09:07:23 cgd Exp $	*/
 
