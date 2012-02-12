@@ -2,7 +2,11 @@
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005 Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2005, 2012
+ *	Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2011
+ *	Svante Signell <svante.signell@telia.com>
+ *	Guillem Jover <guillem@debian.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -48,7 +52,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.10 2012/02/12 00:27:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.11 2012/02/12 00:42:29 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -1121,13 +1125,22 @@ void
 add_dir(char *name, struct stat *psb, int frc_mode)
 {
 	DIRDATA *dblk;
+#if (_POSIX_VERSION >= 200809L)
+	char *rp = NULL;
+#else
 	char realname[MAXPATHLEN], *rp;
+#endif
 
 	if (dirp == NULL)
 		return;
 
 	if (havechd && *name != '/') {
-		if ((rp = realpath(name, realname)) == NULL) {
+#if (_POSIX_VERSION >= 200809L)
+		if ((rp = realpath(name, NULL)) == NULL)
+#else
+		if ((rp = realpath(name, realname)) == NULL)
+#endif
+		    {
 			paxwarn(1, "Cannot canonicalize %s", name);
 			return;
 		}
@@ -1138,6 +1151,9 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 		if (dblk == NULL) {
 			paxwarn(1, "Unable to store mode and times for created"
 			    " directory: %s", name);
+#if (_POSIX_VERSION >= 200809L)
+			free(rp);
+#endif
 			return;
 		}
 		dirp = dblk;
@@ -1147,6 +1163,9 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	if ((dblk->name = strdup(name)) == NULL) {
 		paxwarn(1, "Unable to store mode and times for created"
 		    " directory: %s", name);
+#if (_POSIX_VERSION >= 200809L)
+		free(rp);
+#endif
 		return;
 	}
 	dblk->mode = psb->st_mode & 0xffff;
@@ -1154,6 +1173,9 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	dblk->atime = psb->st_atime;
 	dblk->frc_mode = frc_mode;
 	++dircnt;
+#if (_POSIX_VERSION >= 200809L)
+	free(rp);
+#endif
 }
 
 /*

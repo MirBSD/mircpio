@@ -2,8 +2,10 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007, 2008, 2009
+ * Copyright (c) 2007, 2008, 2009, 2012
  *	Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2011
+ *	Svante Signell <svante.signell@telia.com>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -54,7 +56,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.15 2012/02/12 00:27:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.16 2012/02/12 00:42:28 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -411,7 +413,7 @@ node_creat(ARCHD *arcn)
 	int pass = 0;
 	mode_t file_mode;
 	struct stat sb;
-	char target[MAXPATHLEN];
+	char *target = NULL;
 	char *nm = arcn->name;
 	int len;
 
@@ -434,8 +436,15 @@ node_creat(ARCHD *arcn)
 			if (strcmp(NM_TAR, argv0) == 0 && Lflag) {
 				while (lstat(nm, &sb) == 0 &&
 				    S_ISLNK(sb.st_mode)) {
+					target = malloc(sb.st_size + 1);
+					if (target == NULL) {
+						oerrno = ENOMEM;
+						syswarn(1, oerrno,
+						    "Out of memory");
+						return (-1);
+					}
 					len = readlink(nm, target,
-					    sizeof target - 1);
+					    sb.st_size + 1);
 					if (len == -1) {
 						syswarn(0, errno,
 						   "cannot follow symlink %s in chain for %s",
@@ -471,7 +480,8 @@ badlink:
 			paxwarn(0,
 			    "%s skipped. Sockets cannot be copied or extracted",
 			    nm);
-			return(-1);
+			free(target);
+			return (-1);
 		case PAX_SLK:
 			res = symlink(arcn->ln_name, nm);
 			break;
@@ -485,7 +495,8 @@ badlink:
 			 */
 			paxwarn(0, "%s has an unknown file type, skipping",
 				nm);
-			return(-1);
+			free(target);
+			return (-1);
 		}
 
 		/*
@@ -500,17 +511,21 @@ badlink:
 		 * we failed to make the node
 		 */
 		oerrno = errno;
-		if ((ign = unlnk_exist(nm, arcn->type)) < 0)
-			return(-1);
+		if ((ign = unlnk_exist(nm, arcn->type)) < 0) {
+			free(target);
+			return (-1);
+		}
 
 		if (++pass <= 1)
 			continue;
 
 		if (nodirs || chk_path(nm,arcn->sb.st_uid,arcn->sb.st_gid) < 0) {
 			syswarn(1, oerrno, "Could not create: %s", nm);
-			return(-1);
+			free(target);
+			return (-1);
 		}
 	}
+	free(target);
 
 	/*
 	 * we were able to create the node. set uid/gid, modes and times
@@ -526,7 +541,7 @@ badlink:
 	 * symlinks are done now.
 	 */
 	if (arcn->type == PAX_SLK)
-		return(0);
+		return (0);
 
 	/*
 	 * IMPORTANT SECURITY NOTE:
@@ -577,7 +592,7 @@ badlink:
 
 	if (patime || pmtime)
 		set_ftime(nm, arcn->sb.st_mtime, arcn->sb.st_atime, 0);
-	return(0);
+	return (0);
 }
 
 /*
