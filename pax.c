@@ -52,7 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.11 2012/02/12 01:02:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.12 2012/02/12 01:22:20 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -318,7 +318,10 @@ sig_cleanup(int which_sig)
 	else
 		strlcpy(errbuf, "Signal caught, cleaning up.",
 		    sizeof errbuf);
-	(void) write(STDERR_FILENO, errbuf, strlen(errbuf));
+	if (!write(STDERR_FILENO, errbuf, strlen(errbuf))) {
+		/* dummy, to keep fortified gcc quiet */
+		errbuf[0] = '\0';
+	}
 
 	ar_close();			/* XXX signal race */
 	proc_dir();			/* XXX signal race */
