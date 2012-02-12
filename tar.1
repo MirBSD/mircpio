@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.19 2012/02/11 23:37:52 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.20 2012/02/12 00:04:33 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012
@@ -78,7 +78,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: February 11 2012 $
+.Dd $Mdocdate: February 12 2012 $
 .\"
 .\" Check which macro package we use
 .\"
@@ -177,7 +177,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578AbefHhjLmNOoPRSpqsvwXZz
+.No { Cm crtux No } Op Cm 014578AbefHhJjLmNOoPRSpqsvwXZz
 .Sm on
 .Bk -words
 .Op Ar blocking-factor | archive | replstr
@@ -188,7 +188,7 @@
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
-.Op Fl 014578AeHhjLmNOoPpqRSvwXZz
+.Op Fl 014578AeHhJjLmNOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
@@ -305,6 +305,8 @@ link ultimately points to.
 .It Fl I Ar file
 This is a positional argument which reads the names of files to
 archive or extract from the given file, one per line.
+.It Fl J
+Use the xz utility to compress the archive.
 .It Fl j
 Use the bzip2 utility to compress the archive.
 .It Fl L
@@ -613,7 +615,7 @@ extensions by
 .An Thorsten Glaser Aq tg@mirbsd.org .
 .Sh CAVEATS
 The flags
-.Fl AjLMNRS
+.Fl AJjLMNRS
 are not portable to other implementations of
 .Nm tar
 where they may have a different meaning.
