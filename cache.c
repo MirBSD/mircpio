@@ -47,7 +47,7 @@
 #include "cache.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.5 2012/02/12 00:27:15 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.6 2012/02/12 01:02:05 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -193,7 +193,9 @@ name_uid(uid_t uid, int frc)
 	 * No entry for this uid, we will add it
 	 */
 	if (!pwopn) {
-#if !defined(__INTERIX) && !defined(__GLIBC__)
+#if defined(__GLIBC__)
+		setpwent();
+#elif !defined(__INTERIX)
 		setpassent(1);
 #endif
 		++pwopn;
@@ -261,7 +263,9 @@ name_gid(gid_t gid, int frc)
 	 * No entry for this gid, we will add it
 	 */
 	if (!gropn) {
-#if !defined(__INTERIX) && !defined(__GLIBC__)
+#if defined(__GLIBC__)
+		setgrent();
+#elif !defined(__INTERIX)
 		setgroupent(1);
 #endif
 		++gropn;
@@ -330,7 +334,9 @@ uid_name(const char *name, uid_t *uid)
 	}
 
 	if (!pwopn) {
-#if !defined(__INTERIX) && !defined(__GLIBC__)
+#if defined(__GLIBC__)
+		setpwent();
+#elif !defined(__INTERIX)
 		setpassent(1);
 #endif
 		++pwopn;
@@ -395,7 +401,9 @@ gid_name(const char *name, gid_t *gid)
 	}
 
 	if (!gropn) {
-#if !defined(__INTERIX) && !defined(__GLIBC__)
+#if defined(__GLIBC__)
+		setgrent();
+#elif !defined(__INTERIX)
 		setgroupent(1);
 #endif
 		++gropn;

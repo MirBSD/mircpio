@@ -52,7 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.10 2012/02/12 00:44:57 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.11 2012/02/12 01:02:06 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -226,6 +226,9 @@ main(int argc, char **argv)
 	const char *tmpdir;
 	size_t tdlen;
 
+	/* may not be a constant, thus initialising early */
+	listf = stderr;
+
 	/*
 	 * Keep a reference to cwd, so we can always come back home.
 	 */
@@ -252,8 +255,6 @@ main(int argc, char **argv)
 		memcpy(tempfile, tmpdir, tdlen);
 	tempbase = tempfile + tdlen;
 	*tempbase++ = '/';
-
-	listf = stderr;
 
 	/*
 	 * parse options, determine operational mode, general init

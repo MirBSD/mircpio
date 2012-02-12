@@ -58,7 +58,11 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.40 2012/02/12 00:27:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.41 2012/02/12 01:02:06 tg Exp $");
+
+#ifndef _PATH_DEFTAPE
+#define _PATH_DEFTAPE "/dev/rmt0"
+#endif
 
 #ifdef __GLIBC__
 char *fgetln(FILE *, size_t *);
@@ -1109,10 +1113,8 @@ tar_options(int argc, char **argv)
 		to_stdout = 0;
 	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
 		arcname = getenv("TAPE");
-#ifdef _PATH_DEFTAPE
 		if ((arcname == NULL) || (*arcname == '\0'))
 			arcname = _PATH_DEFTAPE;
-#endif
 	}
 }
 
