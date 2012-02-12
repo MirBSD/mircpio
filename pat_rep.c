@@ -47,7 +47,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.3 2012/02/12 00:27:17 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.4 2012/02/12 00:44:57 tg Exp $");
 
 /*
  * routines to handle pattern matching, name modification (regular expression
@@ -523,7 +523,7 @@ fn_match(char *pattern, char *string, char **pend)
 				c = *++pattern;
 
 			/*
-			 * Optimized hack for pattern with a * at the end
+			 * optimised hack for pattern with a * at the end
 			 */
 			if (c == '\0')
 				return (0);
@@ -835,7 +835,7 @@ fix_path(char *or_name, int *or_len, char *dir_name, int dir_len)
  *	when we find one with a successful substitution, we modify the name
  *	as specified. if required, we print the results. if the resulting name
  *	is empty, we will skip this archive member. We use the regexp(3)
- *	routines (regexp() ought to win a prize as having the most cryptic
+ *	routines (regexp() ought to win a price as having the most cryptic
  *	library function manual page).
  *	--Parameters--
  *	name is the file name we are going to apply the regular expressions to

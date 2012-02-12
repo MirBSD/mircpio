@@ -52,7 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.9 2012/02/12 00:27:17 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.10 2012/02/12 00:44:57 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -312,7 +312,7 @@ sig_cleanup(int which_sig)
 
 	/* paxwarn() uses stdio; fake it as well as we can */
 	if (which_sig == SIGXCPU)
-		strlcpy(errbuf, "Cpu time limit reached, cleaning up.",
+		strlcpy(errbuf, "CPU time limit reached, cleaning up.",
 		    sizeof errbuf);
 	else
 		strlcpy(errbuf, "Signal caught, cleaning up.",
@@ -385,7 +385,7 @@ gen_init(void)
 	/*
 	 * signal handling to reset stored directory times and modes. Since
 	 * we deal with broken pipes via failed writes we ignore it. We also
-	 * deal with any file size limit through failed writes. Cpu time
+	 * deal with any file size limit through failed writes. CPU time
 	 * limits are caught and a cleanup is forced.
 	 */
 	if ((sigemptyset(&s_mask) < 0) || (sigaddset(&s_mask, SIGTERM) < 0) ||

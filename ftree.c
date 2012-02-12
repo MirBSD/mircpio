@@ -47,7 +47,7 @@
 #include "ftree.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.4 2012/02/12 00:27:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.5 2012/02/12 00:44:57 tg Exp $");
 
 /*
  * routines to interface with the fts library function.
@@ -77,7 +77,7 @@ static char *getpathname(char *, int);
 
 /*
  * ftree_start()
- *	initialize the options passed to fts_open() during this run of pax
+ *	initialise the options passed to fts_open() during this run of pax
  *	options are based on the selection of pax options by the user
  *	fts_start() also calls fts_arg() to open the first valid file arg. We
  *	also attempt to reset directory access times when -t (tflag) is set.
@@ -423,7 +423,7 @@ next_file(ARCHD *arcn)
 
 		/*
 		 * ok got a file tree node to process. copy info into arcn
-		 * structure (initialize as required)
+		 * structure (initialise as required)
 		 */
 		arcn->skip = 0;
 		arcn->pad = 0;

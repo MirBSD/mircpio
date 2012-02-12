@@ -50,7 +50,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.9 2012/02/12 00:27:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.10 2012/02/12 00:44:56 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -1290,7 +1290,7 @@ get_arc(void)
 
     out:
 	/*
-	 * we cannot find a header, bow, apologize and quit
+	 * we cannot find a header, bow, apologise and quit
 	 */
 	paxwarn(1, "Sorry, unable to determine archive format.");
 	return(-1);

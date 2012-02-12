@@ -52,7 +52,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.11 2012/02/12 00:42:29 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.12 2012/02/12 00:44:58 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -1141,7 +1141,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 		if ((rp = realpath(name, realname)) == NULL)
 #endif
 		    {
-			paxwarn(1, "Cannot canonicalize %s", name);
+			paxwarn(1, "Cannot canonicalise %s", name);
 			return;
 		}
 		name = rp;
