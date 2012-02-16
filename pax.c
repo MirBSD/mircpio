@@ -52,7 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.15 2012/02/16 17:27:32 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.16 2012/02/16 17:34:35 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -309,7 +309,7 @@ sig_cleanup(int which_sig)
 	 * on the size of long, off_t, and whether LONG_OFF_T is used,
 	 * or not, correctly; target size is 80, error size -1.
 	 */
-	char errbuf[((sizeof(long) == 4) &&
+	char errbuf[((sizeof(long) >= 4) &&
 	    (sizeof(ot_type) >= 4) &&
 	    (sizeof(ot_type) == sizeof(off_t))) ? 80 : -1];
 
