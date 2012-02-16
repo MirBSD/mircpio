@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.8 2012/02/16 17:11:44 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.9 2012/02/16 17:48:06 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -15,7 +15,8 @@ MAN=	pax.1 tar.1 cpio.1
 LINKS=	${BINDIR}/pax ${BINDIR}/tar \
 	${BINDIR}/pax ${BINDIR}/cpio
 
-.if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux") || (${MACHINE_OS} == "GNU")
+.if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux") || \
+    ((${MACHINE_OS} == "GNU") && (${OSNAME} != "GNU/kFreeBSD"))
 CPPFLAGS+= -DLONG_OFF_T
 .endif
 
