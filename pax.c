@@ -52,7 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.13 2012/02/16 16:01:09 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.14 2012/02/16 17:11:46 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -303,7 +303,14 @@ main(int argc, char **argv)
 static void
 sig_cleanup(int which_sig)
 {
-	char errbuf[80];
+	/*
+	 * The definition of this array doubles as compile-time assert
+	 * on the size of long, off_t, and whether LONG_OFF_T is used,
+	 * or not, correctly; target size is 80, error size -1.
+	 */
+	char errbuf[((sizeof(long) == 4) &&
+	    (sizeof(ot_type) >= 4) &&
+	    (sizeof(ot_type) == sizeof(off_t))) ? 80 : -1];
 
 	/*
 	 * restore modes and times for any dirs we may have created

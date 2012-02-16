@@ -1,16 +1,11 @@
-# $MirOS: src/bin/pax/Makefile,v 1.7 2011/08/16 21:32:45 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.8 2012/02/16 17:11:44 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
-
-# To install on versions prior to BSD 4.4 the following may have to be
-# defined with CFLAGS +=
+#-
+# It may be necessary to define some options on pre-4.4BSD or
+# other operating systems:
 #
-# -DLONG_OFF_T	Define this if the base type of an off_t is a long (and is
-#		NOT a quad).  (This is often defined in the file
-#		/usr/include/sys/types.h).
-# 		This define is important, as if you do have a quad_t
-# 		off_t and define LONG_OFF_T, pax will compile but will
-# 		NOT RUN PROPERLY.
-#
+# -DLONG_OFF_T	The base type of off_t is a long, not a long long.
+#		This is often defined in: /usr/include/sys/types.h
 
 PROG=   pax
 SRCS=	ar.c ar_io.c ar_subs.c buf_subs.c cache.c cpio.c file_subs.c ftree.c \

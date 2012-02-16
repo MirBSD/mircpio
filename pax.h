@@ -1,9 +1,10 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.10 2012/02/12 00:44:57 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.11 2012/02/16 17:11:46 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2011 Thorsten Glaser.
+ * Copyright (c) 2011, 2012
+ *	Thorsten Glaser <tg@debian.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -296,5 +297,13 @@ typedef struct oplist {
 #define HOURSPERDAY	24
 #define DAYSPERNYEAR	365
 #define SECSPERHOUR	(SECSPERMIN * MINSPERHOUR)
-#define SECSPERDAY	((long) SECSPERHOUR * HOURSPERDAY)
+#define SECSPERDAY	((long)SECSPERHOUR * HOURSPERDAY)
 #define TM_YEAR_BASE	1900
+
+#ifndef LONG_OFF_T
+#define OT_FMT		"llu"
+typedef unsigned long long ot_type;
+#else
+#define OT_FMT		"lu"
+typedef unsigned long ot_type;
+#endif

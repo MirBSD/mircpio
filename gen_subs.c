@@ -2,6 +2,8 @@
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2012
+ *	Thorsten Glaser <tg@debian.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -52,7 +54,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.10 2012/02/12 00:27:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.11 2012/02/16 17:11:45 tg Exp $");
 
 #ifdef __GLIBC__
 void strmode(mode_t, char *);
@@ -135,13 +137,8 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
 		(void)fprintf(fp, "%4lu,%4lu ", (unsigned long)MAJOR(sbp->st_rdev),
 		    (unsigned long)MINOR(sbp->st_rdev));
-	else {
-#		ifdef LONG_OFF_T
-		(void)fprintf(fp, "%9lu ", sbp->st_size);
-#		else
-		(void)fprintf(fp, "%9llu ", sbp->st_size);
-#		endif
-	}
+	else
+		(void)fprintf(fp, "%9" OT_FMT " ", (ot_type)sbp->st_size);
 
 	/*
 	 * print name and link info for hard and soft links
@@ -311,22 +308,21 @@ ul_asc(u_long val, char *str, int len, int base)
 	return(0);
 }
 
-#ifndef LONG_OFF_T
 /*
- * asc_uqd()
- *	convert hex/octal character string into a u_quad_t. We do not have to
- *	check for overflow! (the headers in all supported formats are not large
- *	enough to create an overflow).
+ * asc_ot()
+ *	convert hex/octal character string into a ot_type. We do not have
+ *	to check for overflow! (the headers in all supported formats are
+ *	not large enough to create an overflow).
  *	NOTE: strings passed to us are NOT TERMINATED.
  * Return:
- *	u_quad_t value
+ *	ot_type value
  */
 
-u_quad_t
-asc_uqd(char *str, int len, int base)
+ot_type
+asc_ot(char *str, int len, int base)
 {
 	char *stop;
-	u_quad_t tval = 0;
+	ot_type tval = 0;
 
 	stop = str + len;
 
@@ -355,21 +351,21 @@ asc_uqd(char *str, int len, int base)
 		while ((str < stop) && (*str >= '0') && (*str <= '7'))
 			tval = (tval << 3) + (*str++ - '0');
 	}
-	return(tval);
+	return (tval);
 }
 
 /*
- * uqd_asc()
- *	convert an u_quad_t into a hex/oct ascii string. pads with LEADING
- *	ascii 0's to fill string completely
+ * ot_asc()
+ *	convert an ot_type into a hex/oct ascii string.
+ *	pads with LEADING ascii 0s to fill string completely.
  *	NOTE: the string created is NOT TERMINATED.
  */
 
 int
-uqd_asc(u_quad_t val, char *str, int len, int base)
+ot_asc(ot_type val, char *str, int len, int base)
 {
 	char *pt;
-	u_quad_t digit;
+	ot_type digit;
 
 	/*
 	 * WARNING str is not '\0' terminated by this routine
@@ -387,13 +383,13 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 				*pt-- = '0' + (char)digit;
 			else
 				*pt-- = 'a' + (char)(digit - 10);
-			if ((val = (val >> 4)) == (u_quad_t)0)
+			if ((val = (val >> 4)) == (ot_type)0)
 				break;
 		}
 	} else {
 		while (pt >= str) {
 			*pt-- = '0' + (char)(val & 0x7);
-			if ((val = (val >> 3)) == (u_quad_t)0)
+			if ((val = (val >> 3)) == (ot_type)0)
 				break;
 		}
 	}
@@ -403,11 +399,10 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 	 */
 	while (pt >= str)
 		*pt-- = '0';
-	if (val != (u_quad_t)0)
-		return(-1);
-	return(0);
+	if (val != (ot_type)0)
+		return (-1);
+	return (0);
 }
-#endif
 
 /*
  * Copy at max min(bufz, fieldsz) chars from field to buf, stopping

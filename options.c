@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.42 2012/02/16 16:01:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.43 2012/02/16 17:11:46 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -1615,48 +1615,51 @@ opt_add(const char *str)
  *	0 for an error, a positive value o.w.
  */
 
+#ifndef LONG_OFF_T
+#define OT_MAX	ULLONG_MAX
+#define strtoot	strtoull
+#else
+#define OT_MAX	ULONG_MAX
+#define strtoot	strtoul
+#endif
+
 static off_t
 str_offt(char *val)
 {
 	char *expr;
-	off_t num, t;
+	ot_type num, t;
 
-#	ifdef LONG_OFF_T
-	num = strtol(val, &expr, 0);
-	if ((num == LONG_MAX) || (num <= 0) || (expr == val))
-#	else
-	num = strtoq(val, &expr, 0);
-	if ((num == QUAD_MAX) || (num <= 0) || (expr == val))
-#	endif
-		return(0);
+	num = strtoot(val, &expr, 0);
+	if ((num == OT_MAX) || (num <= 0) || (expr == val))
+		return (0);
 
 	switch (*expr) {
 	case 'b':
 		t = num;
 		num *= 512;
 		if (t > num)
-			return(0);
+			return (0);
 		++expr;
 		break;
 	case 'k':
 		t = num;
 		num *= 1024;
 		if (t > num)
-			return(0);
+			return (0);
 		++expr;
 		break;
 	case 'm':
 		t = num;
 		num *= 1048576;
 		if (t > num)
-			return(0);
+			return (0);
 		++expr;
 		break;
 	case 'w':
 		t = num;
 		num *= sizeof(int);
 		if (t > num)
-			return(0);
+			return (0);
 		++expr;
 		break;
 	}
@@ -1669,12 +1672,12 @@ str_offt(char *val)
 			t = num;
 			num *= str_offt(expr + 1);
 			if (t > num)
-				return(0);
+				return (0);
 			break;
 		default:
-			return(0);
+			return (0);
 	}
-	return(num);
+	return ((off_t)num);
 }
 
 char *

@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.17 2012/02/16 16:01:08 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.18 2012/02/16 17:11:45 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -45,7 +45,6 @@
 #if defined(__GLIBC__)
 #include <time.h>
 #endif
-
 
 /*
  * ar.c
@@ -196,10 +195,8 @@ void ls_tty(ARCHD *);
 void safe_print(const char *, FILE *);
 u_long asc_ul(char *, int, int);
 int ul_asc(u_long, char *, int, int);
-#ifndef LONG_OFF_T
-u_quad_t asc_uqd(char *, int, int);
-int uqd_asc(u_quad_t, char *, int, int);
-#endif
+ot_type asc_ot(char *, int, int);
+int ot_asc(ot_type, char *, int, int);
 size_t fieldcpy(char *, size_t, const char *, size_t);
 
 /*

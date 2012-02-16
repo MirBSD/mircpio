@@ -2,6 +2,8 @@
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
+ * Copyright (c) 2012
+ *	Thorsten Glaser <tg@debian.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -55,7 +57,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.12 2012/02/16 16:01:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.13 2012/02/16 17:11:45 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -400,31 +402,21 @@ ar_close(void)
 	 * could have written anything yet.
 	 */
 	if (frmt == NULL) {
-#	ifdef LONG_OFF_T
-		(void)fprintf(listf, "%s: unknown format, %lu bytes skipped.\n",
-#	else
-		(void)fprintf(listf, "%s: unknown format, %llu bytes skipped.\n",
-#	endif
-		    argv0, rdcnt);
+		(void)fprintf(listf, "%s: unknown format, %" OT_FMT
+		    " bytes skipped.\n", argv0, (ot_type)rdcnt);
 		(void)fflush(listf);
 		flcnt = 0;
 		return;
 	}
 
 	if (strcmp(NM_CPIO, argv0) == 0)
-#	ifdef LONG_OFF_T
-		(void)fprintf(listf, "%lu blocks\n", (rdcnt ? rdcnt : wrcnt) / 5120);
-#	else
-		(void)fprintf(listf, "%llu blocks\n", (rdcnt ? rdcnt : wrcnt) / 5120);
-#	endif
+		(void)fprintf(listf, "%" OT_FMT " blocks\n",
+		    (ot_type)((rdcnt ? rdcnt : wrcnt) / 5120));
 	else if (strcmp(NM_TAR, argv0) != 0)
 		(void)fprintf(listf,
-#	ifdef LONG_OFF_T
-		    "%s: %s vol %d, %lu files, %lu bytes read, %lu bytes written.\n",
-#	else
-		    "%s: %s vol %d, %lu files, %llu bytes read, %llu bytes written.\n",
-#	endif
-		    argv0, frmt->name, arvol-1, flcnt, rdcnt, wrcnt);
+		    "%s: %s vol %d, %lu files, %" OT_FMT " bytes read, %"
+		    OT_FMT " bytes written.\n", argv0, frmt->name, arvol-1,
+		    flcnt, (ot_type)rdcnt, (ot_type)wrcnt);
 	(void)fflush(listf);
 	flcnt = 0;
 }
