@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.43 2012/02/16 17:11:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.44 2012/02/16 17:27:31 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -288,13 +288,13 @@ pax_options(int argc, char **argv)
 			/*
 			 * use xz (non-standard option)
 			 */
-			gzip_program = XZ_CMD;
+			compress_program = XZ_CMD;
 			break;
 		case 'j':
 			/*
 			 * use bzip2 (non-standard option)
 			 */
-			gzip_program = BZIP2_CMD;
+			compress_program = BZIP2_CMD;
 			break;
 		case 'k':
 			/*
@@ -437,7 +437,7 @@ pax_options(int argc, char **argv)
 			/*
 			 * use gzip (non-standard option)
 			 */
-			gzip_program = GZIP_CMD;
+			compress_program = GZIP_CMD;
 			break;
 		case 'B':
 			/*
@@ -738,13 +738,13 @@ tar_options(int argc, char **argv)
 			/*
 			 * use xz (non-standard option)
 			 */
-			gzip_program = XZ_CMD;
+			compress_program = XZ_CMD;
 			break;
 		case 'j':
 			/*
 			 * use bzip2 (non-standard option)
 			 */
-			gzip_program = BZIP2_CMD;
+			compress_program = BZIP2_CMD;
 			break;
 		case 'm':
 			/*
@@ -826,7 +826,7 @@ tar_options(int argc, char **argv)
 			/*
 			 * use gzip (non-standard option)
 			 */
-			gzip_program = GZIP_CMD;
+			compress_program = GZIP_CMD;
 			break;
 		case 'B':
 			/*
@@ -897,7 +897,7 @@ tar_options(int argc, char **argv)
 			/*
 			 * use compress
 			 */
-			gzip_program = COMPRESS_CMD;
+			compress_program = COMPRESS_CMD;
 			break;
 		case '0':
 			arcname = DEV_0;
@@ -1228,13 +1228,13 @@ cpio_options(int argc, char **argv)
 				/*
 				 * use xz (non-standard option)
 				 */
-				gzip_program = XZ_CMD;
+				compress_program = XZ_CMD;
 				break;
 			case 'j':
 				/*
 				 * use bzip2 (non-standard option)
 				 */
-				gzip_program = BZIP2_CMD;
+				compress_program = BZIP2_CMD;
 				break;
 			case 'k':
 				break;
@@ -1303,7 +1303,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * use gzip (non-standard option)
 				 */
-				gzip_program = GZIP_CMD;
+				compress_program = GZIP_CMD;
 				break;
 			case 'A':
 				/*
@@ -1401,7 +1401,7 @@ cpio_options(int argc, char **argv)
 				/*
 				 * use compress (non-standard option)
 				 */
-				gzip_program = COMPRESS_CMD;
+				compress_program = COMPRESS_CMD;
 				break;
 			case '6':
 				/*

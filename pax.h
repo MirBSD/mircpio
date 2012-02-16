@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/pax.h,v 1.11 2012/02/16 17:11:46 tg Exp $ */
+/**	$MirOS: src/bin/pax/pax.h,v 1.12 2012/02/16 17:27:32 tg Exp $ */
 /*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
@@ -55,7 +55,7 @@
 				/* longer than the system MAXPATHLEN */
 
 /*
- * Pax modes of operation
+ * pax modes of operation
  */
 #define ERROR		-1	/* nothing selected */
 #define	LIST		0	/* List the file in an archive */

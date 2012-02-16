@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.18 2012/02/16 17:11:45 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.19 2012/02/16 17:27:31 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -62,7 +62,7 @@ int uar_trail(ARCHD *, char *, int, int *) __attribute__((__noreturn__));
  * ar_io.c
  */
 extern const char *arcname;
-extern const char *gzip_program;
+extern const char *compress_program;
 extern int force_one_volume;
 int ar_open(const char *);
 void ar_close(void);

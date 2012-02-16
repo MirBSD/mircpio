@@ -50,7 +50,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.11 2012/02/16 16:01:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.12 2012/02/16 17:27:30 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -335,7 +335,7 @@ extract(void)
 			goto popd;
 		}
 		/*
-		 * we have a file with data here. If we can not create it, skip
+		 * we have a file with data here. If we cannot create it, skip
 		 * over the data and purge the name from hard link table
 		 */
 		if (to_stdout)

@@ -48,7 +48,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.11 2012/02/16 17:11:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.12 2012/02/16 17:27:32 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -528,17 +528,17 @@ tar_wr(ARCHD *arcn)
 			return(1);
 		break;
 	case PAX_CHR:
-		paxwarn(1, "Tar cannot archive a character device %s",
+		paxwarn(1, "tar cannot archive a character device %s",
 		    arcn->org_name);
 		return(1);
 	case PAX_BLK:
-		paxwarn(1, "Tar cannot archive a block device %s", arcn->org_name);
+		paxwarn(1, "tar cannot archive a block device %s", arcn->org_name);
 		return(1);
 	case PAX_SCK:
-		paxwarn(1, "Tar cannot archive a socket %s", arcn->org_name);
+		paxwarn(1, "tar cannot archive a socket %s", arcn->org_name);
 		return(1);
 	case PAX_FIF:
-		paxwarn(1, "Tar cannot archive a fifo %s", arcn->org_name);
+		paxwarn(1, "tar cannot archive a fifo %s", arcn->org_name);
 		return(1);
 	case PAX_SLK:
 	case PAX_HLK:
@@ -648,7 +648,7 @@ tar_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "Tar header field is too small for %s", arcn->org_name);
+	paxwarn(1, "tar header field is too small for %s", arcn->org_name);
 	return(1);
 }
 
@@ -905,7 +905,7 @@ ustar_wr(ARCHD *arcn)
 	 * check for those file system types ustar cannot store
 	 */
 	if (arcn->type == PAX_SCK) {
-		paxwarn(1, "Ustar cannot archive a socket %s", arcn->org_name);
+		paxwarn(1, "ustar cannot archive a socket %s", arcn->org_name);
 		return(1);
 	}
 
@@ -1041,7 +1041,7 @@ ustar_wr(ARCHD *arcn)
 		if (uid_warn != t_uid) {
 			uid_warn = t_uid;
 			paxwarn(1,
-			    "Ustar header field is too small for uid %lu, "
+			    "ustar header field is too small for uid %lu, "
 			    "using nobody", t_uid);
 		}
 		if (ul_oct((u_long)uid_nobody, hd->uid, sizeof(hd->uid), 3))
@@ -1055,7 +1055,7 @@ ustar_wr(ARCHD *arcn)
 		if (gid_warn != t_gid) {
 			gid_warn = t_gid;
 			paxwarn(1,
-			    "Ustar header field is too small for gid %lu, "
+			    "ustar header field is too small for gid %lu, "
 			    "using nobody", t_gid);
 		}
 		if (ul_oct((u_long)gid_nobody, hd->gid, sizeof(hd->gid), 3))
@@ -1111,7 +1111,7 @@ ustar_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "Ustar header field is too small for %s", arcn->org_name);
+	paxwarn(1, "ustar header field is too small for %s", arcn->org_name);
 	return(1);
 }
 
@@ -1163,7 +1163,7 @@ name_split(char *name, int len)
 	len = start - name;
 
 	/*
-	 * NOTE: /str where the length of str == TNMSZ can not be stored under
+	 * NOTE: /str where the length of str == TNMSZ cannot be stored under
 	 * the p1003.1-1990 spec for ustar. We could force a prefix of / and
 	 * the file would then expand on extract to //str. The len == 0 below
 	 * makes this special case follow the spec to the letter.

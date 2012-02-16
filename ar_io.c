@@ -57,7 +57,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.13 2012/02/16 17:11:45 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.14 2012/02/16 17:27:30 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -81,8 +81,8 @@ static int invld_rec;			/* tape has out of spec record size */
 static int wr_trail = 1;		/* trailer was rewritten in append */
 static int can_unlnk = 0;		/* do we unlink null archives?  */
 const char *arcname;			/* printable name of archive */
-static char *arcname_;			/* this is so we can free(3) it */
-const char *gzip_program;		/* name of gzip program */
+static char *arcname_alloc;		/* this is so we can free(3) it */
+const char *compress_program;		/* name of compression programme */
 static pid_t zpid = -1;			/* pid of child process */
 int force_one_volume;			/* 1 if we ignore volume changes */
 
@@ -90,7 +90,7 @@ int force_one_volume;			/* 1 if we ignore volume changes */
 static int get_phys(void);
 #endif
 extern sigset_t s_mask;
-static void ar_start_gzip(int, int);
+static void ar_start_compress(int, int);
 
 /*
  * ar_open()
@@ -126,8 +126,8 @@ ar_open(const char *name)
 			arcname = STDN;
 		} else if ((arfd = open(name, EXT_MODE, DMOD)) < 0)
 			syswarn(1, errno, "Failed open to read on %s", name);
-		if (arfd != -1 && gzip_program != NULL)
-			ar_start_gzip(arfd, 0);
+		if (arfd != -1 && compress_program != NULL)
+			ar_start_compress(arfd, 0);
 		break;
 	case ARCHIVE:
 		if (name == NULL) {
@@ -137,8 +137,8 @@ ar_open(const char *name)
 			syswarn(1, errno, "Failed open to write on %s", name);
 		else
 			can_unlnk = 1;
-		if (arfd != -1 && gzip_program != NULL)
-			ar_start_gzip(arfd, 1);
+		if (arfd != -1 && compress_program != NULL)
+			ar_start_compress(arfd, 1);
 		break;
 	case APPND:
 		if (name == NULL) {
@@ -1246,10 +1246,10 @@ ar_next(void)
 		 */
 		if (ar_open(buf) >= 0) {
 			if (freeit) {
-				free(arcname_);
+				free(arcname_alloc);
 				freeit = 0;
 			}
-			if ((arcname = arcname_ = strdup(buf)) == NULL) {
+			if ((arcname = arcname_alloc = strdup(buf)) == NULL) {
 				done = 1;
 				lstrval = -1;
 				paxwarn(0, "Cannot save archive name.");
@@ -1265,15 +1265,15 @@ ar_next(void)
 }
 
 /*
- * ar_start_gzip()
- * starts the gzip compression/decompression process as a child, using magic
+ * ar_start_compress()
+ * starts the compression/decompression process as a child, using magic
  * to keep the fd the same in the calling function (parent).
  */
 void
-ar_start_gzip(int fd, int wr)
+ar_start_compress(int fd, int wr)
 {
 	int fds[2];
-	const char *gzip_flags;
+	const char *compress_flags;
 
 	if (pipe(fds) < 0)
 		err(1, "could not pipe");
@@ -1283,26 +1283,24 @@ ar_start_gzip(int fd, int wr)
 
 	/* parent */
 	if (zpid) {
-		if (wr)
-			dup2(fds[1], fd);
-		else
-			dup2(fds[0], fd);
+		dup2(fds[wr ? 1 : 0], fd);
 		close(fds[0]);
 		close(fds[1]);
 	} else {
 		if (wr) {
 			dup2(fds[0], STDIN_FILENO);
 			dup2(fd, STDOUT_FILENO);
-			gzip_flags = "-c";
+			compress_flags = "-c";
 		} else {
 			dup2(fds[1], STDOUT_FILENO);
 			dup2(fd, STDIN_FILENO);
-			gzip_flags = "-dc";
+			compress_flags = "-dc";
 		}
 		close(fds[0]);
 		close(fds[1]);
-		if (execlp(gzip_program, gzip_program, gzip_flags, NULL) < 0)
-			err(1, "could not exec %s", gzip_program);
+		if (execlp(compress_program, compress_program,
+		    compress_flags, NULL) < 0)
+			err(1, "could not exec %s", compress_program);
 		/* NOTREACHED */
 	}
 }

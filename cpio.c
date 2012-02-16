@@ -48,7 +48,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.17 2012/02/16 17:11:45 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.18 2012/02/16 17:27:31 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -186,7 +186,7 @@ rd_nm(ARCHD *arcn, int nsz)
 	 * do not even try bogus values
 	 */
 	if ((nsz == 0) || ((size_t)nsz > sizeof(arcn->name))) {
-		paxwarn(1, "Cpio file name length %d is out of range", nsz);
+		paxwarn(1, "cpio file name length %d is out of range", nsz);
 		return(-1);
 	}
 
@@ -195,7 +195,7 @@ rd_nm(ARCHD *arcn, int nsz)
 	 */
 	if ((rd_wrbuf(arcn->name,nsz) != nsz) || (arcn->name[nsz-1] != '\0') ||
 	    (arcn->name[0] == '\0')) {
-		paxwarn(1, "Cpio file name in header is corrupted");
+		paxwarn(1, "cpio file name in header is corrupted");
 		return(-1);
 	}
 	return(0);
@@ -227,7 +227,7 @@ rd_ln_nm(ARCHD *arcn)
 	 */
 	if (rd_wrbuf(arcn->ln_name, (int)arcn->sb.st_size) !=
 	    (int)arcn->sb.st_size) {
-		paxwarn(1, "Cpio link name read error");
+		paxwarn(1, "cpio link name read error");
 		return(-1);
 	}
 	arcn->ln_nlen = arcn->sb.st_size;
@@ -237,7 +237,7 @@ rd_ln_nm(ARCHD *arcn)
 	 * watch out for those empty link names
 	 */
 	if (arcn->ln_name[0] == '\0') {
-		paxwarn(1, "Cpio link name is corrupt");
+		paxwarn(1, "cpio link name is corrupt");
 		return(-1);
 	}
 	return(0);
@@ -518,7 +518,7 @@ cpio_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "Cpio header field is too small to store file %s",
+	paxwarn(1, "cpio header field is too small to store file %s",
 	    arcn->org_name);
 	return(1);
 }
@@ -897,7 +897,7 @@ vcpio_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1,"Sv4cpio header field is too small for file %s",arcn->org_name);
+	paxwarn(1,"sv4cpio header field is too small for file %s",arcn->org_name);
 	return(1);
 }
 

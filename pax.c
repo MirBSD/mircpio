@@ -52,7 +52,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.14 2012/02/16 17:11:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.15 2012/02/16 17:27:32 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -275,15 +275,16 @@ main(int argc, char **argv)
 		archive();
 		break;
 	case APPND:
-		if (gzip_program != NULL)
-			errx(1, "can not gzip while appending");
+		if (compress_program != NULL)
+			errx(1, "cannot compress while appending");
 		append();
 		break;
 	case COPY:
 		copy();
 		break;
 	default:
-		act = LIST;	/* for ar_io.c &c. */
+		/* for ar_io.c etc. */
+		act = LIST;
 	case LIST:
 		list();
 		break;
