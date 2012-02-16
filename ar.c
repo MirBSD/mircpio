@@ -40,7 +40,7 @@
 #include "options.h"
 #include "ar.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.5 2011/08/17 10:44:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.6 2012/02/16 17:41:40 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -215,6 +215,7 @@ uar_wr(ARCHD *arcn)
 	time_t t_mtime = 0;
 	char *extname;
 	size_t n;
+	u_long t_mode[sizeof(arcn->sb.st_mode) <= sizeof(u_long) ? 1 : -1];
 
 	anonarch_init();
 
@@ -246,6 +247,7 @@ uar_wr(ARCHD *arcn)
 
 	t_uid = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
+	t_mode[0] = arcn->sb.st_mode;
 	if (!(anonarch & ANON_MTIME))
 		t_mtime = arcn->sb.st_mtime;
 
@@ -261,9 +263,9 @@ uar_wr(ARCHD *arcn)
 		paxwarn(1, "%s overflow for %s", "gid", arcn->org_name);
 		t_gid = 999999UL;
 	}
-	if (arcn->sb.st_mode > 077777777UL) {
+	if (t_mode[0] > 077777777UL) {
 		paxwarn(1, "%s overflow for %s", "mode", arcn->org_name);
-		arcn->sb.st_mode &= 077777777UL;
+		t_mode[0] &= 077777777UL;
 	}
 	if ((uint64_t)arcn->sb.st_size > ((uint64_t)9999999999ULL)) {
 		paxwarn(1, "%s overflow for %s", "size", arcn->org_name);
@@ -272,7 +274,7 @@ uar_wr(ARCHD *arcn)
 
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing mode %8lo user %ld:%ld "
-		    "mtime %08lX name '%s'", (u_long)arcn->sb.st_mode,
+		    "mtime %08lX name '%s'", t_mode[0],
 		    t_uid, t_gid, (u_long)t_mtime, extname);
 
 	memset(&h, ' ', sizeof(HD_AR));
@@ -297,7 +299,7 @@ uar_wr(ARCHD *arcn)
 	uar_itoa64(h.ar_mtime, t_mtime);
 	uar_itoa32(h.ar_uid, t_uid);
 	uar_itoa32(h.ar_gid, t_gid);
-	uar_itoo32(h.ar_mode, arcn->sb.st_mode);
+	uar_itoo32(h.ar_mode, t_mode[0]);
 	uar_itoa64(h.ar_size, arcn->sb.st_size +
 	    (extname ? strlen(extname) : 0));
 	h.ar_magic[0] = 0x60;
