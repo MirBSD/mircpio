@@ -55,7 +55,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.11 2012/02/12 00:27:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.12 2012/02/16 16:01:07 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -313,6 +313,10 @@ ar_close(void)
 
 	if (arfd < 0) {
 		did_io = io_ok = flcnt = 0;
+		if (vfpart) {
+			(void)putc('\n', listf);
+			vfpart = 0;
+		}
 		return;
 	}
 
@@ -374,6 +378,13 @@ ar_close(void)
 	if (frmt != NULL)
 		++arvol;
 
+	/* Vflag can cause this to have been set */
+	if (vfpart) {
+		(void)putc('\n', listf);
+		vfpart = 0;
+	}
+
+	/* nothing to do any more, unless vflag */
 	if (!vflag) {
 		flcnt = 0;
 		return;
@@ -382,10 +393,6 @@ ar_close(void)
 	/*
 	 * Print out a summary of I/O for this archive volume.
 	 */
-	if (vfpart) {
-		(void)putc('\n', listf);
-		vfpart = 0;
-	}
 
 	/*
 	 * If we have not determined the format yet, we just say how many bytes

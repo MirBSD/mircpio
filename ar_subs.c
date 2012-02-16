@@ -50,7 +50,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.10 2012/02/12 00:44:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.11 2012/02/16 16:01:07 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -292,6 +292,10 @@ extract(void)
 				(void)safe_print(arcn->name, listf);
 				vfpart = 1;
 			}
+		} else if (Vflag) {
+			(void)putc('.', listf);
+			(void)fflush(listf);
+			vfpart = 1;
 		}
 
 		/*
@@ -506,6 +510,10 @@ wr_archive(ARCHD *arcn, int is_app)
 				(void)safe_print(arcn->name, listf);
 				vfpart = 1;
 			}
+		} else if (Vflag) {
+			(void)putc('.', listf);
+			(void)fflush(listf);
+			vfpart = 1;
 		}
 		++flcnt;
 
@@ -911,6 +919,10 @@ copy(void)
 
 		if (vflag) {
 			(void)safe_print(arcn->name, listf);
+			vfpart = 1;
+		} else if (Vflag) {
+			(void)putc('.', listf);
+			(void)fflush(listf);
 			vfpart = 1;
 		}
 		++flcnt;

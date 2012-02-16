@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.16 2012/02/12 00:27:15 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.17 2012/02/16 16:01:08 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -243,6 +243,7 @@ extern int lflag;
 extern int nflag;
 extern int tflag;
 extern int uflag;
+extern int Vflag;
 extern int vflag;
 extern int Dflag;
 extern int Hflag;

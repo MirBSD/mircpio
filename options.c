@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.41 2012/02/12 01:02:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.42 2012/02/16 16:01:08 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -1187,7 +1187,7 @@ cpio_options(int argc, char **argv)
 	dflag = 1;
 	nodirs = 1;
 	while ((c = getopt(argc, argv,
-	    "6AaBbC:cdE:F:fH:I:iJjkLlM:mO:oprSstuvZz")) != -1)
+	    "6AaBbC:cdE:F:fH:I:iJjkLlM:mO:oprSstuVvZz")) != -1)
 		switch (c) {
 			case 'a':
 				/*
@@ -1286,6 +1286,12 @@ cpio_options(int argc, char **argv)
 				 * replace newer files
 				 */
 				kflag = 0;
+				break;
+			case 'V':
+				/*
+				 * print a dot for each file processed
+				 */
+				Vflag++;
 				break;
 			case 'v':
 				/*
@@ -1764,11 +1770,11 @@ void
 cpio_usage(void)
 {
 	(void)fputs(
-	    "usage: cpio -o [-AaBcJjLvZz] [-C bytes] [-F archive] [-H format]\n"
+	    "usage: cpio -o [-AaBcJjLVvZz] [-C bytes] [-F archive] [-H format]\n"
 	    "               [-M flag] [-O archive] <name-list [>archive]\n"
-	    "       cpio -i [-6BbcdfJjmrSstuvZz] [-C bytes] [-E file] [-F archive]\n"
+	    "       cpio -i [-6BbcdfJjmrSstuVvZz] [-C bytes] [-E file] [-F archive]\n"
 	    "               [-H format] [-I archive] [-M flag] [pattern ...] [<archive]\n"
-	    "       cpio -p [-adLlmuv] destination-directory <name-list\n",
+	    "       cpio -p [-adLlmuVv] destination-directory <name-list\n",
 	    stderr);
 	exit(1);
 }
