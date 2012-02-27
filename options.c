@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.45 2012/02/27 22:24:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.46 2012/02/27 22:31:01 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -1178,6 +1178,7 @@ cpio_options(int argc, char **argv)
 	char *str;
 	FSUB tmp;
 	FILE *fp;
+	const char *optstr;
 
 	kflag = 1;
 	pids = 1;
@@ -1186,8 +1187,9 @@ cpio_options(int argc, char **argv)
 	arcname = NULL;
 	dflag = 1;
 	nodirs = 1;
-	while ((c = getopt(argc, argv,
-	    "6AaBbC:cdE:F:fH:I:iJjkLlM:mO:oprSstuVvZz")) != -1)
+	optstr = "iop";
+	opterr = 0;
+	while ((c = getopt(argc, argv, optstr)) != -1) {
 		switch (c) {
 		case 'a':
 			/*
@@ -1411,9 +1413,17 @@ cpio_options(int argc, char **argv)
 			break;
 		case '?':
 		default:
+			if (opterr == 0) {
+				paxwarn(1, "need -i or -o or -p option first");
+			}
 			cpio_usage();
 			break;
 		}
+		if (opterr == 0) {
+			optstr = "6AaBbC:cdE:F:fH:I:iJjkLlM:mO:oprSstuVvZz";
+			opterr = 1;
+		}
+	}
 	argc -= optind;
 	argv += optind;
 
