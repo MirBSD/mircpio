@@ -59,7 +59,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.47 2012/05/20 16:13:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.48 2012/05/20 16:38:28 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -100,11 +100,14 @@ static void process_M(const char *, void (*)(void));
 #define GET_LINE_OUT_OF_MEM 2
 static int get_line_error;
 
-
-#define GZIP_CMD	"gzip"		/* command to run as gzip */
-#define COMPRESS_CMD	"compress"	/* command to run as compress */
-#define BZIP2_CMD	"bzip2"		/* command to run as bzip2 */
-#define XZ_CMD		"xz"		/* command to run as xz */
+/* command to run as gzip */
+static const char GZIP_CMD[] = "gzip";
+/* command to run as compress */
+static const char COMPRESS_CMD[] = "compress";
+/* command to run as bzip2 */
+static const char BZIP2_CMD[] = "bzip2";
+/* command to run as lzma and xz */
+static const char XZ_CMD[] = "xz";
 
 /*
  *	Format specific routine table - MUST BE IN SORTED ORDER BY NAME
