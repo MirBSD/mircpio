@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <time.h>
 #include <err.h>
 #include "pax.h"
 #include "options.h"
@@ -57,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.15 2012/05/20 16:05:04 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.16 2012/05/20 16:13:15 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.

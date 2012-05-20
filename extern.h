@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.19 2012/02/16 17:27:31 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.20 2012/05/20 16:13:17 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -41,10 +41,6 @@
  * External references from each source file
  */
 
-#include <sys/cdefs.h>
-#if defined(__GLIBC__)
-#include <time.h>
-#endif
 
 /*
  * ar.c

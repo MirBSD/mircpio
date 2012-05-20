@@ -41,13 +41,14 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "pax.h"
 #include "extern.h"
-#include <stdarg.h>
 
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.4 2012/02/16 16:01:09 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.5 2012/05/20 16:13:20 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user

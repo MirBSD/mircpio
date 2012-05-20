@@ -43,12 +43,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include "pax.h"
 #include "sel_subs.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.4 2012/02/12 00:27:17 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.5 2012/05/20 16:13:19 tg Exp $");
 
 static int str_sec(const char *, time_t *);
 static int usr_match(ARCHD *);

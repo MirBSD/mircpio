@@ -48,11 +48,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <time.h>
 #include "pax.h"
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.14 2012/02/16 17:27:32 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.15 2012/05/20 16:13:19 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax

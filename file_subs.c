@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #ifdef __INTERIX
 #include <utime.h>
@@ -56,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.16 2012/02/12 00:42:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.17 2012/05/20 16:13:17 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0

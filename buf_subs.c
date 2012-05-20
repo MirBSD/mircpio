@@ -42,10 +42,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.4 2012/02/12 00:27:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.5 2012/05/20 16:13:16 tg Exp $");
 
 /*
  * routines which implement archive and file buffering

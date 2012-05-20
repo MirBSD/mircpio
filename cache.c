@@ -43,11 +43,12 @@
 #include <grp.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 #include "pax.h"
 #include "cache.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.6 2012/02/12 01:02:05 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.7 2012/05/20 16:13:16 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive

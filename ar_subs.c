@@ -46,11 +46,12 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 #include "pax.h"
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.12 2012/02/16 17:27:30 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.13 2012/05/20 16:13:15 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);

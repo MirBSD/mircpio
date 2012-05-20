@@ -43,12 +43,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 #include "pax.h"
 #include "cpio.h"
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.18 2012/02/16 17:27:31 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.19 2012/05/20 16:13:16 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
