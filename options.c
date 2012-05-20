@@ -59,7 +59,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.48 2012/05/20 16:38:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.49 2012/05/20 17:21:44 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -108,6 +108,12 @@ static const char COMPRESS_CMD[] = "compress";
 static const char BZIP2_CMD[] = "bzip2";
 /* command to run as lzma and xz */
 static const char XZ_CMD[] = "xz";
+/* command used for creating lzma archives */
+static const char LZMA_WRCMD[] = "lzma";
+/* command to run as lzop */
+static const char LZOP_CMD[] = "lzop";
+/* used as flag value */
+#define COMPRESS_GUESS_CMD ((const void *)&compress_program)
 
 /*
  *	Format specific routine table - MUST BE IN SORTED ORDER BY NAME
@@ -689,10 +695,17 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "014578ABb:C:cef:HhI:JjLM:mNOoPpqRrSs:tuvwXxZz")) != -1) {
+	    "014578AaBb:C:cef:HhI:JjLM:mNOoPpqRrSs:tuvwXxZz")) != -1) {
 		switch (c) {
 		case 'A':
 			Oflag = 5;
+			break;
+		case 'a':
+			/*
+			 * use compression dependent on arcname
+			 * (non-standard option, gtar extension)
+			 */
+			compress_program = COMPRESS_GUESS_CMD;
 			break;
 		case 'b':
 			/*
@@ -1768,10 +1781,10 @@ void
 tar_usage(void)
 {
 	(void)fputs(
-	    "usage: tar {crtux}[014578AbefHhJjLmNOoPpqRSsvwXZz]\n"
+	    "usage: tar {crtux}[014578AabefHhJjLmNOoPpqRSsvwXZz]\n"
 	    "           [blocking-factor | archive | replstr] [-C directory] [-I file]\n"
 	    "           [file ...]\n"
-	    "       tar {-crtux} [-014578AeHhJjLmNOoPpqRSvwXZz] [-b blocking-factor]\n"
+	    "       tar {-crtux} [-014578AaeHhJjLmNOoPpqRSvwXZz] [-b blocking-factor]\n"
 	    "           [-C directory] [-f archive] [-I file] [-M flag] [-s replstr]\n"
 	    "           [file ...]\n",
 	    stderr);
@@ -1870,4 +1883,76 @@ process_M(const char *arg, void (*call_usage)(void))
 		anonarch |= k;
 	else
 		anonarch &= ~k;
+}
+
+void
+guess_compress_program(int wr)
+{
+	const char *ccp;
+
+	if (compress_program != COMPRESS_GUESS_CMD)
+		return;
+
+	if (arcname == NULL || (ccp = strrchr(arcname, '.')) == NULL) {
+		compress_program = NULL;
+		return;
+	}
+	++ccp;
+
+	/* guess standard format gzip */
+	if (!strcmp(ccp, "gz") ||
+	    !strcmp(ccp, "tgz") ||
+	    !strcmp(ccp, "cgz") ||
+	    !strcmp(ccp, "ngz") ||
+	    !strcmp(ccp, "taz")) {
+		compress_program = GZIP_CMD;
+		return;
+	}
+
+	/* guess extended format xz */
+	if (!strcmp(ccp, "xz") ||
+	    !strcmp(ccp, "txz") ||
+	    !strcmp(ccp, "cxz") ||
+	    !strcmp(ccp, "nxz")) {
+		compress_program = XZ_CMD;
+		return;
+	}
+
+	/* guess extended format bzip2 (not bzip) */
+	if (!strcmp(ccp, "bz2") ||
+	    !strcmp(ccp, "tbz") ||
+	    !strcmp(ccp, "tz2") ||
+	    !strcmp(ccp, "tbz2") ||
+	    !strcmp(ccp, "cbz") ||
+	    !strcmp(ccp, "nbz")) {
+		compress_program = BZIP2_CMD;
+		return;
+	}
+
+	/* guess standard format Unix compress */
+	if (!strcmp(ccp, "Z") ||
+	    !strcmp(ccp, "mcz") ||
+	    !strcmp(ccp, "taZ")) {
+		compress_program = COMPRESS_CMD;
+		return;
+	}
+
+	/* guess extended format lzma (using xz for decompression) */
+	if (!strcmp(ccp, "lz") ||
+	    !strcmp(ccp, "lzma") ||
+	    !strcmp(ccp, "tlz") ||
+	    !strcmp(ccp, "clz") ||
+	    !strcmp(ccp, "nlz")) {
+		compress_program = wr ? LZMA_WRCMD : XZ_CMD;
+		return;
+	}
+
+	/* guess extended format lzop */
+	if (!strcmp(ccp, "lzo")) {
+		compress_program = LZOP_CMD;
+		return;
+	}
+
+	/* no sugar */
+	compress_program = NULL;
 }

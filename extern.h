@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.20 2012/05/20 16:13:17 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.21 2012/05/20 17:21:44 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -209,6 +209,7 @@ void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
+void guess_compress_program(int);
 char *chdname;
 
 /*

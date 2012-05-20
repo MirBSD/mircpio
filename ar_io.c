@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.16 2012/05/20 16:13:15 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.17 2012/05/20 17:21:44 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -1275,6 +1275,10 @@ ar_start_compress(int fd, int wr)
 {
 	int fds[2];
 	const char *compress_flags;
+
+	guess_compress_program(wr);
+	if (compress_program == NULL)
+		return;
 
 	if (pipe(fds) < 0)
 		err(1, "could not pipe");

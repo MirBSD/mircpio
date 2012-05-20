@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.22 2012/02/12 02:49:41 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.23 2012/05/20 17:21:45 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012
@@ -78,7 +78,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: February 12 2012 $
+.Dd $Mdocdate: May 20 2012 $
 .\"
 .\" Check which macro package we use
 .\"
@@ -188,7 +188,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578AbefHhJjLmNOoPRSpqsvwXZz
+.No { Cm crtux No } Op Cm 014578AabefHhJjLmNOoPRSpqsvwXZz
 .Sm on
 .Bk -words
 .Op Ar blocking-factor | archive | replstr
@@ -199,7 +199,7 @@
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
-.Op Fl 014578AeHhJjLmNOoPpqRSvwXZz
+.Op Fl 014578AaeHhJjLmNOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
@@ -285,6 +285,16 @@ flags may be used:
 .Bl -tag -width Ds
 .It Fl A
 Write Unix Archiver libraries instead of tape archives.
+.It Fl a
+Guess the compression utility based on the archive filename.
+Inability to guess will result in quietly not using any compression.
+This option only exists for semi-compatibility with
+.Tn GNU
+.Nm tar ;
+it is strongly recommended to archive to stdout and pipe into
+an external compression utility with appropriate arguments instead:
+.Pp
+.Dl tar -cf - foo \*(Ba xz -2e \*(Gtfoo.txz
 .It Fl b Ar blocking-factor
 Set blocking factor to use for the archive.
 .Nm
@@ -632,7 +642,7 @@ extensions by
 .An Thorsten Glaser Aq tg@mirbsd.org .
 .Sh CAVEATS
 The flags
-.Fl AJjLMNRS
+.Fl AaJjLMNRS
 are not portable to other implementations of
 .Nm tar
-where they may have a different meaning.
+where they may have a different meaning or not exist at all.
