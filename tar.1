@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.25 2012/05/20 20:04:32 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.26 2012/06/05 19:29:34 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012
@@ -80,7 +80,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: May 20 2012 $
+.Dd $Mdocdate: June 5 2012 $
 .\"
 .\" Check which macro package we use, and do other -mdoc setup.
 .\"
@@ -650,3 +650,7 @@ The flags
 are not portable to other implementations of
 .Nm tar
 where they may have a different meaning or not exist at all.
+.Sh BUGS
+The
+.Ar pax
+file format is not yet supported.
