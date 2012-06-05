@@ -51,7 +51,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.8 2012/06/05 19:19:45 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.9 2012/06/05 20:20:28 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user
@@ -96,7 +96,12 @@ tty_prnt(const char *fmt, ...)
 	if (ttyfd != -1) {
 		len = vasprintf(&cp, fmt, ap);
 		if (len != -1) {
+#ifdef _FORTIFY_SOURCE
+			/* booh */
+			len = write(ttyfd, cp, len);
+#else
 			write(ttyfd, cp, len);
+#endif
 			free(cp);
 		}
 	}
