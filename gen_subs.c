@@ -55,7 +55,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.14 2012/06/05 18:15:58 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.15 2012/06/05 20:20:39 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -432,4 +432,5 @@ fieldcpy(char *buf, size_t bufsz, const char *field, size_t fieldsz)
 #define OUTSIDE_OF_LIBKERN
 #define L_strlcat
 #define L_strlcpy
+#include ".linked/strlfun.inc"
 #endif
