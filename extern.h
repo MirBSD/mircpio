@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.21 2012/05/20 17:21:44 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.22 2012/06/05 18:13:49 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -329,9 +329,13 @@ void syswarn(int, int, const char *, ...)
     __attribute__((__format__ (__printf__, 3, 4)));
 
 /*
- * part of the OS
+ * portability glue
  */
-#ifdef USE_LIBBSD
+#ifndef HAVE_STRLCPY
 size_t strlcat(char *, const char *, size_t);
 size_t strlcpy(char *, const char *, size_t);
+#endif
+
+#ifndef HAVE_STRMODE
+void strmode(mode_t, char *);
 #endif

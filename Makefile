@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.9 2012/02/16 17:48:06 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.10 2012/06/05 18:13:49 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -18,6 +18,11 @@ LINKS=	${BINDIR}/pax ${BINDIR}/tar \
 .if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux") || \
     ((${MACHINE_OS} == "GNU") && (${OSNAME} != "GNU/kFreeBSD"))
 CPPFLAGS+= -DLONG_OFF_T
+.endif
+
+.if (${MACHINE_OS} == "BSD")
+CPPFLAGS+= -DHAVE_STRLCPY
+CPPFLAGS+= -DHAVE_STRMODE
 .endif
 
 .include <bsd.prog.mk>

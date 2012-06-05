@@ -55,11 +55,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.12 2012/05/20 16:13:17 tg Exp $");
-
-#ifdef __GLIBC__
-void strmode(mode_t, char *);
-#endif
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.13 2012/06/05 18:13:49 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -426,3 +422,14 @@ fieldcpy(char *buf, size_t bufsz, const char *field, size_t fieldsz)
 		*p = '\0';
 	return(i);
 }
+
+#ifndef HAVE_STRMODE
+#include ".linked/strmode.inc"
+#endif
+
+#ifndef HAVE_STRLCPY
+#undef WIDEC
+#define OUTSIDE_OF_LIBKERN
+#define L_strlcat
+#define L_strlcpy
+#endif
