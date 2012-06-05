@@ -51,7 +51,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.9 2012/06/05 20:20:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.10 2012/06/05 22:41:55 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user
@@ -71,7 +71,7 @@ static int ttyfd;
 int
 tty_init(void)
 {
-	if ((ttyfd = open(devtty, O_RDWR)) == -1) {
+	if ((ttyfd = open(devtty, O_RDWR)) == -1 && iflag) {
 		paxwarn(1, "Fatal error, cannot open %s", devtty);
 		return (-1);
 	}
