@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.22 2012/06/05 18:13:49 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.23 2012/06/05 18:52:15 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -319,6 +319,8 @@ int ustar_wr(ARCHD *);
 /*
  * tty_subs.c
  */
+extern char fdgetline_err;
+char *fdgetline(int);
 int tty_init(void);
 void tty_prnt(const char *, ...)
     __attribute__((__format__ (__printf__, 1, 2)));
