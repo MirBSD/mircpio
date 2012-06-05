@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.5 2012/05/20 16:13:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.6 2012/06/05 19:09:41 tg Exp $");
 
 /*
  * routines to handle pattern matching, name modification (regular expression
@@ -695,8 +695,8 @@ mod_name(ARCHD *arcn)
 static int
 tty_rename(ARCHD *arcn)
 {
-	char tmpname[PAXPATHLEN+2];
 	int res;
+	char *tmpname;
 
 	/*
 	 * prompt user for the replacement name for a file, keep trying until
@@ -711,14 +711,16 @@ tty_rename(ARCHD *arcn)
 		tty_prnt("Input new name, or a \".\" to keep the old name, ");
 		tty_prnt("or a \"return\" to skip this file.\n");
 		tty_prnt("Input > ");
-		if (tty_read(tmpname, sizeof(tmpname)) < 0)
-			return(-1);
+		if ((tmpname = tty_rd()) == NULL)
+			return (-1);
 		if (strcmp(tmpname, "..") == 0) {
 			tty_prnt("Try again, illegal file name: ..\n");
+			free(tmpname);
 			continue;
 		}
 		if (strlen(tmpname) > PAXPATHLEN) {
 			tty_prnt("Try again, file name too long\n");
+			free(tmpname);
 			continue;
 		}
 		break;
@@ -729,11 +731,13 @@ tty_rename(ARCHD *arcn)
 	 */
 	if (tmpname[0] == '\0') {
 		tty_prnt("Skipping file.\n");
-		return(1);
+		free(tmpname);
+		return (1);
 	}
 	if ((tmpname[0] == '.') && (tmpname[1] == '\0')) {
 		tty_prnt("Processing continues, name unchanged.\n");
-		return(0);
+		free(tmpname);
+		return (0);
 	}
 
 	/*
@@ -746,9 +750,10 @@ tty_rename(ARCHD *arcn)
 	arcn->nlen = strlcpy(arcn->name, tmpname, sizeof(arcn->name));
 	if ((size_t)arcn->nlen >= sizeof(arcn->name))
 		arcn->nlen = sizeof(arcn->name) - 1; /* XXX truncate? */
+	free(tmpname);
 	if (res < 0)
-		return(-1);
-	return(0);
+		return (-1);
+	return (0);
 }
 
 /*

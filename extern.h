@@ -1,4 +1,4 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.23 2012/06/05 18:52:15 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.24 2012/06/05 19:09:41 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -324,7 +324,7 @@ char *fdgetline(int);
 int tty_init(void);
 void tty_prnt(const char *, ...)
     __attribute__((__format__ (__printf__, 1, 2)));
-int tty_read(char *, int);
+char *tty_rd(void);
 void paxwarn(int, const char *, ...)
     __attribute__((__format__ (__printf__, 2, 3)));
 void syswarn(int, int, const char *, ...)

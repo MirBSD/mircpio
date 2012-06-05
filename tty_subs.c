@@ -49,7 +49,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.6 2012/06/05 18:52:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.7 2012/06/05 19:09:41 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user
@@ -102,23 +102,17 @@ tty_prnt(const char *fmt, ...)
 }
 
 /*
- * tty_read()
+ * tty_rd()
  *	read a string from the controlling terminal if it is open into the
  *	supplied buffer
  * Return:
- *	0 if data was read, -1 otherwise.
+ *	pointer caller must free if data was read, NULL otherwise.
  */
 
-int
-tty_read(char *str, int len)
+char *
+tty_rd(void)
 {
-	char *cp;
-
-	if (ttyfd == -1 || (cp = fdgetline(ttyfd)) == NULL)
-		return (-1);
-	strlcpy(str, cp, len);
-	free(cp);
-	return (0);
+	return (ttyfd == -1 ? NULL : fdgetline(ttyfd));
 }
 
 /*

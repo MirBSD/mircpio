@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.17 2012/05/20 17:21:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.18 2012/06/05 19:09:41 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -82,7 +82,7 @@ static int invld_rec;			/* tape has out of spec record size */
 static int wr_trail = 1;		/* trailer was rewritten in append */
 static int can_unlnk = 0;		/* do we unlink null archives?  */
 const char *arcname;			/* printable name of archive */
-static char *arcname_alloc;		/* this is so we can free(3) it */
+static char *arcname_alloc = NULL;	/* this is so we can free(3) it */
 const char *compress_program;		/* name of compression programme */
 static pid_t zpid = -1;			/* pid of child process */
 int force_one_volume;			/* 1 if we ignore volume changes */
@@ -1127,8 +1127,7 @@ get_phys(void)
 int
 ar_next(void)
 {
-	char buf[PAXPATHLEN+2];
-	static int freeit = 0;
+	char *buf;
 	sigset_t o_mask;
 
 	/*
@@ -1175,7 +1174,9 @@ ar_next(void)
 			tty_prnt(" cannot change storage media, type \"s\"\n");
 			tty_prnt("Is the device ready and online? > ");
 
-			if ((tty_read(buf,sizeof(buf))<0) || !strcmp(buf,".")){
+			if ((buf = tty_rd()) == NULL ||
+			    !strcmp(buf, ".")) {
+				free(buf);
 				done = 1;
 				lstrval = -1;
 				tty_prnt("Quitting %s!\n", argv0);
@@ -1184,8 +1185,7 @@ ar_next(void)
 			}
 
 			if ((buf[0] == '\0') || (buf[1] != '\0')) {
-				tty_prnt("%s unknown command, try again\n",buf);
-				continue;
+				goto eunknown;
 			}
 
 			switch (buf[0]) {
@@ -1194,20 +1194,24 @@ ar_next(void)
 				/*
 				 * we are to continue with the same device
 				 */
+				free(buf);
 				if (ar_open(arcname) >= 0)
-					return(0);
+					return (0);
 				tty_prnt("Cannot re-open %s, try again\n",
-					arcname);
+				    arcname);
 				continue;
 			case 's':
 			case 'S':
 				/*
 				 * user wants to open a different device
 				 */
+				free(buf);
 				tty_prnt("Switching to a different archive\n");
 				break;
 			default:
-				tty_prnt("%s unknown command, try again\n",buf);
+ eunknown:
+				tty_prnt("%s unknown command, try again\n", buf);
+				free(buf);
 				continue;
 			}
 			break;
@@ -1222,7 +1226,8 @@ ar_next(void)
 		tty_prnt("Input archive name or \".\" to quit %s.\n", argv0);
 		tty_prnt("Archive name > ");
 
-		if ((tty_read(buf, sizeof(buf)) < 0) || !strcmp(buf, ".")) {
+		if ((buf = tty_rd()) == NULL || !strcmp(buf, ".")) {
+			free(buf);
 			done = 1;
 			lstrval = -1;
 			tty_prnt("Quitting %s!\n", argv0);
@@ -1231,14 +1236,17 @@ ar_next(void)
 		}
 		if (buf[0] == '\0') {
 			tty_prnt("Empty file name, try again\n");
+			free(buf);
 			continue;
 		}
 		if (!strcmp(buf, "..")) {
 			tty_prnt("Illegal file name: .. try again\n");
+			free(buf);
 			continue;
 		}
 		if (strlen(buf) > PAXPATHLEN) {
 			tty_prnt("File name too long, try again\n");
+			free(buf);
 			continue;
 		}
 
@@ -1246,23 +1254,15 @@ ar_next(void)
 		 * try to open new archive
 		 */
 		if (ar_open(buf) >= 0) {
-			if (freeit) {
-				free(arcname_alloc);
-				freeit = 0;
-			}
-			if ((arcname = arcname_alloc = strdup(buf)) == NULL) {
-				done = 1;
-				lstrval = -1;
-				paxwarn(0, "Cannot save archive name.");
-				return(-1);
-			}
-			freeit = 1;
+			free(arcname_alloc);
+			arcname = arcname_alloc = buf;
 			break;
 		}
 		tty_prnt("Cannot open %s, try again\n", buf);
+		free(buf);
 		continue;
 	}
-	return(0);
+	return (0);
 }
 
 /*
