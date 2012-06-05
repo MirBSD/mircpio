@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.c,v 1.32 2011/05/26 14:42:06 deraadt Exp $	*/
+/*	$OpenBSD: pax.c,v 1.33 2012/04/19 04:26:46 deraadt Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.17 2012/05/20 16:13:19 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.18 2012/06/05 17:56:22 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -323,10 +323,10 @@ sig_cleanup(int which_sig)
 
 	/* paxwarn() uses stdio; fake it as well as we can */
 	if (which_sig == SIGXCPU)
-		strlcpy(errbuf, "CPU time limit reached, cleaning up.",
+		strlcpy(errbuf, "CPU time limit reached, cleaning up.\n",
 		    sizeof errbuf);
 	else
-		strlcpy(errbuf, "Signal caught, cleaning up.",
+		strlcpy(errbuf, "Signal caught, cleaning up.\n",
 		    sizeof errbuf);
 	if (!write(STDERR_FILENO, errbuf, strlen(errbuf))) {
 		/* dummy, to keep fortified gcc quiet */
