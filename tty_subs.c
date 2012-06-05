@@ -2,6 +2,8 @@
 /*	$NetBSD: tty_subs.c,v 1.5 1995/03/21 09:07:52 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2012
+ *	Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -49,7 +51,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.7 2012/06/05 19:09:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.8 2012/06/05 19:19:45 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user

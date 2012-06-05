@@ -43,6 +43,7 @@
 #include <string.h>
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -59,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.50 2012/06/05 17:56:22 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.51 2012/06/05 19:19:44 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -82,7 +83,6 @@ static int no_op_i(int);
 static void printflg(unsigned int);
 static int c_frmt(const void *, const void *);
 static off_t str_offt(char *);
-static char *get_line(FILE *fp);
 static void pax_options(int, char **);
 static void pax_usage(void) __attribute__((__noreturn__));
 static void tar_set_action(int);
@@ -94,11 +94,6 @@ static void cpio_usage(void) __attribute__((__noreturn__));
 int mkpath(char *);
 
 static void process_M(const char *, void (*)(void));
-
-/* errors from get_line */
-#define GET_LINE_FILE_CORRUPT 1
-#define GET_LINE_OUT_OF_MEM 2
-static int get_line_error;
 
 /* command to run as gzip */
 static const char GZIP_CMD[] = "gzip";
@@ -990,24 +985,25 @@ tar_options(int argc, char **argv)
 				} else
 					file = NULL;
 				if (file != NULL) {
-					FILE *fp;
+					int fd;
 					char *str;
 
 					if (strcmp(file, "-") == 0)
-						fp = stdin;
-					else if ((fp = fopen(file, "r")) == NULL) {
+						fd = STDIN_FILENO;
+					else if ((fd = open(file, O_RDONLY)) == -1) {
 						paxwarn(1, "Unable to open file '%s' for read", file);
 						tar_usage();
 					}
-					while ((str = get_line(fp)) != NULL) {
+					while ((str = fdgetline(fd)) != NULL) {
 						if (pat_add(str, dir) < 0)
 							tar_usage();
 						sawpat = 1;
 					}
-					if (strcmp(file, "-") != 0)
-						fclose(fp);
-					if (get_line_error) {
-						paxwarn(1, "Problem with file '%s'", file);
+					if (fd != STDIN_FILENO)
+						close(fd);
+					if (fdgetline_err) {
+						paxwarn(1, "Problem with file '%s'",
+						    file);
 						tar_usage();
 					}
 				} else if (strcmp(*argv, "-C") == 0) {
@@ -1085,8 +1081,8 @@ tar_options(int argc, char **argv)
 			} else
 				file = NULL;
 			if (file != NULL) {
-				FILE *fp;
 				char *str;
+				int fd;
 
 				/* set directory if needed */
 				if (dir) {
@@ -1095,18 +1091,18 @@ tar_options(int argc, char **argv)
 				}
 
 				if (strcmp(file, "-") == 0)
-					fp = stdin;
-				else if ((fp = fopen(file, "r")) == NULL) {
+					fd = STDIN_FILENO;
+				else if ((fd = open(file, O_RDONLY)) == -1) {
 					paxwarn(1, "Unable to open file '%s' for read", file);
 					tar_usage();
 				}
-				while ((str = get_line(fp)) != NULL) {
+				while ((str = fdgetline(fd)) != NULL) {
 					if (ftree_add(str, 0) < 0)
 						tar_usage();
 				}
-				if (strcmp(file, "-") != 0)
-					fclose(fp);
-				if (get_line_error) {
+				if (fd != STDIN_FILENO)
+					close(fd);
+				if (fdgetline_err) {
 					paxwarn(1, "Problem with file '%s'",
 					    file);
 					tar_usage();
@@ -1194,7 +1190,7 @@ cpio_options(int argc, char **argv)
 	size_t i;
 	char *str;
 	FSUB tmp;
-	FILE *fp;
+	int fd;
 	const char *optstr;
 
 	kflag = 1;
@@ -1346,15 +1342,15 @@ cpio_options(int argc, char **argv)
 			/*
 			 * file with patterns to extract or list
 			 */
-			if ((fp = fopen(optarg, "r")) == NULL) {
+			if ((fd = open(optarg, O_RDONLY)) == -1) {
 				paxwarn(1, "Unable to open file '%s' for read", optarg);
 				cpio_usage();
 			}
-			while ((str = get_line(fp)) != NULL) {
+			while ((str = fdgetline(fd)) != NULL) {
 				pat_add(str, NULL);
 			}
-			fclose(fp);
-			if (get_line_error) {
+			close(fd);
+			if (fdgetline_err) {
 				paxwarn(1, "Problem with file '%s'", optarg);
 				cpio_usage();
 			}
@@ -1473,10 +1469,10 @@ cpio_options(int argc, char **argv)
 		 * no read errors allowed on updates/append operation!
 		 */
 		maxflt = 0;
-		while ((str = get_line(stdin)) != NULL) {
+		while ((str = fdgetline(STDIN_FILENO)) != NULL) {
 			ftree_add(str, 0);
 		}
-		if (get_line_error) {
+		if (fdgetline_err) {
 			paxwarn(1, "Problem while reading stdin");
 			cpio_usage();
 		}
@@ -1705,29 +1701,6 @@ str_offt(char *val)
 		return (0);
 	}
 	return ((off_t)num);
-}
-
-char *
-get_line(FILE *f)
-{
-	char *name, *temp;
-	size_t len;
-
-	name = fgetln(f, &len);
-	if (!name) {
-		get_line_error = ferror(f) ? GET_LINE_FILE_CORRUPT : 0;
-		return(0);
-	}
-	if (name[len-1] != '\n')
-		len++;
-	temp = malloc(len);
-	if (!temp) {
-		get_line_error = GET_LINE_OUT_OF_MEM;
-		return(0);
-	}
-	memcpy(temp, name, len-1);
-	temp[len-1] = 0;
-	return(temp);
 }
 
 /*
