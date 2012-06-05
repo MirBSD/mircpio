@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.18 2012/06/05 17:56:22 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.19 2012/06/05 18:22:57 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -445,7 +445,7 @@ gen_init(void)
 		goto out;
 	return(0);
 
-    out:
+ out:
 	syswarn(1, errno, "Unable to set up signal handler");
 	return(-1);
 }

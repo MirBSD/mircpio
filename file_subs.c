@@ -57,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.17 2012/05/20 16:13:17 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.18 2012/06/05 18:22:56 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -459,7 +459,7 @@ node_creat(ARCHD *arcn)
 			}
 			res = mkdir(nm, file_mode);
 
-badlink:
+ badlink:
 			if (ign)
 				res = 0;
 			break;

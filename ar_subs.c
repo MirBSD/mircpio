@@ -51,7 +51,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.13 2012/05/20 16:13:15 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.14 2012/06/05 18:22:55 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -565,7 +565,7 @@ wr_archive(ARCHD *arcn, int is_app)
 			break;
 	}
 
-trailer:
+ trailer:
 	/*
 	 * tell format to write trailer; pad to block boundary; reset directory
 	 * mode/access times, and check if all patterns supplied by the user
@@ -1301,7 +1301,7 @@ get_arc(void)
 		}
 	}
 
-    out:
+ out:
 	/*
 	 * we cannot find a header, bow, apologise and quit
 	 */

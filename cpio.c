@@ -49,7 +49,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.19 2012/05/20 16:13:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.20 2012/06/05 18:22:56 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -515,7 +515,7 @@ cpio_wr(ARCHD *arcn)
 	}
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */
@@ -894,7 +894,7 @@ vcpio_wr(ARCHD *arcn)
 	}
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */
@@ -1206,7 +1206,7 @@ bcpio_wr(ARCHD *arcn)
 	}
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */

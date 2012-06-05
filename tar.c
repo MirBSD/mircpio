@@ -49,7 +49,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.13 2012/05/20 16:13:19 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.14 2012/06/05 18:22:58 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -645,7 +645,7 @@ tar_wr(ARCHD *arcn)
 		return(0);
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */
@@ -1108,7 +1108,7 @@ ustar_wr(ARCHD *arcn)
 		return(0);
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */

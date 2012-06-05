@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.15 2012/05/20 16:13:19 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.16 2012/06/05 18:22:57 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -878,7 +878,7 @@ map_dev(ARCHD *arcn, u_long dev_mask, u_long ino_mask)
 	arcn->sb.st_ino = nino;
 	return(0);
 
-    bad:
+ bad:
 	paxwarn(1, "Unable to fix truncated inode/device field when storing %s",
 	    arcn->name);
 	paxwarn(0, "Archive may create improper hard links when extracted");

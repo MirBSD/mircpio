@@ -49,7 +49,7 @@
 #include "sel_subs.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.5 2012/05/20 16:13:19 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.6 2012/06/05 18:22:57 tg Exp $");
 
 static int str_sec(const char *, time_t *);
 static int usr_match(ARCHD *);
@@ -442,7 +442,7 @@ trng_add(char *str)
 	trtail = pt;
 	return(0);
 
-    out:
+ out:
 	paxwarn(1, "Time range format is: [[[[[cc]yy]mm]dd]HH]MM[.SS][/[c][m]]");
 	return(-1);
 }
