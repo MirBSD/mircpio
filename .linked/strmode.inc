@@ -32,10 +32,12 @@
 #include <sys/stat.h>
 #include <string.h>
 
+__RCSID("$MirOS: src/bin/pax/.linked/strmode.inc,v 1.3 2012/06/05 18:08:34 tg Exp $");
+
 void
 strmode(mode_t mode, char *p)
 {
-	 /* print type */
+	/* print type */
 	switch (mode & S_IFMT) {
 	case S_IFDIR:			/* directory */
 		*p++ = 'd';
