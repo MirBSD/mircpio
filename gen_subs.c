@@ -49,13 +49,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#ifndef __GLIBC__
+#ifdef HAVE_VIS
 #include <vis.h>
 #endif
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.13 2012/06/05 18:13:49 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.14 2012/06/05 18:15:58 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -192,7 +192,7 @@ ls_tty(ARCHD *arcn)
 void
 safe_print(const char *str, FILE *fp)
 {
-#ifndef __GLIBC__
+#ifdef HAVE_VIS
 	char visbuf[5];
 	const char *cp;
 

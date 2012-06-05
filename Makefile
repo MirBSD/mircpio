@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.10 2012/06/05 18:13:49 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.11 2012/06/05 18:15:58 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -23,6 +23,7 @@ CPPFLAGS+= -DLONG_OFF_T
 .if (${MACHINE_OS} == "BSD")
 CPPFLAGS+= -DHAVE_STRLCPY
 CPPFLAGS+= -DHAVE_STRMODE
+CPPFLAGS+= -DHAVE_VIS
 .endif
 
 .include <bsd.prog.mk>
