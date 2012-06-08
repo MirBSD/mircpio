@@ -48,7 +48,7 @@
 #include "cache.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.7 2012/05/20 16:13:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.8 2012/06/08 14:52:47 tg Exp $");
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -266,7 +266,7 @@ name_gid(gid_t gid, int frc)
 	if (!gropn) {
 #if defined(__GLIBC__)
 		setgrent();
-#elif !defined(__INTERIX)
+#elif !defined(__INTERIX) && !defined(__CYGWIN__)
 		setgroupent(1);
 #endif
 		++gropn;
@@ -404,7 +404,7 @@ gid_name(const char *name, gid_t *gid)
 	if (!gropn) {
 #if defined(__GLIBC__)
 		setgrent();
-#elif !defined(__INTERIX)
+#elif !defined(__INTERIX) && !defined(__CYGWIN__)
 		setgroupent(1);
 #endif
 		++gropn;
