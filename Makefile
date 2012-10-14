@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.13 2012/10/14 16:22:49 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.14 2012/10/14 16:24:18 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -11,9 +11,9 @@ PROG=   pax
 SRCS=	ar.c ar_io.c ar_subs.c buf_subs.c cache.c cpio.c file_subs.c ftree.c \
 	gen_subs.c getoldopt.c options.c pat_rep.c pax.c sel_subs.c tables.c \
 	tar.c tty_subs.c
-MAN=	pax.1 tar.1 cpio.1
-LINKS=	${BINDIR}/pax ${BINDIR}/tar \
-	${BINDIR}/pax ${BINDIR}/cpio
+MAN=	cpio.1 pax.1 tar.1
+LINKS+=	${BINDIR}/pax ${BINDIR}/cpio
+LINKS+=	${BINDIR}/pax ${BINDIR}/tar
 
 .if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux") || \
     ((${MACHINE_OS} == "GNU") && (${OSNAME} != "GNU/kFreeBSD"))
