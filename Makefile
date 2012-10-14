@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.12 2012/10/14 14:51:09 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.13 2012/10/14 16:22:49 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -28,8 +28,8 @@ CPPFLAGS+= -DHAVE_VIS
 
 .include <bsd.prog.mk>
 
-CLEANFILES+=	${MANALL:S/.cat/.ps/}
-CLEANFILES+=	${MAN:S/$/.htm/} ${MAN:S/$/.pdf/}
+CLEANFILES+=	${MANALL:S/.cat/.ps/} ${MAN:S/$/.pdf/} ${MANALL:S/$/.gz/}
+CLEANFILES+=	${MAN:S/$/.htm/} ${MAN:S/$/.htm.gz/}
 CLEANFILES+=	${MAN:S/$/.txt/} ${MAN:S/$/.txt.gz/}
 cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 .if "${MANALL:Ncpio.cat1:Npax.cat1:Ntar.cat1}" != ""
@@ -72,7 +72,9 @@ cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 	    for m in ${MANALL}; do \
 		bn=$${m%.*}; ext=$${m##*.cat}; \
 		[[ $$bn != $$m ]]; [[ $$ext != $$m ]]; \
+		gzip -n9 <"$$m" >"$$m.gz"; \
 		col -bx <"$$m" >"$$bn.$$ext.txt"; \
 		rm -f "$$bn.$$ext.txt.gz"; gzip -n9 "$$bn.$$ext.txt"; \
 		do_conversion_verbose "$$bn" "$$ext" "$$m" "$$bn.$$ext.htm"; \
+		rm -f "$$bn.$$ext.htm.gz"; gzip -n9 "$$bn.$$ext.htm"; \
 	done
