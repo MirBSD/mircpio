@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.14 2012/10/14 16:24:18 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.15 2012/11/26 16:39:45 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -28,46 +28,38 @@ CPPFLAGS+= -DHAVE_VIS
 
 .include <bsd.prog.mk>
 
+.ifmake cats
+V_GROFF!=	pkg_info -e 'groff-*'
+V_GHOSTSCRIPT!=	pkg_info -e 'ghostscript-*'
+.  if empty(V_GROFF) || empty(V_GHOSTSCRIPT)
+.    error empty V_GROFF=${V_GROFF} or V_GHOSTSCRIPT=${V_GHOSTSCRIPT}
+.  endif
+.endif
+
 CLEANFILES+=	${MANALL:S/.cat/.ps/} ${MAN:S/$/.pdf/} ${MANALL:S/$/.gz/}
 CLEANFILES+=	${MAN:S/$/.htm/} ${MAN:S/$/.htm.gz/}
 CLEANFILES+=	${MAN:S/$/.txt/} ${MAN:S/$/.txt.gz/}
+CATS_KW=	cpio, pax, tar
+CATS_TITLE_cpio_1=paxcpio - copy file archives in and out
+CATS_TITLE_pax_1=pax - read and write file archives and copy directory hierarchies
+CATS_TITLE_tar_1=paxtar - Unix tape archiver
 cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 .if "${MANALL:Ncpio.cat1:Npax.cat1:Ntar.cat1}" != ""
 .  error Adjust here.
 .endif
-	x=$$(ident ${.CURDIR:Q}/cpio.1 | \
+.for _m _n in cpio 1 pax 1 tar 1
+	x=$$(ident ${.CURDIR:Q}/${_m}.${_n} | \
 	    awk '/MirOS:/ { print $$4$$5; }' | \
 	    tr -dc 0-9); (( $${#x} == 14 )) || exit 1; exec \
 	    ${MKSH} ${BSDSRCDIR:Q}/contrib/hosted/tg/ps2pdfmir -c \
-	    -o cpio.1.pdf '[' /Author '(The MirOS Project)' \
-	    /Title '(paxcpio - copy file archives in and out)' \
+	    -o ${_m}.${_n}.pdf '[' /Author '(The MirOS Project)' \
+	    /Title '('${CATS_TITLE_${_m}_${_n}:Q}')' \
 	    /Subject '(BSD Reference Manual)' /ModDate "(D:$$x)" \
-	    /Creator '(GNU groff version 1.19.2-3 \(MirPorts\))' \
-	    /Producer '(Artifex Ghostscript 8.54-3 \(MirPorts\))' \
-	    /Keywords '(cpio, pax, tar)' /DOCINFO pdfmark \
-	    -f cpio.ps1
-	x=$$(ident ${.CURDIR:Q}/pax.1 | \
-	    awk '/MirOS:/ { print $$4$$5; }' | \
-	    tr -dc 0-9); (( $${#x} == 14 )) || exit 1; exec \
-	    ${MKSH} ${BSDSRCDIR:Q}/contrib/hosted/tg/ps2pdfmir -c \
-	    -o pax.1.pdf '[' /Author '(The MirOS Project)' \
-	    /Title '(pax - read and write file archives and copy directory hierarchies)' \
-	    /Subject '(BSD Reference Manual)' /ModDate "(D:$$x)" \
-	    /Creator '(GNU groff version 1.19.2-3 \(MirPorts\))' \
-	    /Producer '(Artifex Ghostscript 8.54-3 \(MirPorts\))' \
-	    /Keywords '(cpio, pax, tar)' /DOCINFO pdfmark \
-	    -f pax.ps1
-	x=$$(ident ${.CURDIR:Q}/tar.1 | \
-	    awk '/MirOS:/ { print $$4$$5; }' | \
-	    tr -dc 0-9); (( $${#x} == 14 )) || exit 1; exec \
-	    ${MKSH} ${BSDSRCDIR:Q}/contrib/hosted/tg/ps2pdfmir -c \
-	    -o tar.1.pdf '[' /Author '(The MirOS Project)' \
-	    /Title '(paxtar - Unix tape archiver)' \
-	    /Subject '(BSD Reference Manual)' /ModDate "(D:$$x)" \
-	    /Creator '(GNU groff version 1.19.2-3 \(MirPorts\))' \
-	    /Producer '(Artifex Ghostscript 8.54-3 \(MirPorts\))' \
-	    /Keywords '(cpio, pax, tar)' /DOCINFO pdfmark \
-	    -f tar.ps1
+	    /Creator '(GNU groff version ${V_GROFF:S/groff-//} \(MirPorts\))' \
+	    /Producer '(Artifex Ghostscript ${V_GHOSTSCRIPT:S/ghostscript-//:S/-artifex//} \(MirPorts\))' \
+	    /Keywords '('${CATS_KW:Q}')' /DOCINFO pdfmark \
+	    -f ${_m}.ps${_n}
+.endfor
 	set -e; . ${BSDSRCDIR:Q}/scripts/roff2htm; set_target_absolute; \
 	    for m in ${MANALL}; do \
 		bn=$${m%.*}; ext=$${m##*.cat}; \
