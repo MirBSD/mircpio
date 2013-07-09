@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.15 2012/11/26 16:39:45 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.16 2013/07/09 18:48:11 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -70,3 +70,13 @@ cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 		do_conversion_verbose "$$bn" "$$ext" "$$m" "$$bn.$$ext.htm"; \
 		rm -f "$$bn.$$ext.htm.gz"; gzip -n9 "$$bn.$$ext.htm"; \
 	done
+
+# NetBSD®
+NOMANDOC=	Yes
+# OpenBSD
+.if defined(MANLINT) && !empty(MANLINT)
+all: use_nroff_instead
+use_nroff_instead:
+	@echo 'Install GNU groff or AT&T nroff to format *roff manpages!'
+	@exit 1
+.endif
