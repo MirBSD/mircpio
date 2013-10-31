@@ -1,8 +1,10 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.24 2012/06/05 19:09:41 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.25 2013/10/31 20:05:40 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
+ * Copyright © 2013
+ *	Thorsten “mirabilos” Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -323,12 +325,12 @@ extern char fdgetline_err;
 char *fdgetline(int);
 int tty_init(void);
 void tty_prnt(const char *, ...)
-    __attribute__((__format__ (__printf__, 1, 2)));
+    __attribute__((__format__(__printf__, 1, 2)));
 char *tty_rd(void);
 void paxwarn(int, const char *, ...)
-    __attribute__((__format__ (__printf__, 2, 3)));
+    __attribute__((__format__(__printf__, 2, 3)));
 void syswarn(int, int, const char *, ...)
-    __attribute__((__format__ (__printf__, 3, 4)));
+    __attribute__((__format__(__printf__, 3, 4)));
 
 /*
  * portability glue
