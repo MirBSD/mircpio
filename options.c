@@ -2,7 +2,7 @@
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006, 2007, 2012
+ * Copyright (c) 2005, 2006, 2007, 2012, 2014
  *	Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.51 2012/06/05 19:19:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.52 2014/07/03 19:36:25 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -1418,6 +1418,13 @@ cpio_options(int argc, char **argv)
 			 */
 			compress_program = COMPRESS_CMD;
 			break;
+		case '0':
+			/*
+			 * Use \0 as pathname terminator.
+			 * (For use with the -print0 option of find(1).)
+			 */
+			zeroflag = 1;
+			break;
 		case '6':
 			/*
 			 * process Version 6 cpio format
@@ -1433,7 +1440,7 @@ cpio_options(int argc, char **argv)
 			break;
 		}
 		if (opterr == 0) {
-			optstr = "6AaBbC:cdE:F:fH:I:iJjkLlM:mO:oprSstuVvZz";
+			optstr = "06AaBbC:cdE:F:fH:I:iJjkLlM:mO:oprSstuVvZz";
 			opterr = 1;
 		}
 	}
@@ -1773,11 +1780,11 @@ void
 cpio_usage(void)
 {
 	(void)fputs(
-	    "usage: cpio -o [-AaBcJjLVvZz] [-C bytes] [-F archive] [-H format]\n"
+	    "usage: cpio -o [-0AaBcJjLVvZz] [-C bytes] [-F archive] [-H format]\n"
 	    "               [-M flag] [-O archive] <name-list [>archive]\n"
-	    "       cpio -i [-6BbcdfJjmrSstuVvZz] [-C bytes] [-E file] [-F archive]\n"
+	    "       cpio -i [-06BbcdfJjmrSstuVvZz] [-C bytes] [-E file] [-F archive]\n"
 	    "               [-H format] [-I archive] [-M flag] [pattern ...] [<archive]\n"
-	    "       cpio -p [-adLlmuVv] destination-directory <name-list\n",
+	    "       cpio -p [-0adLlmuVv] destination-directory <name-list\n",
 	    stderr);
 	exit(1);
 }

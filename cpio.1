@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.34 2014/07/03 18:57:17 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.35 2014/07/03 19:36:25 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.34 2011/09/03 22:59:08 jmc Exp $
 .\"
 .\" Copyright (c) 2005, 2009, 2011, 2012, 2014
@@ -192,7 +192,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Fl o
-.Op Fl AaBcJjLVvZz
+.Op Fl 0AaBcJjLVvZz
 .Op Fl C Ar bytes
 .Op Fl F Ar archive
 .Op Fl H Ar format
@@ -202,7 +202,7 @@
 .Op \*(Gt Ar archive
 .Nm \*(nm
 .Fl i
-.Op Fl 6BbcdfJjmrSstuVvZz
+.Op Fl 06BbcdfJjmrSstuVvZz
 .Op Fl C Ar bytes
 .Op Fl E Ar file
 .Op Fl F Ar archive
@@ -213,7 +213,7 @@
 .Op \*(Lt Ar archive
 .Nm \*(nm
 .Fl p
-.Op Fl adLlmuVv
+.Op Fl 0adLlmuVv
 .Ar destination-directory
 .No \*(Lt Ar name-list
 .Sh DESCRIPTION
@@ -377,6 +377,22 @@ standard input and extracts files matching the
 .Ar patterns
 that were specified on the command line.
 .Bl -tag -width Ds
+.It Fl 0
+Use the NUL
+.Pq Ql \e0
+character as a pathname terminator, instead of newline
+.Pq Ql \en .
+This applies only to the pathnames read from standard input in
+the write and copy modes,
+and to the pathnames written to standard output in list mode.
+This option is expected to be used in concert with the
+.Fl print0
+function in
+.Xr find 1
+or the
+.Fl 0
+flag in
+.Xr xargs 1 .
 .It Fl 6
 Process old-style
 .Nm cpio
