@@ -2,7 +2,7 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007, 2008, 2009, 2012
+ * Copyright (c) 2007, 2008, 2009, 2012, 2014
  *	Thorsten Glaser <tg@mirbsd.org>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
@@ -57,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.18 2012/06/05 18:22:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.19 2014/07/03 17:52:11 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -289,6 +289,23 @@ chk_same(ARCHD *arcn)
 }
 
 /*
+ * helper function to copy a symbolic link
+ */
+
+static int
+mk_link_symlink(const char *to, const char *from)
+{
+	int cnt;
+	char buf[PAXPATHLEN + 1];
+
+	if ((cnt = readlink(to, buf, PAXPATHLEN)) < 0)
+		return (-1);
+	/* cf. comment in ftree.c:next_file() */
+	buf[cnt] = '\0';
+	return (symlink(buf, from));
+}
+
+/*
  * mk_link()
  *	try to make a hard link between two files. if ign set, we do not
  *	complain.
@@ -348,6 +365,11 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 		if (link(to, from) == 0)
 			break;
 		oerrno = errno;
+		if (S_ISLNK(to_sb->st_mode)) {
+			/* just copy the symlink */
+			if (mk_link_symlink(to, from) == 0)
+				break;
+		}
 		if (!nodirs && chk_path(from, to_sb->st_uid, to_sb->st_gid) == 0)
 			continue;
 		/*-
