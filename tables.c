@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.16 2012/06/05 18:22:57 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.17 2015/10/13 20:18:51 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -378,6 +378,10 @@ chk_ftime(ARCHD *arcn)
 	int namelen;
 	u_int indx;
 	char ckname[PAXPATHLEN+1];
+
+	if (arcn->nlen > PAXPATHLEN)
+		/*XXX just skip over this file */
+		return (-1);
 
 	/*
 	 * no info, go ahead and add to archive

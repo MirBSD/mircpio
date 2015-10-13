@@ -57,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.19 2014/07/03 17:52:11 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.20 2015/10/13 20:18:50 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -1158,7 +1158,7 @@ set_crc(ARCHD *arcn, int fd)
 	int i;
 	int res;
 	off_t cpcnt = 0L;
-	u_long size;
+	size_t size;
 	u_int32_t crc = 0;
 	char tbuf[FILEBLK];
 	struct stat sb;
@@ -1171,8 +1171,8 @@ set_crc(ARCHD *arcn, int fd)
 		return(0);
 	}
 
-	if ((size = (u_long)arcn->sb.st_blksize) > (u_long)sizeof(tbuf))
-		size = (u_long)sizeof(tbuf);
+	if ((size = (size_t)arcn->sb.st_blksize) > sizeof(tbuf))
+		size = sizeof(tbuf);
 
 	/*
 	 * read all the bytes we think that there are in the file. If the user
