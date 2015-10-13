@@ -2,8 +2,8 @@
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2012
- *	Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2012, 2015
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.19 2012/06/05 18:22:57 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.20 2015/10/13 20:11:41 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -264,6 +264,13 @@ main(int argc, char **argv)
 	options(argc, argv);
 	if ((gen_init() < 0) || (tty_init() < 0))
 		return(exit_val);
+
+	/* make list fd independent and line-buffered */
+	if (!(listf = fdopen(dup(fileno(listf)), "wb"))) {
+		syswarn(1, errno, "Can't open list file descriptor");
+		return (exit_val);
+	}
+	setlinebuf(listf);
 
 	/*
 	 * select a primary operation mode
