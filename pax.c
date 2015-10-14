@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.20 2015/10/13 20:11:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.21 2015/10/14 18:10:08 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -95,7 +95,6 @@ int	rmleadslash = 0;	/* remove leading '/' from pathnames */
 int	exit_val;		/* exit value */
 int	docrc;			/* check/create file crc */
 char	*dirptr;		/* destination dir in a copy */
-char	*ltmfrmt;		/* -v locale time format (if any) */
 const char *argv0;		/* root of argv[0] */
 sigset_t s_mask;		/* signal mask for cleanup critical sect */
 FILE	*listf;			/* fp to print file list to (default stderr) */
@@ -395,13 +394,6 @@ gen_init(void)
 		(void)setrlimit(RLIMIT_RSS , &reslimit);
 	}
 #endif
-
-	/*
-	 * Handle posix locale
-	 *
-	 * set user defines time printing format for -v option
-	 */
-	ltmfrmt = getenv("LC_TIME");
 
 	/*
 	 * signal handling to reset stored directory times and modes. Since
