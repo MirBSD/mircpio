@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.16 2013/07/09 18:48:11 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.17 2016/03/03 23:51:32 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -51,7 +51,7 @@ cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 	x=$$(ident ${.CURDIR:Q}/${_m}.${_n} | \
 	    awk '/MirOS:/ { print $$4$$5; }' | \
 	    tr -dc 0-9); (( $${#x} == 14 )) || exit 1; exec \
-	    ${MKSH} ${BSDSRCDIR:Q}/contrib/hosted/tg/ps2pdfmir -c \
+	    ${MKSH} ${BSDSRCDIR:Q}/contrib/hosted/tg/ps2pdfmir -p pa4 -c \
 	    -o ${_m}.${_n}.pdf '[' /Author '(The MirOS Project)' \
 	    /Title '('${CATS_TITLE_${_m}_${_n}:Q}')' \
 	    /Subject '(BSD Reference Manual)' /ModDate "(D:$$x)" \
