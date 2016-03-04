@@ -1,4 +1,4 @@
-/*	$OpenBSD: cache.c,v 1.21 2014/05/24 18:51:00 guenther Exp $	*/
+/*	$OpenBSD: cache.c,v 1.19 2009/12/22 12:09:36 jasper Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
 /*-
@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -77,7 +78,7 @@ uidtb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((uidtb = calloc(UID_SZ, sizeof(UIDC *))) == NULL) {
+	if ((uidtb = (UIDC **)calloc(UID_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
 		paxwarn(1, "Unable to allocate memory for user id cache table");
 		return(-1);
@@ -101,7 +102,7 @@ gidtb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((gidtb = calloc(GID_SZ, sizeof(GIDC *))) == NULL) {
+	if ((gidtb = (GIDC **)calloc(GID_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
 		paxwarn(1, "Unable to allocate memory for group id cache table");
 		return(-1);
@@ -125,7 +126,7 @@ usrtb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((usrtb = calloc(UNM_SZ, sizeof(UIDC *))) == NULL) {
+	if ((usrtb = (UIDC **)calloc(UNM_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
 		paxwarn(1, "Unable to allocate memory for user name cache table");
 		return(-1);
@@ -149,7 +150,7 @@ grptb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((grptb = calloc(GNM_SZ, sizeof(GIDC *))) == NULL) {
+	if ((grptb = (GIDC **)calloc(GNM_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
 		paxwarn(1,"Unable to allocate memory for group name cache table");
 		return(-1);
@@ -330,7 +331,7 @@ uid_name(char *name, uid_t *uid)
 
 	if (ptr == NULL)
 		ptr = usrtb[st_hash(name, namelen, UNM_SZ)] =
-		  malloc(sizeof(UIDC));
+		  (UIDC *)malloc(sizeof(UIDC));
 
 	/*
 	 * no match, look it up, if no match store it as an invalid entry,
@@ -392,7 +393,7 @@ gid_name(char *name, gid_t *gid)
 	}
 	if (ptr == NULL)
 		ptr = grptb[st_hash(name, namelen, GID_SZ)] =
-		  malloc(sizeof(GIDC));
+		  (GIDC *)malloc(sizeof(GIDC));
 
 	/*
 	 * no match, look it up, if no match store it as an invalid entry,

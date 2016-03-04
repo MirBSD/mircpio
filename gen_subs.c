@@ -1,4 +1,4 @@
-/*	$OpenBSD: gen_subs.c,v 1.28 2015/03/17 03:23:17 guenther Exp $	*/
+/*	$OpenBSD: gen_subs.c,v 1.20 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -37,7 +37,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <stdio.h>
+#include <tzfile.h>
 #include <utmp.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -55,13 +57,10 @@
  */
 #define MODELEN 20
 #define DATELEN 64
-#define SECSPERDAY	(24 * 60 * 60)
-#define SIXMONTHS	(SECSPERDAY * 365 / 2)
+#define SIXMONTHS	 ((DAYSPERNYEAR / 2) * SECSPERDAY)
 #define CURFRMT		"%b %e %H:%M"
 #define OLDFRMT		"%b %e  %Y"
 #define NAME_WIDTH	8
-#define	TIMEFMT(t, now) \
-	(((t) + SIXMONTHS <= (now) || (t) > (now)) ? OLDFRMT : CURFRMT)
 
 /*
  * ls_list()
@@ -74,6 +73,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	struct stat *sbp;
 	char f_mode[MODELEN];
 	char f_date[DATELEN];
+	const char *timefrmt;
 	int term;
 
 	term = zeroflag ? '\0' : '\n';	/* path termination character */
@@ -97,11 +97,22 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	sbp = &(arcn->sb);
 	strmode(sbp->st_mode, f_mode);
 
+	if (ltmfrmt == NULL) {
+		/*
+		 * no locale specified format. time format based on age
+		 * compared to the time pax was started.
+		 */
+		if ((sbp->st_mtime + SIXMONTHS) <= now)
+			timefrmt = OLDFRMT;
+		else
+			timefrmt = CURFRMT;
+	} else
+		timefrmt = ltmfrmt;
+
 	/*
 	 * print file mode, link count, uid, gid and time
 	 */
-	if (strftime(f_date, sizeof(f_date), TIMEFMT(sbp->st_mtime, now),
-	    localtime(&(sbp->st_mtime))) == 0)
+	if (strftime(f_date,DATELEN,timefrmt,localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
 	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode, sbp->st_nlink,
 		NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
@@ -111,11 +122,18 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	 * print device id's for devices, or sizes for other nodes
 	 */
 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
-		(void)fprintf(fp, "%4lu, %4lu ",
-		    (unsigned long)MAJOR(sbp->st_rdev),
+#		ifdef LONG_OFF_T
+		(void)fprintf(fp, "%4u,%4u ", MAJOR(sbp->st_rdev),
+#		else
+		(void)fprintf(fp, "%4lu,%4lu ", (unsigned long)MAJOR(sbp->st_rdev),
+#		endif
 		    (unsigned long)MINOR(sbp->st_rdev));
 	else {
-		(void)fprintf(fp, "%9llu ", sbp->st_size);
+#		ifdef LONG_OFF_T
+		(void)fprintf(fp, "%9lu ", sbp->st_size);
+#		else
+		(void)fprintf(fp, "%9qu ", sbp->st_size);
+#		endif
 	}
 
 	/*
@@ -124,7 +142,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	(void)fputs(f_date, fp);
 	(void)putc(' ', fp);
 	safe_print(arcn->name, fp);
-	if (PAX_IS_HARDLINK(arcn->type)) {
+	if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG)) {
 		fputs(" == ", fp);
 		safe_print(arcn->ln_name, fp);
 	} else if (arcn->type == PAX_SLK) {
@@ -133,6 +151,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	}
 	(void)putc(term, fp);
 	(void)fflush(fp);
+	return;
 }
 
 /*
@@ -145,16 +164,28 @@ ls_tty(ARCHD *arcn)
 {
 	char f_date[DATELEN];
 	char f_mode[MODELEN];
-	time_t now = time(NULL);
+	const char *timefrmt;
+
+	if (ltmfrmt == NULL) {
+		/*
+		 * no locale specified format
+		 */
+		if ((arcn->sb.st_mtime + SIXMONTHS) <= time(NULL))
+			timefrmt = OLDFRMT;
+		else
+			timefrmt = CURFRMT;
+	} else
+		timefrmt = ltmfrmt;
 
 	/*
 	 * convert time to string, and print
 	 */
-	if (strftime(f_date, DATELEN, TIMEFMT(arcn->sb.st_mtime, now),
+	if (strftime(f_date, DATELEN, timefrmt,
 	    localtime(&(arcn->sb.st_mtime))) == 0)
 		f_date[0] = '\0';
 	strmode(arcn->sb.st_mode, f_mode);
 	tty_prnt("%s%s %s\n", f_mode, f_date, arcn->name);
+	return;
 }
 
 void
@@ -272,6 +303,7 @@ ul_asc(u_long val, char *str, int len, int base)
 	return(0);
 }
 
+#ifndef LONG_OFF_T
 /*
  * asc_uqd()
  *	convert hex/octal character string into a u_quad_t. We do not have to
@@ -367,6 +399,7 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 		return(-1);
 	return(0);
 }
+#endif
 
 /*
  * Copy at max min(bufz, fieldsz) chars from field to buf, stopping

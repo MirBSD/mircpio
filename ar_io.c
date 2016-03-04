@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_io.c,v 1.55 2015/12/06 16:57:45 deraadt Exp $	*/
+/*	$OpenBSD: ar_io.c,v 1.39 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
+#include <sys/param.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <string.h>
@@ -181,7 +182,7 @@ ar_open(const char *name)
 		artyp = ISREG;
 
 	/*
-	 * make sure beyond any doubt that we can unlink only regular files
+	 * make sure we beyond any doubt that we only can unlink regular files
 	 * we created
 	 */
 	if (artyp != ISREG)
@@ -289,12 +290,11 @@ ar_open(const char *name)
 }
 
 /*
- * ar_close(int int_sig)
+ * ar_close()
  *	closes archive device, increments volume number, and prints i/o summary
- *	If in_sig is set we're in a signal handler and can't flush stdio.
  */
 void
-ar_close(int in_sig)
+ar_close(void)
 {
 	int status;
 
@@ -302,8 +302,6 @@ ar_close(int in_sig)
 		did_io = io_ok = flcnt = 0;
 		return;
 	}
-	if (!in_sig)
-		fflush(listf);
 
 	/*
 	 * Close archive file. This may take a LONG while on tapes (we may be
@@ -312,9 +310,12 @@ ar_close(int in_sig)
 	 * broken).
 	 */
 	if (vflag && (artyp == ISTAPE)) {
-		(void)dprintf(listfd,
-		    "%s%s: Waiting for tape drive close to complete...",
-		    vfpart ? "\n" : "", argv0);
+		if (vfpart)
+			(void)putc('\n', listf);
+		(void)fprintf(listf,
+			"%s: Waiting for tape drive close to complete...",
+			argv0);
+		(void)fflush(listf);
 	}
 
 	/*
@@ -331,24 +332,19 @@ ar_close(int in_sig)
 	 * for a quick extract/list, pax frequently exits before the child
 	 * process is done
 	 */
-	if ((act == LIST || act == EXTRACT) && nflag && zpid > 0) {
+	if ((act == LIST || act == EXTRACT) && nflag && zpid > 0)
 		kill(zpid, SIGINT);
-		zpid = -1;
-	}
 
 	(void)close(arfd);
 
 	/* Do not exit before child to ensure data integrity */
-	if (zpid > 0) {
+	if (zpid > 0)
 		waitpid(zpid, &status, 0);
-		if (!WIFEXITED(status) || WEXITSTATUS(status))
-			exit_val = 1;
-	}
-
 
 	if (vflag && (artyp == ISTAPE)) {
-		(void)write(listfd, "done.\n", sizeof("done.\n")-1);
+		(void)fputs("done.\n", listf);
 		vfpart = 0;
+		(void)fflush(listf);
 	}
 	arfd = -1;
 
@@ -374,7 +370,7 @@ ar_close(int in_sig)
 	 * Print out a summary of I/O for this archive volume.
 	 */
 	if (vfpart) {
-		(void)write(listfd, "\n", 1);
+		(void)putc('\n', listf);
 		vfpart = 0;
 	}
 
@@ -384,21 +380,28 @@ ar_close(int in_sig)
 	 * could have written anything yet.
 	 */
 	if (frmt == NULL) {
-		(void)dprintf(listfd,
-		    "%s: unknown format, %llu bytes skipped.\n", argv0, rdcnt);
+#	ifdef LONG_OFF_T
+		(void)fprintf(listf, "%s: unknown format, %lu bytes skipped.\n",
+#	else
+		(void)fprintf(listf, "%s: unknown format, %qu bytes skipped.\n",
+#	endif
+		    argv0, rdcnt);
+		(void)fflush(listf);
 		flcnt = 0;
 		return;
 	}
 
-	if (strcmp(NM_PAX, argv0) == 0)
-		(void)dprintf(listfd, "%s: %s vol %d, %lu files,"
-		    " %llu bytes read, %llu bytes written.\n",
+	if (strcmp(NM_CPIO, argv0) == 0)
+		(void)fprintf(listf, "%qu blocks\n", (rdcnt ? rdcnt : wrcnt) / 5120);
+	else if (strcmp(NM_TAR, argv0) != 0)
+		(void)fprintf(listf,
+#	ifdef LONG_OFF_T
+		    "%s: %s vol %d, %lu files, %lu bytes read, %lu bytes written.\n",
+#	else
+		    "%s: %s vol %d, %lu files, %qu bytes read, %qu bytes written.\n",
+#	endif
 		    argv0, frmt->name, arvol-1, flcnt, rdcnt, wrcnt);
-#ifndef NOCPIO
-	else if (strcmp(NM_CPIO, argv0) == 0)
-		(void)dprintf(listfd, "%llu blocks\n",
-		    (rdcnt ? rdcnt : wrcnt) / 5120);
-#endif /* !NOCPIO */
+	(void)fflush(listf);
 	flcnt = 0;
 }
 
@@ -665,7 +668,7 @@ ar_write(char *buf, int bsz)
 	/*
 	 * Better tell the user the bad news...
 	 * if this is a block aligned archive format, we may have a bad archive
-	 * if the format wants the header to start at a BLKMULT boundary. While
+	 * if the format wants the header to start at a BLKMULT boundary.. While
 	 * we can deal with the mis-aligned data, it violates spec and other
 	 * archive readers will likely fail. if the format is not block
 	 * aligned, the user may be lucky (and the archive is ok).
@@ -1108,7 +1111,7 @@ ar_next(void)
 	 */
 	if (sigprocmask(SIG_BLOCK, &s_mask, &o_mask) < 0)
 		syswarn(0, errno, "Unable to set signal mask");
-	ar_close(0);
+	ar_close();
 	if (sigprocmask(SIG_SETMASK, &o_mask, NULL) < 0)
 		syswarn(0, errno, "Unable to restore signal mask");
 
@@ -1217,7 +1220,7 @@ ar_next(void)
 		 */
 		if (ar_open(buf) >= 0) {
 			if (freeit) {
-				free((char *)arcname);
+				(void)free((char *)arcname);
 				freeit = 0;
 			}
 			if ((arcname = strdup(buf)) == NULL) {
@@ -1241,7 +1244,7 @@ ar_next(void)
  * to keep the fd the same in the calling function (parent).
  */
 void
-ar_start_gzip(int fd, const char *path, int wr)
+ar_start_gzip(int fd, const char *gzip_program, int wr)
 {
 	int fds[2];
 	const char *gzip_flags;
@@ -1260,12 +1263,6 @@ ar_start_gzip(int fd, const char *path, int wr)
 			dup2(fds[0], fd);
 		close(fds[0]);
 		close(fds[1]);
-
-		if (pmode == 0 || (act != EXTRACT && act != COPY)) {
-		    if (pledge("stdio rpath wpath cpath fattr dpath getpw ioctl proc",
-			NULL) == -1)
-				err(1, "pledge");
-		}
 	} else {
 		if (wr) {
 			dup2(fds[0], STDIN_FILENO);
@@ -1278,12 +1275,8 @@ ar_start_gzip(int fd, const char *path, int wr)
 		}
 		close(fds[0]);
 		close(fds[1]);
-
-		/* System compressors are more likely to use pledge(2) */
-		putenv("PATH=/usr/bin:/usr/local/bin");
-
-		if (execlp(path, path, gzip_flags, (char *)NULL) < 0)
-			err(1, "could not exec %s", path);
+		if (execlp(gzip_program, gzip_program, gzip_flags, (char *)NULL) < 0)
+			err(1, "could not exec %s", gzip_program);
 		/* NOTREACHED */
 	}
 }
