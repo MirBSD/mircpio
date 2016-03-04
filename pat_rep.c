@@ -1,4 +1,4 @@
-/*	$OpenBSD: pat_rep.c,v 1.40 2015/11/17 19:01:34 mmcc Exp $	*/
+/*	$OpenBSD: pat_rep.c,v 1.31 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: pat_rep.c,v 1.4 1995/03/21 09:07:33 cgd Exp $	*/
 
 /*-
@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -121,7 +122,7 @@ rep_add(char *str)
 	 * allocate space for the node that handles this replacement pattern
 	 * and split out the regular expression and try to compile it
 	 */
-	if ((rep = malloc(sizeof(REPLACE))) == NULL) {
+	if ((rep = (REPLACE *)malloc(sizeof(REPLACE))) == NULL) {
 		paxwarn(1, "Unable to allocate memory for replacement string");
 		return(-1);
 	}
@@ -130,7 +131,7 @@ rep_add(char *str)
 	if ((res = regcomp(&(rep->rcmp), str+1, 0)) != 0) {
 		regerror(res, &(rep->rcmp), rebuf, sizeof(rebuf));
 		paxwarn(1, "%s while compiling regular expression %s", rebuf, str);
-		free(rep);
+		(void)free((char *)rep);
 		return(-1);
 	}
 
@@ -150,7 +151,7 @@ rep_add(char *str)
 	}
 	if (*pt2 == '\0') {
 		regfree(&(rep->rcmp));
-		free(rep);
+		(void)free((char *)rep);
 		paxwarn(1, "Invalid replacement string %s", str);
 		return(-1);
 	}
@@ -175,7 +176,7 @@ rep_add(char *str)
 			break;
 		default:
 			regfree(&(rep->rcmp));
-			free(rep);
+			(void)free((char *)rep);
 			*pt1 = *str;
 			paxwarn(1, "Invalid replacement string option %s", str);
 			return(-1);
@@ -208,7 +209,7 @@ rep_add(char *str)
  */
 
 int
-pat_add(char *str, char *chdirname)
+pat_add(char *str, char *chdname)
 {
 	PATTERN *pt;
 
@@ -225,7 +226,7 @@ pat_add(char *str, char *chdirname)
 	 * part of argv so do not bother to copy it, just point at it. Add the
 	 * node to the end of the pattern list
 	 */
-	if ((pt = malloc(sizeof(PATTERN))) == NULL) {
+	if ((pt = (PATTERN *)malloc(sizeof(PATTERN))) == NULL) {
 		paxwarn(1, "Unable to allocate memory for pattern string");
 		return(-1);
 	}
@@ -235,7 +236,7 @@ pat_add(char *str, char *chdirname)
 	pt->plen = strlen(str);
 	pt->fow = NULL;
 	pt->flgs = 0;
-	pt->chdname = chdirname;
+	pt->chdname = chdname;
 
 	if (pathead == NULL) {
 		pattail = pathead = pt;
@@ -294,7 +295,7 @@ pat_sel(ARCHD *arcn)
 {
 	PATTERN *pt;
 	PATTERN **ppt;
-	size_t len;
+	int len;
 
 	/*
 	 * if no patterns just return
@@ -391,7 +392,7 @@ pat_sel(ARCHD *arcn)
 		return(-1);
 	}
 	*ppt = pt->fow;
-	free(pt);
+	(void)free((char *)pt);
 	arcn->pat = NULL;
 	return(0);
 }
@@ -583,25 +584,6 @@ range_match(char *pattern, int test)
 }
 
 /*
- * has_dotdot()
- *	Returns true iff the supplied path contains a ".." component.
- */
-
-int
-has_dotdot(const char *path)
-{
-	const char *p = path;
-
-	while ((p = strstr(p, "..")) != NULL) {
-		if ((p == path || p[-1] == '/') &&
-		    (p[2] == '/' || p[2] == '\0'))
-			return (1);
-		p += 2;
-	}
-	return (0);
-}
-
-/*
  * mod_name()
  *	modify a selected file name. first attempt to apply replacement string
  *	expressions, then apply interactive file rename. We apply replacement
@@ -638,7 +620,7 @@ mod_name(ARCHD *arcn)
 		}
 	}
 	while (rmleadslash && arcn->ln_name[0] == '/' &&
-	    PAX_IS_HARDLINK(arcn->type)) {
+	    (arcn->type == PAX_HLK || arcn->type == PAX_HRG)) {
 		if (arcn->ln_name[1] == '\0') {
 			arcn->ln_name[0] = '.';
 		} else {
@@ -649,30 +631,6 @@ mod_name(ARCHD *arcn)
 		if (rmleadslash < 2) {
 			rmleadslash = 2;
 			paxwarn(0, "Removing leading / from absolute path names in the archive");
-		}
-	}
-	if (rmleadslash) {
-		const char *last = NULL;
-		const char *p = arcn->name;
-
-		while ((p = strstr(p, "..")) != NULL) {
-			if ((p == arcn->name || p[-1] == '/') &&
-			    (p[2] == '/' || p[2] == '\0'))
-				last = p + 2;
-			p += 2;
-		}
-		if (last != NULL) {
-			last++;
-			paxwarn(1, "Removing leading \"%.*s\"",
-			    (int)(last - arcn->name), arcn->name);
-			arcn->nlen = strlen(last);
-			if (arcn->nlen > 0)
-				memmove(arcn->name, last, arcn->nlen + 1);
-			else {
-				arcn->name[0] = '.';
-				arcn->name[1] = '\0';
-				arcn->nlen = 1;
-			}
 		}
 	}
 
@@ -703,11 +661,10 @@ mod_name(ARCHD *arcn)
 		if ((res = rep_name(arcn->name, sizeof(arcn->name), &(arcn->nlen), 1)) != 0)
 			return(res);
 
-		if (PAX_IS_LINK(arcn->type)) {
-			if ((res = rep_name(arcn->ln_name,
-			    sizeof(arcn->ln_name), &(arcn->ln_nlen), 0)) != 0)
-				return(res);
-		}
+		if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
+		    (arcn->type == PAX_HRG)) &&
+		    ((res = rep_name(arcn->ln_name, sizeof(arcn->ln_name), &(arcn->ln_nlen), 0)) != 0))
+			return(res);
 	}
 
 	if (iflag) {
@@ -716,9 +673,9 @@ mod_name(ARCHD *arcn)
 		 */
 		if ((res = tty_rename(arcn)) != 0)
 			return(res);
-		if (PAX_IS_LINK(arcn->type))
-			sub_name(arcn->ln_name, &(arcn->ln_nlen),
-			    sizeof(arcn->ln_name));
+		if ((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
+		    (arcn->type == PAX_HRG))
+			sub_name(arcn->ln_name, &(arcn->ln_nlen), sizeof(arcn->ln_name));
 	}
 	return(res);
 }
@@ -811,7 +768,7 @@ set_dest(ARCHD *arcn, char *dest_dir, int dir_len)
 	 * if the name they point was moved (or will be moved). It is best to
 	 * leave them alone.
 	 */
-	if (!PAX_IS_HARDLINK(arcn->type))
+	if ((arcn->type != PAX_HLK) && (arcn->type != PAX_HRG))
 		return(0);
 
 	if (fix_path(arcn->ln_name, &(arcn->ln_nlen), dest_dir, dir_len) < 0)
