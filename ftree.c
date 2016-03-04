@@ -1,4 +1,4 @@
-/*	$OpenBSD: ftree.c,v 1.29 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: ftree.c,v 1.38 2015/03/19 05:14:24 guenther Exp $	*/
 /*	$NetBSD: ftree.c,v 1.4 1995/03/21 09:07:21 cgd Exp $	*/
 
 /*-
@@ -37,7 +37,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -153,7 +152,7 @@ ftree_add(char *str, int chflg)
 	 * processed in the same order they were passed to pax). Get rid of any
 	 * trailing / the user may pass us. (watch out for / by itself).
 	 */
-	if ((ft = (FTREE *)malloc(sizeof(FTREE))) == NULL) {
+	if ((ft = malloc(sizeof(FTREE))) == NULL) {
 		paxwarn(0, "Unable to allocate memory for filename");
 		return(-1);
 	}
@@ -338,8 +337,6 @@ int
 next_file(ARCHD *arcn)
 {
 	int cnt;
-	time_t atime;
-	time_t mtime;
 
 	/*
 	 * ftree_sel() might have set the ftree_skip flag if the user has the
@@ -394,10 +391,10 @@ next_file(ARCHD *arcn)
 			 * remember to force the time (this is -t on a read
 			 * directory, not a created directory).
 			 */
-			if (!tflag || (get_atdir(ftent->fts_statp->st_dev,
-			    ftent->fts_statp->st_ino, &mtime, &atime) < 0))
+			if (!tflag)
 				continue;
-			set_ftime(ftent->fts_path, mtime, atime, 1);
+			do_atdir(ftent->fts_path, ftent->fts_statp->st_dev,
+			    ftent->fts_statp->st_ino);
 			continue;
 		case FTS_DC:
 			/*
@@ -446,8 +443,8 @@ next_file(ARCHD *arcn)
 			if (!tflag)
 				break;
 			add_atdir(ftent->fts_path, arcn->sb.st_dev,
-			    arcn->sb.st_ino, arcn->sb.st_mtime,
-			    arcn->sb.st_atime);
+			    arcn->sb.st_ino, &arcn->sb.st_mtim,
+			    &arcn->sb.st_atim);
 			break;
 		case S_IFCHR:
 			arcn->type = PAX_CHR;
@@ -478,7 +475,7 @@ next_file(ARCHD *arcn)
 			}
 			/*
 			 * set link name length, watch out readlink does not
-			 * always NUL terminate the link path
+			 * NUL terminate the link path
 			 */
 			arcn->ln_name[cnt] = '\0';
 			arcn->ln_nlen = cnt;

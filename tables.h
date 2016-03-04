@@ -1,4 +1,4 @@
-/*	$OpenBSD: tables.h,v 1.8 2006/08/05 23:05:13 ray Exp $	*/
+/*	$OpenBSD: tables.h,v 1.16 2015/03/19 05:14:24 guenther Exp $	*/
 /*	$NetBSD: tables.h,v 1.3 1995/03/21 09:07:47 cgd Exp $	*/
 
 /*-
@@ -50,6 +50,7 @@
 #define N_TAB_SZ	541		/* interactive rename hash table */
 #define D_TAB_SZ	317		/* unique device mapping table */
 #define A_TAB_SZ	317		/* ftree dir access time reset table */
+#define SL_TAB_SZ	317		/* escape symlink tables */
 #define MAXKEYLEN	64		/* max number of chars for hash */
 #define DIRP_SIZE	64		/* initial size of created dir table */
 
@@ -58,9 +59,9 @@
  * hard links in a file system or with some archive formats (cpio)
  */
 typedef struct hrdlnk {
+	ino_t		ino;	/* files inode number */
 	char		*name;	/* name of first file seen with this ino/dev */
 	dev_t		dev;	/* files device number */
-	ino_t		ino;	/* files inode number */
 	u_long		nlink;	/* expected link count */
 	struct hrdlnk	*fow;
 } HRDLNK;
@@ -77,10 +78,10 @@ typedef struct hrdlnk {
  * handle is greatly increased).
  */
 typedef struct ftm {
-	int		namelen;	/* file name length */
-	time_t		mtime;		/* files last modification time */
 	off_t		seek;		/* location in scratch file */
+	struct timespec	mtim;		/* files last modification time */
 	struct ftm	*fow;
+	int		namelen;	/* file name length */
 } FTM;
 
 /*
@@ -143,11 +144,7 @@ typedef struct dlist {
  */
 
 typedef struct atdir {
-	char *name;	/* name of directory to reset */
-	dev_t dev;	/* dev and inode for fast lookup */
-	ino_t ino;
-	time_t mtime;	/* access and mod time to reset to */
-	time_t atime;
+	struct file_times ft;
 	struct atdir *fow;
 } ATDIR;
 
@@ -162,9 +159,7 @@ typedef struct atdir {
  */
 
 typedef struct dirdata {
-	char *name;	/* file name */
-	time_t mtime;	/* mtime to set */
-	time_t atime;	/* atime to set */
-	u_int16_t mode;	/* file mode to restore */
+	struct file_times ft;
+	u_int16_t mode;		/* file mode to restore */
 	u_int16_t frc_mode;	/* do we force mode settings? */
 } DIRDATA;
