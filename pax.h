@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
+/*	$OpenBSD: pax.h,v 1.28 2015/11/17 19:01:34 mmcc Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
@@ -49,7 +49,7 @@
 #define DEVBLK		8192	/* default read blksize for devices */
 #define FILEBLK		10240	/* default read blksize for files */
 #define PAXPATHLEN	3072	/* maximum path length for pax. MUST be */
-				/* longer than the system MAXPATHLEN */
+				/* longer than the system PATH_MAX */
 
 /*
  * Pax modes of operation
@@ -79,7 +79,7 @@ typedef struct pattern {
 	char		*pstr;		/* pattern to match, user supplied */
 	char		*pend;		/* end of a prefix match */
 	char		*chdname;	/* the dir to change to if not NULL.  */
-	int		plen;		/* length of pstr */
+	size_t		plen;		/* length of pstr */
 	int		flgs;		/* processing/state flags */
 #define MTCH		0x1		/* pattern has been matched */
 #define DIR_MTCH	0x2		/* pattern matched a directory */
@@ -126,6 +126,10 @@ typedef struct {
 #define PAX_GLL		11		/* GNU long symlink */
 #define PAX_GLF		12		/* GNU long file */
 } ARCHD;
+
+#define PAX_IS_REG(type)	((type) == PAX_REG || (type) == PAX_CTG)
+#define PAX_IS_HARDLINK(type)	((type) == PAX_HLK || (type) == PAX_HRG)
+#define PAX_IS_LINK(type)	((type) == PAX_SLK || PAX_IS_HARDLINK(type))
 
 /*
  * Format Specific Routine Table
@@ -207,12 +211,22 @@ typedef struct {
 				/* CAUTION: parameters to this function are */
 				/* different for trailers inside or outside */
 				/* of headers. See get_head() for details */
-	int (*rd_data)(ARCHD *,	/* read/process file data from the archive */
-	    int, off_t *);
-	int (*wr_data)(ARCHD *,	/* write/process file data to the archive */
-	    int, off_t *);
 	int (*options)(void);	/* process format specific options (-o) */
 } FSUB;
+
+/*
+ * Time data for a given file.  This is usually embedded in a structure
+ * indexed by dev+ino, by name, by order in the archive, etc.  set_attr()
+ * takes one of these and will only change the times or mode if the file
+ * at the given name has the indicated dev+ino.
+ */
+struct file_times {
+	ino_t	ft_ino;			/* inode number to verify */
+	struct	timespec ft_mtim;	/* times to set */
+	struct	timespec ft_atim;
+	char	*ft_name;		/* name of file to set the times on */
+	dev_t	ft_dev;			/* device number to verify */
+};
 
 /*
  * Format Specific Options List
@@ -228,12 +242,14 @@ typedef struct oplist {
 /*
  * General Macros
  */
-#ifndef MIN
-#define	MIN(a,b) (((a)<(b))?(a):(b))
-#endif
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
 #define TODEV(x, y)	makedev((x), (y))
+
+#define FILEBITS		(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
+#define SETBITS			(S_ISUID | S_ISGID)
+#define ABITS			(FILEBITS | SETBITS)
 
 /*
  * General Defines

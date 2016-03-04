@@ -1,4 +1,4 @@
-.\"	$OpenBSD: tar.1,v 1.55 2010/12/02 04:08:27 tedu Exp $
+.\"	$OpenBSD: tar.1,v 1.59 2015/09/13 15:42:11 guenther Exp $
 .\"
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -23,7 +23,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: February 11 2012 $
+.Dd $Mdocdate: March 4 2016 $
 .Dt TAR 1
 .Os
 .Sh NAME
@@ -131,9 +131,8 @@ Set blocking factor to use for the archive.
 .Nm
 uses 512-byte blocks.
 The default is 20, the maximum is 126.
-Archives with a blocking factor larger than 63 violate the
-.Tn POSIX
-standard and will not be portable to all systems.
+Archives with a blocking factor larger than 63
+violate the POSIX standard and will not be portable to all systems.
 .It Fl C Ar directory
 This is a positional argument which sets the working directory for the
 following files.
@@ -146,6 +145,12 @@ Stop after the first error.
 Filename where the archive is stored.
 Defaults to
 .Pa /dev/rst0 .
+If set to hyphen
+.Pq Sq -
+standard output is used.
+See also the
+.Ev TAPE
+environment variable.
 .It Fl H
 Follow symlinks given on the command line only.
 .It Fl h
@@ -187,8 +192,8 @@ The default is to strip leading slashes.
 Preserve user and group ID as well as file mode regardless of
 the current
 .Xr umask 2 .
-The setuid and setgid bits are only preserved if the user is
-the superuser.
+The setuid and setgid bits are only preserved if the user and group ID
+could be preserved.
 Only meaningful in conjunction with the
 .Fl x
 flag.
@@ -288,6 +293,9 @@ Path in which to store temporary files.
 .It Ev TAPE
 Default tape device to use instead of
 .Pa /dev/rst0 .
+If set to hyphen
+.Pq Sq -
+standard output is used.
 .El
 .Sh FILES
 .Bl -tag -width "/dev/rst0"
@@ -381,7 +389,8 @@ A
 command first appeared in
 .At v7 .
 .Sh AUTHORS
-Keith Muller at the University of California, San Diego.
+.An Keith Muller
+at the University of California, San Diego.
 .Sh CAVEATS
 The
 .Fl j

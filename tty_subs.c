@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty_subs.c,v 1.14 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: tty_subs.c,v 1.16 2014/11/23 05:28:12 guenther Exp $	*/
 /*	$NetBSD: tty_subs.c,v 1.5 1995/03/21 09:07:52 cgd Exp $	*/
 
 /*-
@@ -37,7 +37,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
@@ -67,7 +66,7 @@ tty_init(void)
 {
 	int ttyfd;
 
-	if ((ttyfd = open(DEVTTY, O_RDWR)) >= 0) {
+	if ((ttyfd = open(DEVTTY, O_RDWR | O_CLOEXEC)) >= 0) {
 		if ((ttyoutf = fdopen(ttyfd, "w")) != NULL) {
 			if ((ttyinf = fdopen(ttyfd, "r")) != NULL)
 				return(0);

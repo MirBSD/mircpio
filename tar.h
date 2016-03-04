@@ -1,4 +1,4 @@
-/*	$OpenBSD: tar.h,v 1.7 2003/06/02 23:32:09 millert Exp $	*/
+/*	$OpenBSD: tar.h,v 1.9 2014/01/08 06:43:34 deraadt Exp $	*/
 /*	$NetBSD: tar.h,v 1.3 1995/03/21 09:07:51 cgd Exp $	*/
 
 /*-
@@ -62,6 +62,12 @@
 #define	CONTTYPE	'7'		/* high perf file */
 
 /*
+ * Extended header - POSIX.1-2001
+ */
+#define	XHDRTYPE	'x'		/* Extended header */
+#define	GHDRTYPE	'g'		/* Global header*/
+
+/*
  * GNU tar compatibility;
  */
 #define	LONGLINKTYPE	'K'		/* Long Symlink */
@@ -96,8 +102,8 @@
  */
 typedef struct {
 	char name[TNMSZ];		/* name of entry */
-	char mode[8]; 			/* mode */
-	char uid[8]; 			/* uid */
+	char mode[8];			/* mode */
+	char uid[8];			/* uid */
 	char gid[8];			/* gid */
 	char size[12];			/* size */
 	char mtime[12];			/* modification time */
@@ -135,8 +141,8 @@ typedef struct {
 
 typedef struct {
 	char name[TNMSZ];		/* name of entry */
-	char mode[8]; 			/* mode */
-	char uid[8]; 			/* uid */
+	char mode[8];			/* mode */
+	char uid[8];			/* uid */
 	char gid[8];			/* gid */
 	char size[12];			/* size */
 	char mtime[12];			/* modification time */

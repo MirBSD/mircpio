@@ -1,4 +1,4 @@
-/*	$OpenBSD: tar.c,v 1.43 2010/12/02 04:08:27 tedu Exp $	*/
+/*	$OpenBSD: tar.c,v 1.59 2016/02/15 02:38:53 guenther Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
@@ -37,7 +37,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
+#include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -54,8 +56,9 @@ static size_t expandname(char *, size_t, char **, const char *, size_t);
 static u_long tar_chksm(char *, int);
 static char *name_split(char *, int);
 static int ul_oct(u_long, char *, int, int);
-#ifndef LONG_OFF_T
 static int uqd_oct(u_quad_t, char *, int, int);
+#ifndef SMALL
+static int rd_xheader(ARCHD *arcn, int, off_t);
 #endif
 
 static uid_t uid_nobody;
@@ -67,7 +70,7 @@ static gid_t gid_warn;
  * Routines common to all versions of tar
  */
 
-static int tar_nodir;			/* do not write dirs under old tar */
+int tar_nodir;				/* do not write dirs under old tar */
 char *gnu_name_string;			/* GNU ././@LongLink hackery name */
 char *gnu_link_string;			/* GNU ././@LongLink hackery link */
 
@@ -194,7 +197,6 @@ ul_oct(u_long val, char *str, int len, int term)
 	return(0);
 }
 
-#ifndef LONG_OFF_T
 /*
  * uqd_oct()
  *	convert an u_quad_t to an octal string. one of many oddball field
@@ -248,7 +250,6 @@ uqd_oct(u_quad_t val, char *str, int len, int term)
 		return(-1);
 	return(0);
 }
-#endif
 
 /*
  * tar_chksm()
@@ -377,6 +378,7 @@ int
 tar_rd(ARCHD *arcn, char *buf)
 {
 	HD_TAR *hd;
+	u_quad_t val;
 	char *pt;
 
 	/*
@@ -402,12 +404,12 @@ tar_rd(ARCHD *arcn, char *buf)
 	    0xfff);
 	arcn->sb.st_uid = (uid_t)asc_ul(hd->uid, sizeof(hd->uid), OCT);
 	arcn->sb.st_gid = (gid_t)asc_ul(hd->gid, sizeof(hd->gid), OCT);
-#ifdef LONG_OFF_T
-	arcn->sb.st_size = (off_t)asc_ul(hd->size, sizeof(hd->size), OCT);
-#else
 	arcn->sb.st_size = (off_t)asc_uqd(hd->size, sizeof(hd->size), OCT);
-#endif
-	arcn->sb.st_mtime = (time_t)asc_ul(hd->mtime, sizeof(hd->mtime), OCT);
+	val = asc_uqd(hd->mtime, sizeof(hd->mtime), OCT);
+	if ((time_t)val < 0 || (time_t)val != val)
+		arcn->sb.st_mtime = INT_MAX;                    /* XXX 2038 */
+	else
+		arcn->sb.st_mtime = val;
 	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
 
 	/*
@@ -599,7 +601,7 @@ tar_wr(ARCHD *arcn)
 		    sizeof(arcn->ln_name));
 		if (ul_oct((u_long)0L, hd->size, sizeof(hd->size), 1))
 			goto out;
-	} else if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG)) {
+	} else if (PAX_IS_HARDLINK(arcn->type)) {
 		/*
 		 * no data follows this file, so no pad
 		 */
@@ -613,13 +615,8 @@ tar_wr(ARCHD *arcn)
 		 * data follows this file, so set the pad
 		 */
 		hd->linkflag = AREGTYPE;
-#		ifdef LONG_OFF_T
-		if (ul_oct((u_long)arcn->sb.st_size, hd->size,
-		    sizeof(hd->size), 1)) {
-#		else
 		if (uqd_oct((u_quad_t)arcn->sb.st_size, hd->size,
 		    sizeof(hd->size), 1)) {
-#		endif
 			paxwarn(1,"File is too large for tar %s", arcn->org_name);
 			return(1);
 		}
@@ -630,9 +627,10 @@ tar_wr(ARCHD *arcn)
 	 * copy those fields that are independent of the type
 	 */
 	if (ul_oct((u_long)arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 0) ||
+	    uqd_oct(arcn->sb.st_mtime < 0 ? 0 : arcn->sb.st_mtime, hd->mtime,
+		sizeof(hd->mtime), 1) ||
 	    ul_oct((u_long)arcn->sb.st_uid, hd->uid, sizeof(hd->uid), 0) ||
-	    ul_oct((u_long)arcn->sb.st_gid, hd->gid, sizeof(hd->gid), 0) ||
-	    ul_oct((u_long)(u_int)arcn->sb.st_mtime, hd->mtime, sizeof(hd->mtime), 1))
+	    ul_oct((u_long)arcn->sb.st_gid, hd->gid, sizeof(hd->gid), 0))
 		goto out;
 
 	/*
@@ -647,7 +645,7 @@ tar_wr(ARCHD *arcn)
 		return(-1);
 	if (wr_skip((off_t)(BLKMULT - sizeof(HD_TAR))) < 0)
 		return(-1);
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG))
+	if (PAX_IS_REG(arcn->type))
 		return(0);
 	return(1);
 
@@ -736,40 +734,71 @@ ustar_id(char *blk, int size)
 int
 ustar_rd(ARCHD *arcn, char *buf)
 {
-	HD_USTAR *hd;
+	HD_USTAR *hd = (HD_USTAR *)buf;
 	char *dest;
 	int cnt = 0;
 	dev_t devmajor;
 	dev_t devminor;
+	u_quad_t val;
 
 	/*
 	 * we only get proper sized buffers
 	 */
 	if (ustar_id(buf, BLKMULT) < 0)
 		return(-1);
+
+#ifndef SMALL
+reset:
+#endif
 	memset(arcn, 0, sizeof(*arcn));
 	arcn->org_name = arcn->name;
 	arcn->sb.st_nlink = 1;
-	hd = (HD_USTAR *)buf;
 
-	/*
-	 * see if the filename is split into two parts. if, so joint the parts.
-	 * we copy the prefix first and add a / between the prefix and name.
-	 */
-	dest = arcn->name;
-	if (*(hd->prefix) != '\0') {
-		cnt = fieldcpy(dest, sizeof(arcn->name) - 1, hd->prefix,
-		    sizeof(hd->prefix));
-		dest += cnt;
-		*dest++ = '/';
-		cnt++;
-	} else {
-		cnt = 0;
+#ifndef SMALL
+	/* Process Extended headers. */
+	if (hd->typeflag == XHDRTYPE || hd->typeflag == GHDRTYPE) {
+		if (rd_xheader(arcn, hd->typeflag == GHDRTYPE,
+		    (off_t)asc_ul(hd->size, sizeof(hd->size), OCT)) < 0)
+			return (-1);
+
+		/* Update and check the ustar header. */
+		if (rd_wrbuf(buf, BLKMULT) != BLKMULT)
+			return (-1);
+		if (ustar_id(buf, BLKMULT) < 0)
+			return(-1);
+
+		/* if the next block is another extension, reset the values */
+		if (hd->typeflag == XHDRTYPE || hd->typeflag == GHDRTYPE)
+			goto reset;
+	}
+#endif
+
+	if (!arcn->nlen) {
+		/*
+		 * See if the filename is split into two parts. if, so join
+		 * the parts.  We copy the prefix first and add a / between
+		 * the prefix and name.
+		 */
+		dest = arcn->name;
+		if (*(hd->prefix) != '\0') {
+			cnt = fieldcpy(dest, sizeof(arcn->name) - 1,
+			    hd->prefix, sizeof(hd->prefix));
+			dest += cnt;
+			*dest++ = '/';
+			cnt++;
+		} else
+			cnt = 0;
+
+		if (hd->typeflag != LONGLINKTYPE &&
+		    hd->typeflag != LONGNAMETYPE) {
+			arcn->nlen = cnt + expandname(dest,
+			    sizeof(arcn->name) - cnt, &gnu_name_string,
+			    hd->name, sizeof(hd->name));
+		}
 	}
 
-	if (hd->typeflag != LONGLINKTYPE && hd->typeflag != LONGNAMETYPE) {
-		arcn->nlen = cnt + expandname(dest, sizeof(arcn->name) - cnt,
-		    &gnu_name_string, hd->name, sizeof(hd->name));
+	if (!arcn->ln_nlen &&
+	    hd->typeflag != LONGLINKTYPE && hd->typeflag != LONGNAMETYPE) {
 		arcn->ln_nlen = expandname(arcn->ln_name, sizeof(arcn->ln_name),
 		    &gnu_link_string, hd->linkname, sizeof(hd->linkname));
 	}
@@ -780,12 +809,12 @@ ustar_rd(ARCHD *arcn, char *buf)
 	 */
 	arcn->sb.st_mode = (mode_t)(asc_ul(hd->mode, sizeof(hd->mode), OCT) &
 	    0xfff);
-#ifdef LONG_OFF_T
-	arcn->sb.st_size = (off_t)asc_ul(hd->size, sizeof(hd->size), OCT);
-#else
 	arcn->sb.st_size = (off_t)asc_uqd(hd->size, sizeof(hd->size), OCT);
-#endif
-	arcn->sb.st_mtime = (time_t)asc_ul(hd->mtime, sizeof(hd->mtime), OCT);
+	val = asc_uqd(hd->mtime, sizeof(hd->mtime), OCT);
+	if ((time_t)val < 0 || (time_t)val != val)
+		arcn->sb.st_mtime = INT_MAX;                    /* XXX 2038 */
+	else
+		arcn->sb.st_mtime = val;
 	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
 
 	/*
@@ -915,10 +944,15 @@ ustar_wr(ARCHD *arcn)
 	}
 
 	/*
+	 * user asked that dirs not be written to the archive
+	 */
+	if (arcn->type == PAX_DIR && tar_nodir)
+		return (1);
+
+	/*
 	 * check the length of the linkname
 	 */
-	if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
-	    (arcn->type == PAX_HRG)) && (arcn->ln_nlen > sizeof(hd->linkname))){
+	if (PAX_IS_LINK(arcn->type) && (arcn->ln_nlen > sizeof(hd->linkname))) {
 		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
 		return(1);
 	}
@@ -1010,13 +1044,8 @@ ustar_wr(ARCHD *arcn)
 		else
 			hd->typeflag = REGTYPE;
 		arcn->pad = TAR_PAD(arcn->sb.st_size);
-#		ifdef LONG_OFF_T
-		if (ul_oct((u_long)arcn->sb.st_size, hd->size,
-		    sizeof(hd->size), 3)) {
-#		else
 		if (uqd_oct((u_quad_t)arcn->sb.st_size, hd->size,
 		    sizeof(hd->size), 3)) {
-#		endif
 			paxwarn(1,"File is too long for ustar %s",arcn->org_name);
 			return(1);
 		}
@@ -1058,8 +1087,9 @@ ustar_wr(ARCHD *arcn)
 		if (ul_oct((u_long)gid_nobody, hd->gid, sizeof(hd->gid), 3))
 			goto out;
 	}
-	if (ul_oct((u_long)arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3) ||
-	    ul_oct((u_long)(u_int)arcn->sb.st_mtime,hd->mtime,sizeof(hd->mtime),3))
+	if (uqd_oct(arcn->sb.st_mtime < 0 ? 0 : arcn->sb.st_mtime, hd->mtime,
+		sizeof(hd->mtime), 3) ||
+	    ul_oct((u_long)arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3))
 		goto out;
 	if (!Nflag) {
 		strncpy(hd->uname, name_uid(arcn->sb.st_uid, 0), sizeof(hd->uname));
@@ -1081,7 +1111,7 @@ ustar_wr(ARCHD *arcn)
 		return(-1);
 	if (wr_skip((off_t)(BLKMULT - sizeof(HD_USTAR))) < 0)
 		return(-1);
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG))
+	if (PAX_IS_REG(arcn->type))
 		return(0);
 	return(1);
 
@@ -1129,6 +1159,16 @@ name_split(char *name, int len)
 	 * include the slash between the two parts that gets thrown away)
 	 */
 	start = name + len - TNMSZ - 1;
+
+	/*
+	 * the prefix may not be empty, so skip the first character when
+	 * trying to split a path of exactly TNMSZ+1 characters.
+	 * NOTE: This means the ustar format can't store /str if
+	 * str contains no slashes and the length of str == TNMSZ
+	 */
+	if (start == name)
+		++start;
+
 	while ((*start != '\0') && (*start != '/'))
 		++start;
 
@@ -1138,15 +1178,12 @@ name_split(char *name, int len)
 	 */
 	if (*start == '\0')
 		return(NULL);
-	len = start - name;
 
 	/*
-	 * NOTE: /str where the length of str == TNMSZ can not be stored under
-	 * the p1003.1-1990 spec for ustar. We could force a prefix of / and
-	 * the file would then expand on extract to //str. The len == 0 below
-	 * makes this special case follow the spec to the letter.
+	 * the split point isn't valid if it results in a prefix
+	 * longer than TPFSZ
 	 */
-	if ((len > TPFSZ) || (len == 0))
+	if ((start - name) > TPFSZ)
 		return(NULL);
 
 	/*
@@ -1171,3 +1208,100 @@ expandname(char *buf, size_t len, char **gnu_name, const char *name,
 		nlen = fieldcpy(buf, len, name, limit);
 	return(nlen);
 }
+
+#ifndef SMALL
+
+/* shortest possible extended record: "5 a=\n" */
+#define MINXHDRSZ	5
+
+/* longest record we'll accept */
+#define MAXXHDRSZ	BLKMULT
+
+static int
+rd_xheader(ARCHD *arcn, int global, off_t size)
+{
+	char buf[MAXXHDRSZ];
+	unsigned long len;
+	char *delim, *keyword;
+	char *nextp, *p, *end;
+	int pad, ret = 0;
+
+	/* before we alter size, make note of how much we have to skip */
+	pad = TAR_PAD((unsigned)size);
+
+	p = end = buf;
+	while (size > 0 || p < end) {
+		if (size > 0) {
+			int rdlen;
+
+			/* shift stuff down */
+			if (p > buf) {
+				memmove(buf, p, end - p);
+				end -= p - buf;
+				p = buf;
+			}
+
+			/* fill starting at end */
+			rdlen = MINIMUM(size, (buf + sizeof buf) - end);
+			if (rd_wrbuf(end, rdlen) != rdlen) {
+				ret = -1;
+				break;
+			}
+			size -= rdlen;
+			end += rdlen;
+		}
+
+		/* [p, end) is good */
+		if (memchr(p, ' ', end - p) == NULL ||
+		    !isdigit((unsigned char)*p)) {
+			paxwarn(1, "Invalid extended header record");
+			ret = -1;
+			break;
+		}
+		errno = 0;
+		len = strtoul(p, &delim, 10);
+		if (*delim != ' ' || (errno == ERANGE && len == ULONG_MAX) ||
+		    len < MINXHDRSZ) {
+			paxwarn(1, "Invalid extended header record length");
+			ret = -1;
+			break;
+		}
+		if (len > end - p) {
+			paxwarn(1, "Extended header record length %lu is "
+			    "out of range", len);
+			/* if we can just toss this record, do so */
+			len -= end - p;
+			if (len <= size && rd_skip(len) == 0) {
+				size -= len;
+				p = end = buf;
+				continue;
+			}
+			ret = -1;
+			break;
+		}
+		nextp = p + len;
+		keyword = p = delim + 1;
+		p = memchr(p, '=', len);
+		if (!p || nextp[-1] != '\n') {
+			paxwarn(1, "Malformed extended header record");
+			ret = -1;
+			break;
+		}
+		*p++ = nextp[-1] = '\0';
+		if (!global) {
+			if (!strcmp(keyword, "path")) {
+				arcn->nlen = strlcpy(arcn->name, p,
+				    sizeof(arcn->name));
+			} else if (!strcmp(keyword, "linkpath")) {
+				arcn->ln_nlen = strlcpy(arcn->ln_name, p,
+				    sizeof(arcn->ln_name));
+			}
+		}
+		p = nextp;
+	}
+
+	if (rd_skip(size + pad) < 0)
+		return (-1);
+	return (ret);
+}
+#endif
