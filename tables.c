@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.21 2016/03/06 14:45:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.22 2016/03/06 14:50:21 tg Exp $");
 __IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
@@ -559,7 +559,12 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 	int fd;
 
 	/* create the placeholder */
-	fd = open(path0, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+	fd = open(path0, O_WRONLY | O_CREAT |
+#ifdef O_CLOEXEC
+	    /* not strictly required, fd is closed a dozen lines below */
+	    O_CLOEXEC |
+#endif
+	    O_EXCL, 0600);
 	if (fd == -1)
 		return (-1);
 	if (fstat(fd, &sb) == -1) {
@@ -1483,7 +1488,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 		}
 		name = rp;
 	}
-	if (dircnt == (long)dirsize) {
+	if (dircnt == dirsize) {
 		dblk = realloc(dirp, 2 * dirsize * sizeof(DIRDATA));
 		if (dblk == NULL) {
 			paxwarn(1, "Unable to store mode and times for created"
