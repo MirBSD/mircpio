@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2011 Thorsten Glaser.
+ * Copyright (c) 2011 mirabilos
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,7 +41,7 @@
 #include "options.h"
 #include "ar.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.7 2012/05/20 16:13:15 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.8 2016/03/06 13:47:10 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries

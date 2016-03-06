@@ -3,7 +3,7 @@
 
 /*-
  * Copyright (c) 2012
- *	Thorsten Glaser <tg@debian.org>
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.18 2012/06/05 19:09:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.19 2016/03/06 13:47:11 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.

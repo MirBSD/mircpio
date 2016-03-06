@@ -2,8 +2,8 @@
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2012
- *	Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2005, 2012, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -49,7 +49,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.20 2012/06/05 18:22:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.21 2016/03/06 13:47:11 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);

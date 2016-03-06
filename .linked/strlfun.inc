@@ -3,7 +3,7 @@ ifeq (0,gmake ignores from here)
 #endif
 /*-
  * Copyright (c) 2006, 2008, 2011
- *	Thorsten Glaser <tg@mirbsd.org>
+ *	mirabilos <m@mirbsd.org>
  *
  * Provided that these terms and disclaimer and all copyright notices
  * are retained or reproduced in an accompanying document, permission
@@ -25,9 +25,9 @@ ifeq (0,gmake ignores from here)
  * plies only to the strlcpy(3) portion of the code, as Thorsten Gla-
  * ser write the following strlcat(3) implementation according to the
  * spec. Both functions below have been optimised according to sugge-
- * stions from Bodo Eggert. Thorsten Glaser also has merged this code
- * with strxfrm(3) for ISO-10646-only systems and the wide char vari-
- * ants wcslcat(3), wcslcpy(3), and wcsxfrm(3).
+ * stions from Bodo Eggert. mirabilos merged the code with strxfrm(3)
+ * (Unicode-only systems) and the wide character variants wcslcat(3),
+ * wcslcpy(3), and wcsxfrm(3).
  */
 
 #include <sys/types.h>
@@ -39,7 +39,7 @@ ifeq (0,gmake ignores from here)
 #define __RCSID(x)		static const char __rcsid[] = x
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.4 2011/11/11 20:39:31 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.5 2016/03/06 13:47:13 tg Exp $");
 
 #ifdef WIDEC
 #ifdef OUTSIDE_OF_LIBKERN

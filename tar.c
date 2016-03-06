@@ -2,8 +2,8 @@
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2006, 2012
- *	Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2006, 2012, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -49,7 +49,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.14 2012/06/05 18:22:58 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.15 2016/03/06 13:47:12 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar

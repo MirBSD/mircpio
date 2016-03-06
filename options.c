@@ -2,8 +2,8 @@
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006, 2007, 2012, 2014
- *	Thorsten Glaser <tg@mirbsd.org>
+ * Copyright (c) 2005, 2006, 2007, 2012, 2014, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.52 2014/07/03 19:36:25 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.53 2016/03/06 13:47:11 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
