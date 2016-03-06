@@ -2,7 +2,7 @@
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2012, 2015
+ * Copyright (c) 2005, 2012, 2015, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.20 2016/03/06 14:12:29 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.21 2016/03/06 14:45:41 tg Exp $");
 __IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
@@ -79,7 +79,7 @@ static DEVT **dtab = NULL;	/* device/inode mapping tables */
 static ATDIR **atab = NULL;	/* file tree directory time reset table */
 static DIRDATA *dirp = NULL;	/* storage for setting created dir time/mode */
 static size_t dirsize;		/* size of dirp table */
-static long dircnt = 0;		/* entries in dir time/mode storage */
+static size_t dircnt = 0;	/* entries in dir time/mode storage */
 static int ffd = -1;		/* tmp file for file time table name storage */
 
 static DEVT *chk_dev(dev_t, int);
@@ -1556,7 +1556,7 @@ void
 proc_dir(void)
 {
 	DIRDATA *dblk;
-	long cnt;
+	size_t cnt;
 
 	if (dirp == NULL)
 		return;
@@ -1564,7 +1564,7 @@ proc_dir(void)
 	 * read backwards through the file and process each directory
 	 */
 	cnt = dircnt;
-	while (--cnt >= 0) {
+	while (cnt-- > 0) {
 		dblk = &dirp[cnt];
 		/*
 		 * If we remove a directory we created, we replace the
