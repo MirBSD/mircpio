@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.22 2016/03/06 14:50:21 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.23 2016/03/06 14:59:08 tg Exp $");
 __IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
@@ -714,6 +714,7 @@ sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
 
 	err = 0;
 	if (first != NULL) {
+#ifdef HAVE_LINKAT
 		/* add another hardlink to the existing symlink */
 		if (linkat(AT_FDCWD, first, AT_FDCWD, path, 0) == 0)
 			return (0);
@@ -724,6 +725,9 @@ sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
 		 * for reporting if that fails.
 		 */
 		err = errno;
+#else
+		err = EOPNOTSUPP;
+#endif
 	}
 
 	if (symlink(s->sli_value, path)) {
