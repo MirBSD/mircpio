@@ -313,6 +313,7 @@ sig_cleanup(int which_sig)
 	(void) write(STDERR_FILENO, errbuf, strlen(errbuf));
 
 	ar_close();			/* XXX signal race */
+	sltab_process(1);
 	proc_dir();			/* XXX signal race */
 	if (tflag)
 		atdir_end();		/* XXX signal race */

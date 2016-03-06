@@ -338,8 +338,6 @@ int
 next_file(ARCHD *arcn)
 {
 	int cnt;
-	time_t atime;
-	time_t mtime;
 
 	/*
 	 * ftree_sel() might have set the ftree_skip flag if the user has the
@@ -394,10 +392,10 @@ next_file(ARCHD *arcn)
 			 * remember to force the time (this is -t on a read
 			 * directory, not a created directory).
 			 */
-			if (!tflag || (get_atdir(ftent->fts_statp->st_dev,
-			    ftent->fts_statp->st_ino, &mtime, &atime) < 0))
+			if (!tflag)
 				continue;
-			set_ftime(ftent->fts_path, mtime, atime, 1);
+			do_atdir(ftent->fts_path, ftent->fts_statp->st_dev,
+			    ftent->fts_statp->st_ino);
 			continue;
 		case FTS_DC:
 			/*
