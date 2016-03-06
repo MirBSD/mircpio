@@ -1,4 +1,3 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.27 2016/03/06 13:47:49 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
@@ -38,6 +37,9 @@
  *
  *	@(#)extern.h	8.2 (Berkeley) 4/18/94
  */
+
+#ifndef MIRCPIO_EXTERN_H
+#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.28 2016/03/06 14:12:27 tg Exp $"
 
 /*
  * External references from each source file
@@ -349,4 +351,6 @@ size_t strlcpy(char *, const char *, size_t);
 
 #ifndef HAVE_STRMODE
 void strmode(mode_t, char *);
+#endif
+
 #endif

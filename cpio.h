@@ -1,8 +1,9 @@
-/**	$MirOS: src/bin/pax/cpio.h,v 1.4 2012/02/12 00:27:15 tg Exp $ */
 /*	$OpenBSD: cpio.h,v 1.4 2003/06/02 23:32:08 millert Exp $	*/
 /*	$NetBSD: cpio.h,v 1.3 1995/03/21 09:07:15 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2005, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -36,6 +37,9 @@
  *
  *	@(#)cpio.h	8.1 (Berkeley) 5/31/93
  */
+
+#ifndef MIRCPIO_CPIO_H
+#define MIRCPIO_CPIO_H "$MirOS: src/bin/pax/cpio.h,v 1.5 2016/03/06 14:12:27 tg Exp $"
 
 /*
  * Defines common to all versions of cpio
@@ -149,3 +153,5 @@ typedef struct {
 #define VCPIO_PAD(x)	((4 - ((x) & 3)) & 3)	/* pad to next 4 byte word */
 #define VCPIO_MASK	0xffffffff	/* mask for dev/ino fields */
 #endif /* _PAX_ */
+
+#endif

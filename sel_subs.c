@@ -49,7 +49,8 @@
 #include "sel_subs.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.6 2012/06/05 18:22:57 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.7 2016/03/06 14:12:28 tg Exp $");
+__IDSTRING(rcsid_sel_subs_h, MIRCPIO_SEL_SUBS_H);
 
 static int str_sec(const char *, time_t *);
 static int usr_match(ARCHD *);

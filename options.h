@@ -1,8 +1,9 @@
-/**	$MirOS: src/bin/pax/options.h,v 1.6 2011/08/16 13:45:01 tg Exp $ */
 /*	$OpenBSD: options.h,v 1.4 2003/06/13 17:51:14 millert Exp $	*/
 /*	$NetBSD: options.h,v 1.3 1995/03/21 09:07:32 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2006, 2009, 2011, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -36,6 +37,9 @@
  *
  *	@(#)options.h	8.2 (Berkeley) 4/18/94
  */
+
+#ifndef MIRCPIO_OPTIONS_H
+#define MIRCPIO_OPTIONS_H "$MirOS: src/bin/pax/options.h,v 1.7 2016/03/06 14:12:28 tg Exp $"
 
 /*
  * argv[0] names. Used for tar and cpio emulation
@@ -131,3 +135,5 @@ extern int anonarch;
 void anonarch_init(void);
 
 extern int to_stdout;
+
+#endif

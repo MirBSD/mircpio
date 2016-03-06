@@ -1,9 +1,8 @@
-/**	$MirOS: src/bin/pax/tables.h,v 1.5 2016/03/06 13:47:50 tg Exp $ */
 /*	$OpenBSD: tables.h,v 1.8 2006/08/05 23:05:13 ray Exp $	*/
 /*	$NetBSD: tables.h,v 1.3 1995/03/21 09:07:47 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005
+ * Copyright (c) 2005, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -38,6 +37,9 @@
  *
  *	@(#)tables.h	8.1 (Berkeley) 5/31/93
  */
+
+#ifndef MIRCPIO_TABLES_H
+#define MIRCPIO_TABLES_H "$MirOS: src/bin/pax/tables.h,v 1.6 2016/03/06 14:12:29 tg Exp $"
 
 /*
  * data structures and constants used by the different databases kept by pax
@@ -177,3 +179,5 @@ typedef struct hrdflnk {
 	ino_t		newi;	/* new inode number */
 	struct hrdflnk	*fow;
 } HRDFLNK;
+
+#endif

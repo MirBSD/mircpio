@@ -1,4 +1,3 @@
-/**	$MirOS: src/bin/pax/sel_subs.h,v 1.2 2012/02/12 00:27:18 tg Exp $ */
 /*	$OpenBSD: sel_subs.h,v 1.4 2003/06/02 23:32:09 millert Exp $	*/
 /*	$NetBSD: sel_subs.h,v 1.3 1995/03/21 09:07:44 cgd Exp $	*/
 
@@ -37,6 +36,9 @@
  *	@(#)sel_subs.h	8.1 (Berkeley) 5/31/93
  */
 
+#ifndef MIRCPIO_SEL_SUBS_H
+#define MIRCPIO_SEL_SUBS_H "$MirOS: src/bin/pax/sel_subs.h,v 1.3 2016/03/06 14:12:28 tg Exp $"
+
 /*
  * data structure for storing uid/grp selects (-U, -G non standard options)
  */
@@ -71,3 +73,5 @@ typedef struct time_rng {
 #define CMPBOTH	(CMPMTME|CMPCTME)	/* compare inode and mod time */
 	struct time_rng	*fow;		/* next pattern */
 } TIME_RNG;
+
+#endif

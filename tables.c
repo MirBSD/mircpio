@@ -53,7 +53,8 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.19 2016/03/06 13:47:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.20 2016/03/06 14:12:29 tg Exp $");
+__IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -622,7 +623,7 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 	s->sli_fow = slitab[indx];
 	slitab[indx] = s;
 
-set_value:
+ set_value:
 	s->sli_paths.sp_path = path;
 	s->sli_paths.sp_next = NULL;
 	s->sli_value = value;

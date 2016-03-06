@@ -1,7 +1,6 @@
-/* $MirOS: src/bin/pax/ar.h,v 1.2 2016/03/06 13:47:10 tg Exp $ */
-
 /*-
- * Copyright (c) 2011 mirabilos
+ * Copyright (c) 2011, 2016
+ *	mirabilos <m@mirbsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,6 +27,8 @@
  * SUCH DAMAGE.
  */
 
+#ifndef MIRCPIO_AR_H
+#define MIRCPIO_AR_H "$MirOS: src/bin/pax/ar.h,v 1.3 2016/03/06 14:12:26 tg Exp $"
 
 /****************************************************
 
@@ -97,3 +98,5 @@ typedef struct {
 	char ar_size[10];
 	char ar_magic[2];
 } HD_AR;
+
+#endif

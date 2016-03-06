@@ -60,7 +60,13 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.53 2016/03/06 13:47:11 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.54 2016/03/06 14:12:27 tg Exp $");
+__IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
+__IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
+__IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
+__IDSTRING(rcsid_options_h, MIRCPIO_OPTIONS_H);
+__IDSTRING(rcsid_pax_h, MIRCPIO_PAX_H);
+__IDSTRING(rcsid_tar_h, MIRCPIO_TAR_H);
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"

@@ -1,4 +1,3 @@
-/**	$MirOS: src/bin/pax/ftree.h,v 1.2 2012/02/12 00:27:16 tg Exp $ */
 /*	$OpenBSD: ftree.h,v 1.5 2008/05/06 06:54:28 henning Exp $	*/
 /*	$NetBSD: ftree.h,v 1.3 1995/03/21 09:07:23 cgd Exp $	*/
 
@@ -37,6 +36,9 @@
  *	@(#)ftree.h	8.1 (Berkeley) 5/31/93
  */
 
+#ifndef MIRCPIO_FTREE_H
+#define MIRCPIO_FTREE_H "$MirOS: src/bin/pax/ftree.h,v 1.3 2016/03/06 14:12:27 tg Exp $"
+
 /*
  * Data structure used by the ftree.c routines to store the file args to be
  * handed to fts(). It keeps a reference count of which args generated a
@@ -50,3 +52,5 @@ typedef struct ftree {
 	int		chflg;		/* change directory flag */
 	struct ftree	*fow;		/* pointer to next entry on list */
 } FTREE;
+
+#endif
