@@ -2,7 +2,7 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007, 2008, 2009, 2012, 2014
+ * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
@@ -57,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.21 2016/03/06 13:47:49 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.22 2016/03/06 14:41:32 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -979,7 +979,11 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 	 * so do *not* use O_NOFOLLOW.  The dev+ino check will
 	 * protect us from evil.
 	 */
-	fd = open(ft->ft_name, O_RDONLY | O_DIRECTORY);
+	fd = open(ft->ft_name, O_RDONLY
+#ifdef O_DIRECTORY
+	    | O_DIRECTORY
+#endif
+	    );
 	if (fd == -1) {
 		if (!in_sig)
 			syswarn(1, errno, "Unable to restore mode and times"
@@ -992,6 +996,13 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 			syswarn(1, errno, "Unable to stat directory: %s",
 			    ft->ft_name);
 		r = -1;
+#ifndef O_DIRECTORY
+	} else if (!S_ISDIR(sb.st_mode)) {
+		if (!in_sig)
+			syswarn(1, ENOTDIR, "Unable to restore mode and times"
+			    " for directory: %s", ft->ft_name);
+		r = -1;
+#endif
 	} else if (ft->ft_ino != sb.st_ino || ft->ft_dev != sb.st_dev) {
 		if (!in_sig)
 			paxwarn(1, "Directory vanished before restoring"
