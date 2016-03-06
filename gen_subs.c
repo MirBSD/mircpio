@@ -2,7 +2,7 @@
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2012, 2015
+ * Copyright (c) 2012, 2015, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -55,7 +55,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.16 2015/10/14 18:10:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.17 2016/03/06 15:28:48 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -82,7 +82,6 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	struct stat *sbp;
 	char f_mode[MODELEN];
 	char f_date[DATELEN];
-	const char *timefrmt;
 	int term;
 
 	term = zeroflag ? '\0' : '\n';	/* path termination character */
@@ -106,15 +105,11 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	sbp = &(arcn->sb);
 	strmode(sbp->st_mode, f_mode);
 
-	if ((sbp->st_mtime + SIXMONTHS) <= now)
-		timefrmt = OLDFRMT;
-	else
-		timefrmt = CURFRMT;
-
 	/*
 	 * print file mode, link count, uid, gid and time
 	 */
-	if (strftime(f_date,DATELEN,timefrmt,localtime(&(sbp->st_mtime))) == 0)
+	if (strftime(f_date, DATELEN, ((sbp->st_mtime + SIXMONTHS) <= now) ?
+	    OLDFRMT : CURFRMT, localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
 	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode,
 		(unsigned)sbp->st_nlink,
@@ -158,18 +153,13 @@ ls_tty(ARCHD *arcn)
 {
 	char f_date[DATELEN];
 	char f_mode[MODELEN];
-	const char *timefrmt;
-
-	if ((arcn->sb.st_mtime + SIXMONTHS) <= time(NULL))
-		timefrmt = OLDFRMT;
-	else
-		timefrmt = CURFRMT;
 
 	/*
 	 * convert time to string, and print
 	 */
-	if (strftime(f_date, DATELEN, timefrmt,
-	    localtime(&(arcn->sb.st_mtime))) == 0)
+	if (strftime(f_date, DATELEN,
+	    ((arcn->sb.st_mtime + SIXMONTHS) <= time(NULL)) ? OLDFRMT :
+	    CURFRMT, localtime(&(arcn->sb.st_mtime))) == 0)
 		f_date[0] = '\0';
 	strmode(arcn->sb.st_mode, f_mode);
 	tty_prnt("%s%s %s\n", f_mode, f_date, arcn->name);
