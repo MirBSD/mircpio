@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.6 2012/06/05 19:09:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.7 2016/03/06 13:47:49 tg Exp $");
 
 /*
  * routines to handle pattern matching, name modification (regular expression
@@ -586,6 +586,25 @@ range_match(char *pattern, int test)
 }
 
 /*
+ * has_dotdot()
+ *	Returns true iff the supplied path contains a ".." component.
+ */
+
+int
+has_dotdot(const char *path)
+{
+	const char *p = path;
+
+	while ((p = strstr(p, "..")) != NULL) {
+		if ((p == path || p[-1] == '/') &&
+		    (p[2] == '/' || p[2] == '\0'))
+			return (1);
+		p += 2;
+	}
+	return (0);
+}
+
+/*
  * mod_name()
  *	modify a selected file name. first attempt to apply replacement string
  *	expressions, then apply interactive file rename. We apply replacement
@@ -633,6 +652,30 @@ mod_name(ARCHD *arcn)
 		if (rmleadslash < 2) {
 			rmleadslash = 2;
 			paxwarn(0, "Removing leading / from absolute path names in the archive");
+		}
+	}
+	if (rmleadslash) {
+		const char *last = NULL;
+		const char *p = arcn->name;
+
+		while ((p = strstr(p, "..")) != NULL) {
+			if ((p == arcn->name || p[-1] == '/') &&
+			    (p[2] == '/' || p[2] == '\0'))
+				last = p + 2;
+			p += 2;
+		}
+		if (last != NULL) {
+			last++;
+			paxwarn(1, "Removing leading \"%.*s\"",
+			    (int)(last - arcn->name), arcn->name);
+			arcn->nlen = strlen(last);
+			if (arcn->nlen > 0)
+				memmove(arcn->name, last, arcn->nlen + 1);
+			else {
+				arcn->name[0] = '.';
+				arcn->name[1] = '\0';
+				arcn->nlen = 1;
+			}
 		}
 	}
 

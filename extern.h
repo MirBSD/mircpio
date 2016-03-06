@@ -1,9 +1,9 @@
-/**	$MirOS: src/bin/pax/extern.h,v 1.26 2015/10/14 18:10:08 tg Exp $ */
+/**	$MirOS: src/bin/pax/extern.h,v 1.27 2016/03/06 13:47:49 tg Exp $ */
 /*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
- * Copyright © 2013, 2015
+ * Copyright © 2013, 2015, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -170,6 +170,8 @@ int fset_ids(char *, int, uid_t, gid_t);
 int set_lids(char *, uid_t, gid_t);
 void set_pmode(char *, mode_t);
 void fset_pmode(char *, int, mode_t);
+int set_attr(const struct file_times *, int _force_times, mode_t, int _do_mode,
+    int _in_sig);
 int file_write(int, char *, int, int *, int *, int, char *);
 void file_flush(int, char *, int);
 void rdfile_close(ARCHD *, int *);
@@ -224,6 +226,7 @@ int pat_sel(ARCHD *);
 int pat_match(ARCHD *);
 int mod_name(ARCHD *);
 int set_dest(ARCHD *, char *, int);
+int has_dotdot(const char *);
 
 /*
  * pax.c
@@ -283,6 +286,10 @@ void purg_lnk(ARCHD *);
 void lnk_end(void);
 int ftime_start(void);
 int chk_ftime(ARCHD *);
+int sltab_start(void);
+int sltab_add_sym(const char *_path, const char *_value, mode_t _mode);
+int sltab_add_link(const char *, const struct stat *);
+void sltab_process(int _in_sig);
 int name_start(void);
 int add_name(char *, int, char *);
 void sub_name(char *, int *, size_t);
@@ -292,9 +299,10 @@ int map_dev(ARCHD *, u_long, u_long);
 int atdir_start(void);
 void atdir_end(void);
 void add_atdir(char *, dev_t, ino_t, time_t, time_t);
-int get_atdir(dev_t, ino_t, time_t *, time_t *);
+int do_atdir(const char *, dev_t, ino_t);
 int dir_start(void);
 void add_dir(char *, struct stat *, int);
+void delete_dir(dev_t, ino_t);
 void proc_dir(void);
 u_int st_hash(const char *, int, int);
 int flnk_start(void);

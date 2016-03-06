@@ -2,7 +2,7 @@
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2012, 2015
+ * Copyright (c) 2012, 2015, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.21 2015/10/14 18:10:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.22 2016/03/06 13:47:50 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -340,6 +340,7 @@ sig_cleanup(int which_sig)
 	}
 
 	ar_close();			/* XXX signal race */
+	sltab_process(1);
 	proc_dir();			/* XXX signal race */
 	if (tflag)
 		atdir_end();		/* XXX signal race */

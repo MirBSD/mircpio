@@ -3,7 +3,7 @@
 
 /*-
  * Copyright (c) 2007, 2008, 2009, 2012, 2014
- *	Thorsten Glaser <tg@mirbsd.org>
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
  * Copyright (c) 1992 Keith Muller.
@@ -57,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.20 2015/10/13 20:18:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.21 2016/03/06 13:47:49 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -76,10 +76,6 @@ static void fset_ftime(char *, int, time_t, time_t, int);
  * routines that deal with file operations such as: creating, removing;
  * and setting access modes, uid/gid and times of files
  */
-
-#define FILEBITS		(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
-#define SETBITS			(S_ISUID | S_ISGID)
-#define ABITS			(FILEBITS | SETBITS)
 
 /*
  * file_creat()
@@ -213,6 +209,15 @@ lnk_creat(ARCHD *arcn, int *fdp)
 	}
 
 	rv = mk_link(arcn->ln_name, &sb, arcn->name, 0);
+	if (rv == 0) {
+		/* check for a hardlink to a placeholder symlink */
+		rv = sltab_add_link(arcn->name, &sb);
+
+		if (rv < 0) {
+			/* arrgh, it failed, clean up */
+			unlink(arcn->name);
+		}
+	}
 	if (fdp != NULL && rv == 0 && sb.st_size == 0 && arcn->skip > 0) {
 		/* request to write out file data late (broken archive) */
 		if (pmode)
@@ -347,6 +352,7 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 				syswarn(1, errno, "Unable to remove %s", from);
 				return(-1);
 			}
+			delete_dir(sb.st_dev, sb.st_ino);
 		} else if (unlink(from) < 0) {
 			if (!ign) {
 				syswarn(1, errno, "Unable to remove %s", from);
@@ -438,7 +444,7 @@ node_creat(ARCHD *arcn)
 	struct stat sb;
 	char *target = NULL;
 	char *nm = arcn->name;
-	int len;
+	int len, defer_pmode = 0;
 
 	/*
 	 * create node based on type, if that fails try to unlink the node and
@@ -506,7 +512,21 @@ node_creat(ARCHD *arcn)
 			free(target);
 			return (-1);
 		case PAX_SLK:
-			res = symlink(arcn->ln_name, nm);
+			if (arcn->ln_name[0] != '/' &&
+			    !has_dotdot(arcn->ln_name))
+				res = symlink(arcn->ln_name, nm);
+			else {
+				/*
+				 * absolute symlinks and symlinks with ".."
+				 * have to be deferred to prevent the archive
+				 * from bootstrapping itself to outside the
+				 * working directory.
+				 */
+				res = sltab_add_sym(nm, arcn->ln_name,
+				    arcn->sb.st_mode);
+				if (res == 0)
+					defer_pmode = 1;
+			}
 			break;
 		case PAX_CTG:
 		case PAX_HLK:
@@ -573,7 +593,7 @@ node_creat(ARCHD *arcn)
 	 */
 	if (!pmode || res)
 		arcn->sb.st_mode &= ~(SETBITS);
-	if (pmode)
+	if (pmode && !defer_pmode)
 		set_pmode(nm, arcn->sb.st_mode);
 
 	if (arcn->type == PAX_DIR && strcmp(NM_CPIO, argv0) != 0) {
@@ -584,33 +604,36 @@ node_creat(ARCHD *arcn)
 		 * rights. This allows nodes in the archive that are children
 		 * of this directory to be extracted without failure. Both time
 		 * and modes will be fixed after the entire archive is read and
-		 * before pax exits.
+		 * before pax exits.  To do that safely, we want the dev+ino
+		 * of the directory we created.
 		 */
-		if (access(nm, R_OK | W_OK | X_OK) < 0) {
-			if (lstat(nm, &sb) < 0) {
-				syswarn(0, errno,"Could not access %s (stat)",
-				    arcn->name);
-				set_pmode(nm,file_mode | S_IRWXU);
-			} else {
-				/*
-				 * We have to add rights to the dir, so we make
-				 * sure to restore the mode. The mode must be
-				 * restored AS CREATED and not as stored if
-				 * pmode is not set.
-				 */
-				set_pmode(nm,
-				    ((sb.st_mode & FILEBITS) | S_IRWXU));
-				if (!pmode)
-					arcn->sb.st_mode = sb.st_mode;
-			}
+		if (lstat(nm, &sb) < 0) {
+			syswarn(0, errno,"Could not access %s (stat)", nm);
+		} else if (access(nm, R_OK | W_OK | X_OK) < 0) {
+			/*
+			 * We have to add rights to the dir, so we make
+			 * sure to restore the mode. The mode must be
+			 * restored AS CREATED and not as stored if
+			 * pmode is not set.
+			 */
+			set_pmode(nm,
+			    ((sb.st_mode & FILEBITS) | S_IRWXU));
+			if (!pmode)
+				arcn->sb.st_mode = sb.st_mode;
 
 			/*
-			 * we have to force the mode to what was set here,
-			 * since we changed it from the default as created.
+			 * we have to force the mode to what was set
+			 * here, since we changed it from the default
+			 * as created.
 			 */
+			arcn->sb.st_dev = sb.st_dev;
+			arcn->sb.st_ino = sb.st_ino;
 			add_dir(nm, &(arcn->sb), 1);
-		} else if (pmode || patime || pmtime)
+		} else if (pmode || patime || pmtime) {
+			arcn->sb.st_dev = sb.st_dev;
+			arcn->sb.st_ino = sb.st_ino;
 			add_dir(nm, &(arcn->sb), 0);
+		}
 	}
 
 	if (patime || pmtime)
@@ -654,6 +677,7 @@ unlnk_exist(char *name, int type)
 			syswarn(1,errno,"Unable to remove directory %s", name);
 			return(-1);
 		}
+		delete_dir(sb.st_dev, sb.st_ino);
 		return(0);
 	}
 
@@ -936,6 +960,60 @@ fset_pmode(char *fnm, int fd, mode_t mode)
 }
 
 /*
+ * set_attr()
+ *	Given a DIRDATA, restore the mode and times as indicated, but
+ *	only after verifying that it's the directory that we wanted.
+ */
+int
+set_attr(const struct file_times *ft, int force_times, mode_t mode,
+    int do_mode, int in_sig)
+{
+	struct stat sb;
+	int fd, r;
+
+	if (!do_mode && !force_times && !patime && !pmtime)
+		return (0);
+
+	/*
+	 * We could legitimately go through a symlink here,
+	 * so do *not* use O_NOFOLLOW.  The dev+ino check will
+	 * protect us from evil.
+	 */
+	fd = open(ft->ft_name, O_RDONLY | O_DIRECTORY);
+	if (fd == -1) {
+		if (!in_sig)
+			syswarn(1, errno, "Unable to restore mode and times"
+			    " for directory: %s", ft->ft_name);
+		return (-1);
+	}
+
+	if (fstat(fd, &sb) == -1) {
+		if (!in_sig)
+			syswarn(1, errno, "Unable to stat directory: %s",
+			    ft->ft_name);
+		r = -1;
+	} else if (ft->ft_ino != sb.st_ino || ft->ft_dev != sb.st_dev) {
+		if (!in_sig)
+			paxwarn(1, "Directory vanished before restoring"
+			    " mode and times: %s", ft->ft_name);
+		r = -1;
+	} else {
+		/* Whew, it's a match!  Is there anything to change? */
+		if (do_mode && (mode & ABITS) != (sb.st_mode & ABITS))
+			fset_pmode(ft->ft_name, fd, mode);
+		if (((force_times || patime) && ft->ft_atime != sb.st_atime) ||
+		    ((force_times || pmtime) && ft->ft_mtime != sb.st_mtime))
+			fset_ftime(ft->ft_name, fd, ft->ft_mtime,
+			    ft->ft_atime, force_times);
+		r = 0;
+	}
+	close(fd);
+
+	return (r);
+}
+
+
+/*
  * file_write()
  *	Write/copy a file (during copy or archive extract). This routine knows
  *	how to copy files with lseek holes in it. (Which are read as file
@@ -1131,16 +1209,15 @@ rdfile_close(ARCHD *arcn, int *fd)
 	if (*fd < 0)
 		return;
 
-	(void)close(*fd);
-	*fd = -1;
-	if (!tflag)
-		return;
-
 	/*
 	 * user wants last access time reset
 	 */
-	set_ftime(arcn->org_name, arcn->sb.st_mtime, arcn->sb.st_atime, 1);
-	return;
+	if (tflag)
+		fset_ftime(arcn->org_name, *fd, arcn->sb.st_mtime,
+		    arcn->sb.st_atime, 1);
+
+	(void)close(*fd);
+	*fd = -1;
 }
 
 /*

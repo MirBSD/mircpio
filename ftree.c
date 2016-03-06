@@ -48,7 +48,7 @@
 #include "ftree.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.6 2012/05/20 16:13:17 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.7 2016/03/06 13:47:49 tg Exp $");
 
 /*
  * routines to interface with the fts library function.
@@ -340,8 +340,6 @@ int
 next_file(ARCHD *arcn)
 {
 	int cnt;
-	time_t atime;
-	time_t mtime;
 
 	/*
 	 * ftree_sel() might have set the ftree_skip flag if the user has the
@@ -396,10 +394,10 @@ next_file(ARCHD *arcn)
 			 * remember to force the time (this is -t on a read
 			 * directory, not a created directory).
 			 */
-			if (!tflag || (get_atdir(ftent->fts_statp->st_dev,
-			    ftent->fts_statp->st_ino, &mtime, &atime) < 0))
+			if (!tflag)
 				continue;
-			set_ftime(ftent->fts_path, mtime, atime, 1);
+			do_atdir(ftent->fts_path, ftent->fts_statp->st_dev,
+			    ftent->fts_statp->st_ino);
 			continue;
 		case FTS_DC:
 			/*

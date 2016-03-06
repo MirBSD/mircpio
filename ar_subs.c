@@ -3,7 +3,7 @@
 
 /*-
  * Copyright (c) 2008, 2011, 2012
- *	Thorsten Glaser <tg@mirbsd.org>
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -51,7 +51,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.14 2012/06/05 18:22:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.15 2016/03/06 13:47:48 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -171,6 +171,8 @@ extract(void)
 	struct stat sb;
 	int fd;
 	time_t now;
+
+	sltab_start();
 
 	arcn = &archd;
 	/*
@@ -379,6 +381,7 @@ extract(void)
 	(void)(*frmt->end_rd)();
 	(void)sigprocmask(SIG_BLOCK, &s_mask, NULL);
 	ar_close();
+	sltab_process(0);
 	proc_dir();
 	pat_chk();
 }
@@ -785,6 +788,8 @@ copy(void)
 	ARCHD archd;
 	char dirbuf[PAXPATHLEN+1];
 
+	sltab_start();
+
 	arcn = &archd;
 	/*
 	 * set up the destination dir path and make sure it is a directory. We
@@ -1000,6 +1005,7 @@ copy(void)
 	 */
 	(void)sigprocmask(SIG_BLOCK, &s_mask, NULL);
 	ar_close();
+	sltab_process(0);
 	proc_dir();
 	ftree_chk();
 }
