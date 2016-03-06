@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.23 2016/03/06 14:59:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.24 2016/03/06 21:06:04 tg Exp $");
 __IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
@@ -581,12 +581,12 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 			return (-1);
 		}
 	} else if ((path = strdup(path0)) == NULL) {
-		syswarn(1, errno, "defered symlink path");
+		syswarn(1, errno, "deferred symlink path");
 		unlink(path0);
 		return (-1);
 	}
 	if ((value = strdup(value0)) == NULL) {
-		syswarn(1, errno, "defered symlink value");
+		syswarn(1, errno, "deferred symlink value");
 		unlink(path);
 		free(path);
 		return (-1);
@@ -617,7 +617,7 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 
 	/* Normal case: create a new node */
 	if ((s = malloc(sizeof *s)) == NULL) {
-		syswarn(1, errno, "defered symlink");
+		syswarn(1, errno, "deferred symlink");
 		unlink(path);
 		free(path);
 		free(value);
@@ -672,7 +672,7 @@ sltab_add_link(const char *path, const struct stat *sb)
 				return (-1);
 			}
 		} else if ((p->sp_path = strdup(path)) == NULL) {
-			syswarn(1, errno, "defered symlink hardlink path");
+			syswarn(1, errno, "deferred symlink hardlink path");
 			free(p);
 			return (-1);
 		}
