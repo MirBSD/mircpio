@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_EXTERN_H
-#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.28 2016/03/06 14:12:27 tg Exp $"
+#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.29 2016/03/12 13:20:47 tg Exp $"
 
 /*
  * External references from each source file
@@ -216,7 +216,7 @@ OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
 void guess_compress_program(int);
-char *chdname;
+extern char *chdname;
 
 /*
  * pat_rep.c

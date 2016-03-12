@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.56 2016/03/12 13:02:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.57 2016/03/12 13:20:48 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -84,8 +84,10 @@ static char flgch[] = FLGCH;	/* list of all possible flags */
 static OPLIST *ophead = NULL;	/* head for format specific options -x */
 static OPLIST *optail = NULL;	/* option tail */
 
+#ifndef SMALL
 static int no_op(void);
 static int no_op_i(int);
+#endif
 static void printflg(unsigned int);
 static int c_frmt(const void *, const void *);
 static off_t str_offt(char *);
@@ -130,53 +132,55 @@ static const char LZOP_CMD[] = "lzop";
 
 FSUB fsub[] = {
 #ifndef SMALL
-/* 0: UNIX ARCHIVER */
+/* FSUB_AR: UNIX ARCHIVER */
 	{"ar", 512, sizeof(HD_AR), 0, 0, 0, 0, uar_id, no_op,
 	uar_rd, uar_endrd, uar_stwr, uar_wr, no_op, uar_trail,
 	rd_wrfile, uar_wr_data, bad_opt, 1},
-#endif
 
-/* 1: OLD BINARY CPIO */
+/* FSUB_BCPIO: OLD BINARY CPIO */
 	{"bcpio", 5120, sizeof(HD_BCPIO), 1, 0, 0, 1, bcpio_id, cpio_strd,
 	bcpio_rd, bcpio_endrd, cpio_stwr, bcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
+#endif
 
-/* 2: OLD OCTAL CHARACTER CPIO */
+/* FSUB_CPIO: OLD OCTAL CHARACTER CPIO */
 	{"cpio", 5120, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, cpio_stwr, cpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 3: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
+/* FSUB_DIST: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
 	{"dist", 512, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, dist_stwr, cpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 4: SVR4 HEX CPIO */
+/* FSUB_SV4CPIO: SVR4 HEX CPIO */
 	{"sv4cpio", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, vcpio_id, cpio_strd,
 	vcpio_rd, vcpio_endrd, cpio_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 5: SVR4 HEX CPIO WITH CRC */
+/* FSUB_SV4CRC: SVR4 HEX CPIO WITH CRC */
 	{"sv4crc", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, crc_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 6: OLD TAR */
+#ifndef SMALL
+/* FSUB_TAR: OLD TAR */
 	{"tar", 10240, BLKMULT, 0, 1, BLKMULT, 0, tar_id, no_op,
 	tar_rd, tar_endrd, no_op_i, tar_wr, tar_endwr, tar_trail,
 	rd_wrfile, wr_rdfile, tar_opt, 0},
+#endif
 
-/* 7: POSIX USTAR */
+/* FSUB_USTAR: POSIX USTAR */
 	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 8: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
+/* FSUB_V4NORM: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
 	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4norm_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
-/* 9: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
+/* FSUB_V4ROOT: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
 	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
@@ -189,11 +193,15 @@ FSUB fsub[] = {
  */
 int ford[] = {
 	FSUB_USTAR,
+#ifndef SMALL
 	FSUB_TAR,
+#endif
 	FSUB_SV4CRC,
 	FSUB_SV4CPIO,
 	FSUB_CPIO,
+#ifndef SMALL
 	FSUB_BCPIO,
+#endif
 	-1
 };
 
@@ -204,9 +212,10 @@ int anonarch = 0;
 int to_stdout = 0;
 
 /*
- * Do we have -C anywhere?
+ * Do we have -C anywhere and what is it?
  */
 int havechd = 0;
+char *chdname = NULL;
 
 /*
  * options()
@@ -1050,6 +1059,7 @@ tar_options(int argc, char **argv)
 		    case 0:
 			frmt = &(fsub[FSUB_USTAR]);
 			break;
+#ifndef SMALL
 		    case 1:
 			frmt = &(fsub[FSUB_TAR]);
 			break;
@@ -1058,6 +1068,7 @@ tar_options(int argc, char **argv)
 			if (opt_add("write_opt=nodir") < 0)
 				tar_usage();
 			break;
+#endif
 		    case 3:
 			frmt = &(fsub[FSUB_SV4CPIO]);
 			break;
@@ -1450,12 +1461,14 @@ cpio_options(int argc, char **argv)
 			 */
 			zeroflag = 1;
 			break;
+#ifndef SMALL
 		case '6':
 			/*
 			 * process Version 6 cpio format
 			 */
 			frmt = &(fsub[FSUB_BCPIO]);
 			break;
+#endif
 		case '?':
 		default:
 			if (opterr == 0) {
@@ -1735,6 +1748,7 @@ str_offt(char *val)
 	return ((off_t)num);
 }
 
+#ifndef SMALL
 /*
  * no_op()
  *	for those option functions where the archive format has nothing to do.
@@ -1753,6 +1767,7 @@ no_op_i(int is_app __attribute__((__unused__)))
 {
 	return(0);
 }
+#endif
 
 /*
  * pax_usage()

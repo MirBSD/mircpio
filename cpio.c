@@ -49,7 +49,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.21 2016/03/06 13:47:11 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.22 2016/03/12 13:20:47 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -59,7 +59,9 @@ static int com_rd(ARCHD *);
  * Routines which support the different cpio versions
  */
 
+#ifndef SMALL
 static int swp_head;		/* binary cpio header byte swap */
+#endif
 
 /*
  * Routines common to all versions of cpio
@@ -902,6 +904,7 @@ vcpio_wr(ARCHD *arcn)
 	return(1);
 }
 
+#ifndef SMALL
 /*
  * Routines common to the old binary header cpio
  */
@@ -1213,3 +1216,4 @@ bcpio_wr(ARCHD *arcn)
 	paxwarn(1,"Bcpio header field is too small for file %s", arcn->org_name);
 	return(1);
 }
+#endif

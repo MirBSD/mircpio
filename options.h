@@ -39,20 +39,22 @@
  */
 
 #ifndef MIRCPIO_OPTIONS_H
-#define MIRCPIO_OPTIONS_H "$MirOS: src/bin/pax/options.h,v 1.8 2016/03/12 12:53:28 tg Exp $"
+#define MIRCPIO_OPTIONS_H "$MirOS: src/bin/pax/options.h,v 1.9 2016/03/12 13:20:48 tg Exp $"
 
 /* format table, see FSUB fsub[] in options.c */
 
 enum fsub_order {
 #ifndef SMALL
 	FSUB_AR,
-#endif
 	FSUB_BCPIO,
+#endif
 	FSUB_CPIO,
 	FSUB_DIST,
 	FSUB_SV4CPIO,
 	FSUB_SV4CRC,
+#ifndef SMALL
 	FSUB_TAR,
+#endif
 	FSUB_USTAR,
 	FSUB_V4NORM,
 	FSUB_V4ROOT,

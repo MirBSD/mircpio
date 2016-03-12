@@ -49,7 +49,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.15 2016/03/06 13:47:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.16 2016/03/12 13:20:48 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -72,7 +72,9 @@ static gid_t gid_warn;
  * Routines common to all versions of tar
  */
 
+#ifndef SMALL
 static int tar_nodir;			/* do not write dirs under old tar */
+#endif
 char *gnu_name_string;			/* GNU ././@LongLink hackery name */
 char *gnu_link_string;			/* GNU ././@LongLink hackery link */
 
@@ -292,6 +294,7 @@ tar_chksm(char *blk, int len)
 	return(chksm);
 }
 
+#ifndef SMALL
 /*
  * Routines for old BSD style tar (also made portable to sysV tar)
  */
@@ -652,6 +655,7 @@ tar_wr(ARCHD *arcn)
 	paxwarn(1, "tar header field is too small for %s", arcn->org_name);
 	return(1);
 }
+#endif
 
 /*
  * Routines for POSIX ustar
