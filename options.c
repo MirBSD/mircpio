@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.54 2016/03/06 14:12:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.55 2016/03/12 12:53:28 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -118,6 +118,7 @@ static const char LZOP_CMD[] = "lzop";
 
 /*
  *	Format specific routine table - MUST BE IN SORTED ORDER BY NAME
+ *	(see enum fsub_order in options.h for index)
  *	(see pax.h for description of each function)
  *
  * 	name, blksz, hdsz, udev, hlk, blkagn, inhead, id, st_read,
@@ -126,10 +127,12 @@ static const char LZOP_CMD[] = "lzop";
  */
 
 FSUB fsub[] = {
+#ifndef SMALL
 /* 0: UNIX ARCHIVER */
 	{"ar", 512, sizeof(HD_AR), 0, 0, 0, 0, uar_id, no_op,
 	uar_rd, uar_endrd, uar_stwr, uar_wr, no_op, uar_trail,
 	rd_wrfile, uar_wr_data, bad_opt, 1},
+#endif
 
 /* 1: OLD BINARY CPIO */
 	{"bcpio", 5120, sizeof(HD_BCPIO), 1, 0, 0, 1, bcpio_id, cpio_strd,
@@ -176,21 +179,21 @@ FSUB fsub[] = {
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 };
-#define	F_OCPIO	1	/* format when called as cpio -6 */
-#define	F_ACPIO	2	/* format when called as cpio -c */
-#define	F_NCPIO	4	/* format when called as tar -R */
-#define	F_CPIO	5	/* format when called as cpio or tar -S */
-#define F_OTAR	6	/* format when called as tar -o */
-#define F_TAR	7	/* format when called as tar */
-int F_UAR = 0;
-#define DEFLT	7	/* default write format from list above */
 
 /*
  * ford is the archive search order used by get_arc() to determine what kind
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-int ford[] = { 7, 6, 5, 4, 2, 1, -1 };
+int ford[] = {
+	FSUB_USTAR,
+	FSUB_TAR,
+	FSUB_SV4CRC,
+	FSUB_SV4CPIO,
+	FSUB_CPIO,
+	FSUB_BCPIO,
+	-1
+};
 
 /* normalise archives */
 int anonarch = 0;
@@ -625,7 +628,7 @@ pax_options(int argc, char **argv)
 	 * adopt the format of the existing archive if none was supplied.
 	 */
 	if (!(flg & XF) && (act == ARCHIVE))
-		frmt = &(fsub[DEFLT]);
+		frmt = &(fsub[FSUB_USTAR]);
 
 	/*
 	 * process the args as they are interpreted by the operation mode
@@ -698,9 +701,11 @@ tar_options(int argc, char **argv)
 	while ((c = getoldopt(argc, argv,
 	    "014578AaBb:C:cef:HhI:JjLM:mNOoPpqRrSs:tuvwXxZz")) != -1) {
 		switch (c) {
+#ifndef SMALL
 		case 'A':
 			Oflag = 5;
 			break;
+#endif
 		case 'a':
 			/*
 			 * use compression dependent on arcname
@@ -1035,25 +1040,27 @@ tar_options(int argc, char **argv)
 	case APPND:
 		switch(Oflag) {
 		    case 0:
-			frmt = &(fsub[F_TAR]);
+			frmt = &(fsub[FSUB_USTAR]);
 			break;
 		    case 1:
-			frmt = &(fsub[F_OTAR]);
+			frmt = &(fsub[FSUB_TAR]);
 			break;
 		    case 2:
-			frmt = &(fsub[F_OTAR]);
+			frmt = &(fsub[FSUB_TAR]);
 			if (opt_add("write_opt=nodir") < 0)
 				tar_usage();
 			break;
 		    case 3:
-			frmt = &(fsub[F_NCPIO]);
+			frmt = &(fsub[FSUB_SV4CPIO]);
 			break;
 		    case 4:
-			frmt = &(fsub[F_CPIO]);
+			frmt = &(fsub[FSUB_SV4CRC]);
 			break;
+#ifndef SMALL
 		    case 5:
-			frmt = &(fsub[F_UAR]);
+			frmt = &(fsub[FSUB_AR]);
 			break;
+#endif
 		    default:
 			tar_usage();
 			break;
@@ -1225,7 +1232,7 @@ cpio_options(int argc, char **argv)
 			/*
 			 * ASCII cpio header
 			 */
-			frmt = &(fsub[F_ACPIO]);
+			frmt = &(fsub[FSUB_CPIO]);
 			break;
 		case 'd':
 			/*
@@ -1276,7 +1283,7 @@ cpio_options(int argc, char **argv)
 			 * create an archive
 			 */
 			cpio_set_action(ARCHIVE);
-			frmt = &(fsub[F_CPIO]);
+			frmt = &(fsub[FSUB_SV4CRC]);
 			break;
 		case 'p':
 			/*
@@ -1435,7 +1442,7 @@ cpio_options(int argc, char **argv)
 			/*
 			 * process Version 6 cpio format
 			 */
-			frmt = &(fsub[F_OCPIO]);
+			frmt = &(fsub[FSUB_BCPIO]);
 			break;
 		case '?':
 		default:

@@ -46,7 +46,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.6 2012/06/05 18:22:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.7 2016/03/12 12:53:27 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -1007,6 +1007,7 @@ buf_flush(int bufcnt)
 	return(-1);
 }
 
+#ifndef SMALL
 /*
  * wr_rdfile replacement for the Unix Archiver (padding)
  */
@@ -1030,3 +1031,4 @@ uar_wr_data(ARCHD *arcn, int ifd, off_t *left)
 	*bufpt++ = '\n';
 	return (0);
 }
+#endif
