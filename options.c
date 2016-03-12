@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.55 2016/03/12 12:53:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.56 2016/03/12 13:02:07 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -103,6 +103,7 @@ static void process_M(const char *, void (*)(void));
 
 /* command to run as gzip */
 static const char GZIP_CMD[] = "gzip";
+#ifndef SMALL
 /* command to run as compress */
 static const char COMPRESS_CMD[] = "compress";
 /* command to run as bzip2 */
@@ -113,6 +114,7 @@ static const char XZ_CMD[] = "xz";
 static const char LZMA_WRCMD[] = "lzma";
 /* command to run as lzop */
 static const char LZOP_CMD[] = "lzop";
+#endif
 /* used as flag value */
 #define COMPRESS_GUESS_CMD ((const void *)&compress_program)
 
@@ -298,6 +300,7 @@ pax_options(int argc, char **argv)
 			iflag = 1;
 			flg |= IF;
 			break;
+#ifndef SMALL
 		case 'J':
 			/*
 			 * use xz (non-standard option)
@@ -310,6 +313,7 @@ pax_options(int argc, char **argv)
 			 */
 			compress_program = BZIP2_CMD;
 			break;
+#endif
 		case 'k':
 			/*
 			 * do not clobber files that exist
@@ -757,6 +761,7 @@ tar_options(int argc, char **argv)
 			 */
 			Lflag = 1;
 			break;
+#ifndef SMALL
 		case 'J':
 			/*
 			 * use xz (non-standard option)
@@ -769,6 +774,7 @@ tar_options(int argc, char **argv)
 			 */
 			compress_program = BZIP2_CMD;
 			break;
+#endif
 		case 'm':
 			/*
 			 * do not preserve modification time
@@ -916,12 +922,14 @@ tar_options(int argc, char **argv)
 			 */
 			Xflag = 1;
 			break;
+#ifndef SMALL
 		case 'Z':
 			/*
 			 * use compress
 			 */
 			compress_program = COMPRESS_CMD;
 			break;
+#endif
 		case '0':
 			arcname = DEV_0;
 			break;
@@ -1252,6 +1260,7 @@ cpio_options(int argc, char **argv)
 			 */
 			cpio_set_action(EXTRACT);
 			break;
+#ifndef SMALL
 		case 'J':
 			/*
 			 * use xz (non-standard option)
@@ -1264,6 +1273,7 @@ cpio_options(int argc, char **argv)
 			 */
 			compress_program = BZIP2_CMD;
 			break;
+#endif
 		case 'k':
 			break;
 		case 'l':
@@ -1425,12 +1435,14 @@ cpio_options(int argc, char **argv)
 			 * swap halfwords after reading data
 			 */
 			break;
+#ifndef SMALL
 		case 'Z':
 			/*
 			 * use compress (non-standard option)
 			 */
 			compress_program = COMPRESS_CMD;
 			break;
+#endif
 		case '0':
 			/*
 			 * Use \0 as pathname terminator.
@@ -1879,7 +1891,7 @@ process_M(const char *arg, void (*call_usage)(void))
 }
 
 void
-guess_compress_program(int wr)
+guess_compress_program(int wr __attribute__((__unused__)))
 {
 	const char *ccp;
 
@@ -1902,6 +1914,7 @@ guess_compress_program(int wr)
 		return;
 	}
 
+#ifndef SMALL
 	/* guess extended format xz */
 	if (!strcmp(ccp, "xz") ||
 	    !strcmp(ccp, "txz") ||
@@ -1945,6 +1958,7 @@ guess_compress_program(int wr)
 		compress_program = LZOP_CMD;
 		return;
 	}
+#endif
 
 	/* no sugar */
 	compress_program = NULL;
