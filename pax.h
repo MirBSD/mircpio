@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_PAX_H
-#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.14 2016/03/06 14:12:28 tg Exp $"
+#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.15 2016/03/12 20:53:12 tg Exp $"
 
 /*
  * BSD PAX global data structures and constants.
@@ -254,6 +254,9 @@ typedef struct oplist {
 #endif
 #ifdef __INTERIX
 #include <sys/mkdev.h>
+#endif
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
 #endif
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)

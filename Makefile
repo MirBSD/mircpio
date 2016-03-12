@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.18 2016/03/06 14:59:08 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.19 2016/03/12 20:53:11 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -22,6 +22,7 @@ CPPFLAGS+= -DLONG_OFF_T
 
 .if (${MACHINE_OS} == "GNU") || (${MACHINE_OS} == "Linux")
 CPPFLAGS+= -DHAVE_LINKAT # probably
+CPPFLAGS+= -DHAVE_SYS_SYSMACROS_H # probably
 .endif
 
 .if (${MACHINE_OS} == "BSD")
