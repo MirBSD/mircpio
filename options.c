@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.58 2016/10/25 18:57:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.59 2016/10/25 19:09:57 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -694,7 +694,7 @@ tar_options(int argc, char **argv)
 {
 	int c;
 	int fstdin = 0;
-	int Oflag = 0;
+	int Oflag = FSUB_USTAR;
 	int nincfiles = 0;
 	int incfiles_max = 0;
 	struct incfile {
@@ -716,7 +716,7 @@ tar_options(int argc, char **argv)
 		switch (c) {
 #ifndef SMALL
 		case 'A':
-			Oflag = 5;
+			Oflag = FSUB_AR;
 			break;
 #endif
 		case 'a':
@@ -791,11 +791,11 @@ tar_options(int argc, char **argv)
 			pmtime = 0;
 			break;
 		case 'O':
-			Oflag = 1;
+			Oflag = FSUB_TAR;
 			to_stdout = 2;
 			break;
 		case 'o':
-			Oflag = 2;
+			Oflag = FSUB_TAR;
 			tar_nodir = 1;
 			break;
 		case 'p':
@@ -819,11 +819,11 @@ tar_options(int argc, char **argv)
 			tar_set_action(APPND);
 			break;
 		case 'R':
-			Oflag = 3;
+			Oflag = FSUB_SV4CPIO;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
 			break;
 		case 'S':
-			Oflag = 4;
+			Oflag = FSUB_SV4CRC;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
 			break;
 		case 's':
@@ -1066,31 +1066,7 @@ tar_options(int argc, char **argv)
 		break;
 	case ARCHIVE:
 	case APPND:
-		switch(Oflag) {
-		    case 0:
-			frmt = &(fsub[FSUB_USTAR]);
-			break;
-#ifndef SMALL
-		    case 1:
-		    case 2:
-			frmt = &(fsub[FSUB_TAR]);
-			break;
-#endif
-		    case 3:
-			frmt = &(fsub[FSUB_SV4CPIO]);
-			break;
-		    case 4:
-			frmt = &(fsub[FSUB_SV4CRC]);
-			break;
-#ifndef SMALL
-		    case 5:
-			frmt = &(fsub[FSUB_AR]);
-			break;
-#endif
-		    default:
-			tar_usage();
-			break;
-		}
+		frmt = &(fsub[Oflag]);
 
 		if (chdname != NULL) {
 			/* initial chdir() */
