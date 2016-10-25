@@ -2,7 +2,7 @@
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2012
+ * Copyright (c) 2012, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.20 2016/10/25 18:57:54 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.21 2016/10/25 19:00:27 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -1305,7 +1305,7 @@ ar_start_compress(int fd, int wr)
 		close(fds[1]);
 
 		/* System compressors are more likely to use pledge(2) */
-		putenv("PATH=/bin:/usr/bin");
+		putenv("PATH=" PAX_SAFE_PATH);
 
 		if (execlp(compress_program, compress_program,
 		    compress_flags, NULL) < 0)

@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.19 2016/03/12 20:53:11 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.20 2016/10/25 19:00:26 tg Exp $
 # $OpenBSD: Makefile,v 1.10 2001/05/26 00:32:20 millert Exp $
 #-
 # It may be necessary to define some options on pre-4.4BSD or
@@ -14,6 +14,9 @@ SRCS=	ar.c ar_io.c ar_subs.c buf_subs.c cache.c cpio.c file_subs.c ftree.c \
 MAN=	cpio.1 pax.1 tar.1
 LINKS+=	${BINDIR}/pax ${BINDIR}/cpio
 LINKS+=	${BINDIR}/pax ${BINDIR}/tar
+
+SAFE_PATH=/bin:/usr/bin:/usr/mpkg/bin:/usr/local/bin
+CPPFLAGS+= -DPAX_SAFE_PATH=\"${SAFE_PATH}\"
 
 .if (${MACHINE_OS} == "Interix") || (${MACHINE_OS} == "Linux") || \
     ((${MACHINE_OS} == "GNU") && (${OSNAME} != "GNU/kFreeBSD"))
