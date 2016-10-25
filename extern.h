@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_EXTERN_H
-#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.30 2016/10/25 18:57:54 tg Exp $"
+#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.31 2016/10/25 19:27:12 tg Exp $"
 
 /*
  * External references from each source file
@@ -210,7 +210,7 @@ int getoldopt(int, char **, const char *);
  * options.c
  */
 extern FSUB fsub[];
-extern int ford[];
+extern const int ford[];
 void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
@@ -311,7 +311,9 @@ int chk_flnk(ARCHD *);
 /*
  * tar.c
  */
+#ifndef SMALL
 extern int tar_nodir;
+#endif
 extern char *gnu_hack_string;
 int tar_endwr(void);
 off_t tar_endrd(void);

@@ -51,7 +51,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.16 2016/03/12 12:53:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.17 2016/10/25 19:27:12 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -1199,7 +1199,7 @@ get_arc(void)
 	 * find the smallest header size in all archive formats and then set up
 	 * to read the archive.
 	 */
-	for (i = 0; ford[i] >= 0; ++i) {
+	for (i = 0; ford[i] != FSUB_MAX; ++i) {
 		if (fsub[ford[i]].hsz < minhd)
 			minhd = fsub[ford[i]].hsz;
 	}
@@ -1264,7 +1264,7 @@ get_arc(void)
 		 * may be subsets of each other and the order would then be
 		 * important).
 		 */
-		for (i = 0; ford[i] >= 0; ++i) {
+		for (i = 0; ford[i] != FSUB_MAX; ++i) {
 			if ((*fsub[ford[i]].id)(hdbuf, hdsz) < 0)
 				continue;
 			frmt = &(fsub[ford[i]]);

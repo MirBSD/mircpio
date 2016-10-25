@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.31 2016/10/25 19:26:13 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.32 2016/10/25 19:27:12 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.55 +1.58 +1.59 2010/12/02 04:08:27 tedu Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016
@@ -413,12 +413,10 @@ If reading, extract files to standard output.
 .br
 If writing, write old-style (non-POSIX) archives.
 .It Fl o
+If writing, write old-style (non-POSIX) archives.
 Don't write directory information that the older (V7) style
 .Nm tar
 is unable to decode.
-This implies the
-.Fl O
-flag.
 .It Fl P
 Do not strip leading slashes
 .Pq Sq /

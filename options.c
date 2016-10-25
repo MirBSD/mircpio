@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.59 2016/10/25 19:09:57 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.60 2016/10/25 19:27:12 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -191,7 +191,7 @@ FSUB fsub[] = {
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-int ford[] = {
+const int ford[] = {
 	FSUB_USTAR,
 #ifndef SMALL
 	FSUB_TAR,
@@ -202,7 +202,7 @@ int ford[] = {
 #ifndef SMALL
 	FSUB_BCPIO,
 #endif
-	-1
+	FSUB_MAX
 };
 
 /* normalise archives */
@@ -791,13 +791,19 @@ tar_options(int argc, char **argv)
 			pmtime = 0;
 			break;
 		case 'O':
+#ifndef SMALL
 			Oflag = FSUB_TAR;
+#else
+			Oflag = FSUB_MAX;
+#endif
 			to_stdout = 2;
 			break;
+#ifndef SMALL
 		case 'o':
 			Oflag = FSUB_TAR;
 			tar_nodir = 1;
 			break;
+#endif
 		case 'p':
 			/*
 			 * preserve uid/gid and file mode, regardless of umask
@@ -1066,6 +1072,8 @@ tar_options(int argc, char **argv)
 		break;
 	case ARCHIVE:
 	case APPND:
+		if (Oflag == FSUB_MAX)
+			tar_usage();
 		frmt = &(fsub[Oflag]);
 
 		if (chdname != NULL) {
