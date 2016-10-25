@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_PAX_H
-#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.16 2016/10/25 18:57:56 tg Exp $"
+#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.17 2016/10/25 19:04:26 tg Exp $"
 
 /*
  * BSD PAX global data structures and constants.
@@ -313,15 +313,6 @@ typedef struct oplist {
 #define OCT		8
 #define _PAX_		1
 #define _TFILE_BASE	"paxXXXXXXXXXX"
-
-/* copied from <tzfile.h> */
-#define SECSPERMIN	60
-#define MINSPERHOUR	60
-#define HOURSPERDAY	24
-#define DAYSPERNYEAR	365
-#define SECSPERHOUR	(SECSPERMIN * MINSPERHOUR)
-#define SECSPERDAY	((long)SECSPERHOUR * HOURSPERDAY)
-#define TM_YEAR_BASE	1900
 
 #ifndef LONG_OFF_T
 #define OT_FMT		"llu"

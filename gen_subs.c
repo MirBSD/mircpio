@@ -55,7 +55,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.18 2016/10/25 18:57:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.19 2016/10/25 19:04:26 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -66,8 +66,7 @@ __RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.18 2016/10/25 18:57:55 tg Exp $");
  */
 #define MODELEN 20
 #define DATELEN 64
-#define SECSPERDAY	(24 * 60 * 60)
-#define SIXMONTHS	(SECSPERDAY * 365 / 2)
+#define SIXMONTHS	(86400 * 365 / 2)
 #define CURFRMT		"%b %e %H:%M"
 #define OLDFRMT		"%b %e  %Y"
 #define NAME_WIDTH	8
