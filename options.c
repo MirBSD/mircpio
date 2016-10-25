@@ -1,4 +1,4 @@
-/*	$OpenBSD: options.c,v 1.75 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: options.c,v 1.75 +1.88 +1.89 +1.91 2012/03/04 04:05:15 fgsch Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -137,9 +137,10 @@ FSUB fsub[] = {
 int ford[] = {5, 4, 3, 2, 1, 0, -1 };
 
 /*
- * Do we have -C anywhere?
+ * Do we have -C anywhere and what is it?
  */
 int havechd = 0;
+char *chdname = NULL;
 
 /*
  * options()
@@ -682,6 +683,7 @@ tar_options(int argc, char **argv)
 			break;
 		case 'o':
 			Oflag = 2;
+			tar_nodir = 1;
 			break;
 		case 'p':
 			/*
@@ -833,6 +835,16 @@ tar_options(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
+	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
+		arcname = getenv("TAPE");
+		if ((arcname == NULL) || (*arcname == '\0'))
+			arcname = _PATH_DEFTAPE;
+		else if ((arcname[0] == '-') && (arcname[1]== '\0')) {
+			arcname = NULL;
+			fstdin = 1;
+		}
+	}
+
 	/* Traditional tar behaviour (pax uses stderr unless in list mode) */
 	if (fstdin == 1 && act == ARCHIVE)
 		listf = stderr;
@@ -918,9 +930,6 @@ tar_options(int argc, char **argv)
 	case APPND:
 		frmt = &(fsub[Oflag ? F_OTAR : F_TAR]);
 
-		if (Oflag == 2 && opt_add("write_opt=nodir") < 0)
-			tar_usage();
-
 		if (chdname != NULL) {	/* initial chdir() */
 			if (ftree_add(chdname, 1) < 0)
 				tar_usage();
@@ -988,11 +997,6 @@ tar_options(int argc, char **argv)
 		 */
 		maxflt = 0;
 		break;
-	}
-	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
-		arcname = getenv("TAPE");
-		if ((arcname == NULL) || (*arcname == '\0'))
-			arcname = _PATH_DEFTAPE;
 	}
 }
 

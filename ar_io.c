@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_io.c,v 1.39 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: ar_io.c,v 1.39 +1.49 +1.54 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
@@ -182,7 +182,7 @@ ar_open(const char *name)
 		artyp = ISREG;
 
 	/*
-	 * make sure we beyond any doubt that we only can unlink regular files
+	 * make sure beyond any doubt that we can unlink only regular files
 	 * we created
 	 */
 	if (artyp != ISREG)
@@ -1275,6 +1275,10 @@ ar_start_gzip(int fd, const char *gzip_program, int wr)
 		}
 		close(fds[0]);
 		close(fds[1]);
+
+		/* System compressors are more likely to use pledge(2) */
+		putenv("PATH=/usr/bin:/usr/local/bin");
+
 		if (execlp(gzip_program, gzip_program, gzip_flags, (char *)NULL) < 0)
 			err(1, "could not exec %s", gzip_program);
 		/* NOTREACHED */

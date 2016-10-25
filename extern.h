@@ -1,4 +1,4 @@
-/*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
+/*	$OpenBSD: extern.h,v 1.34 +1.51 +1.52 +1.54 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -196,7 +196,7 @@ void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
-char *chdname;
+extern char *chdname;
 
 /*
  * pat_rep.c
@@ -250,7 +250,6 @@ extern char *tempfile;
 extern char *tempbase;
 extern int havechd;
 
-int main(int, char **);
 void sig_cleanup(int);
 
 /*
@@ -293,6 +292,7 @@ u_int st_hash(char *, int, int);
 /*
  * tar.c
  */
+extern int tar_nodir;
 extern char *gnu_hack_string;
 int tar_endwr(void);
 off_t tar_endrd(void);
