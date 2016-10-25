@@ -1,4 +1,4 @@
-/*	$OpenBSD: options.c,v 1.75 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: options.c,v 1.75 +1.88 +1.89 +1.91 2012/03/04 04:05:15 fgsch Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.57 2016/03/12 13:20:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.58 2016/10/25 18:57:55 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -796,6 +796,7 @@ tar_options(int argc, char **argv)
 			break;
 		case 'o':
 			Oflag = 2;
+			tar_nodir = 1;
 			break;
 		case 'p':
 			/*
@@ -969,6 +970,16 @@ tar_options(int argc, char **argv)
 	if (act == ERROR)
 		tar_usage();
 
+	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
+		arcname = getenv("TAPE");
+		if ((arcname == NULL) || (*arcname == '\0'))
+			arcname = _PATH_DEFTAPE;
+		else if ((arcname[0] == '-') && (arcname[1]== '\0')) {
+			arcname = NULL;
+			fstdin = 1;
+		}
+	}
+
 	/* traditional tar behaviour (pax uses stderr unless in list mode) */
 	if (fstdin == 1 && act == ARCHIVE)
 		listf = stderr;
@@ -1061,12 +1072,8 @@ tar_options(int argc, char **argv)
 			break;
 #ifndef SMALL
 		    case 1:
-			frmt = &(fsub[FSUB_TAR]);
-			break;
 		    case 2:
 			frmt = &(fsub[FSUB_TAR]);
-			if (opt_add("write_opt=nodir") < 0)
-				tar_usage();
 			break;
 #endif
 		    case 3:
@@ -1156,11 +1163,6 @@ tar_options(int argc, char **argv)
 	}
 	if (to_stdout != 1)
 		to_stdout = 0;
-	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
-		arcname = getenv("TAPE");
-		if ((arcname == NULL) || (*arcname == '\0'))
-			arcname = _PATH_DEFTAPE;
-	}
 }
 
 int

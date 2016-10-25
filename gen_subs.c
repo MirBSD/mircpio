@@ -1,4 +1,4 @@
-/*	$OpenBSD: gen_subs.c,v 1.20 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: gen_subs.c,v 1.20 +1.27 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -55,7 +55,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.17 2016/03/06 15:28:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.18 2016/10/25 18:57:55 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -66,7 +66,8 @@ __RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.17 2016/03/06 15:28:48 tg Exp $");
  */
 #define MODELEN 20
 #define DATELEN 64
-#define SIXMONTHS	 ((DAYSPERNYEAR / 2) * SECSPERDAY)
+#define SECSPERDAY	(24 * 60 * 60)
+#define SIXMONTHS	(SECSPERDAY * 365 / 2)
 #define CURFRMT		"%b %e %H:%M"
 #define OLDFRMT		"%b %e  %Y"
 #define NAME_WIDTH	8

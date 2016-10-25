@@ -1,4 +1,4 @@
-/*	$OpenBSD: pat_rep.c,v 1.31 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: pat_rep.c,v 1.31 +1.40 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: pat_rep.c,v 1.4 1995/03/21 09:07:33 cgd Exp $	*/
 
 /*-
@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.8 2016/03/06 14:12:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.9 2016/10/25 18:57:55 tg Exp $");
 __IDSTRING(rcsid_pat_rep_h, MIRCPIO_PAT_REP_H);
 
 /*
@@ -298,7 +298,7 @@ pat_sel(ARCHD *arcn)
 {
 	PATTERN *pt;
 	PATTERN **ppt;
-	int len;
+	size_t len;
 
 	/*
 	 * if no patterns just return

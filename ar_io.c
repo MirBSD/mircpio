@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_io.c,v 1.39 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: ar_io.c,v 1.39 +1.49 +1.54 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.19 2016/03/06 13:47:11 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.20 2016/10/25 18:57:54 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -198,7 +198,7 @@ ar_open(const char *name)
 		artyp = ISREG;
 
 	/*
-	 * make sure we beyond any doubt that we only can unlink regular files
+	 * make sure beyond any doubt that we can unlink only regular files
 	 * we created
 	 */
 	if (artyp != ISREG)
@@ -1303,6 +1303,10 @@ ar_start_compress(int fd, int wr)
 		}
 		close(fds[0]);
 		close(fds[1]);
+
+		/* System compressors are more likely to use pledge(2) */
+		putenv("PATH=/bin:/usr/bin");
+
 		if (execlp(compress_program, compress_program,
 		    compress_flags, NULL) < 0)
 			err(1, "could not exec %s", compress_program);

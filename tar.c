@@ -1,4 +1,4 @@
-/*	$OpenBSD: tar.c,v 1.43 2010/12/02 04:08:27 tedu Exp $	*/
+/*	$OpenBSD: tar.c,v 1.43 +1.57 +1.59 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
@@ -49,7 +49,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.16 2016/03/12 13:20:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.17 2016/10/25 18:57:56 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -73,7 +73,7 @@ static gid_t gid_warn;
  */
 
 #ifndef SMALL
-static int tar_nodir;			/* do not write dirs under old tar */
+int tar_nodir;				/* do not write dirs under old tar */
 #endif
 char *gnu_name_string;			/* GNU ././@LongLink hackery name */
 char *gnu_link_string;			/* GNU ././@LongLink hackery link */
@@ -1156,6 +1156,16 @@ name_split(char *name, int len)
 	 * include the slash between the two parts that gets thrown away)
 	 */
 	start = name + len - TNMSZ - 1;
+
+	/*
+	 * the prefix may not be empty, so skip the first character when
+	 * trying to split a path of exactly TNMSZ+1 characters.
+	 * NOTE: This means the ustar format can't store /str if
+	 * str contains no slashes and the length of str == TNMSZ
+	 */
+	if (start == name)
+		++start;
+
 	while ((*start != '\0') && (*start != '/'))
 		++start;
 
@@ -1165,15 +1175,12 @@ name_split(char *name, int len)
 	 */
 	if (*start == '\0')
 		return(NULL);
-	len = start - name;
 
 	/*
-	 * NOTE: /str where the length of str == TNMSZ cannot be stored under
-	 * the p1003.1-1990 spec for ustar. We could force a prefix of / and
-	 * the file would then expand on extract to //str. The len == 0 below
-	 * makes this special case follow the spec to the letter.
+	 * the split point isn't valid if it results in a prefix
+	 * longer than TPFSZ
 	 */
-	if ((len > TPFSZ) || (len == 0))
+	if ((start - name) > TPFSZ)
 		return(NULL);
 
 	/*

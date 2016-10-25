@@ -1,4 +1,4 @@
-/*	$OpenBSD: extern.h,v 1.34 2010/12/02 04:08:27 tedu Exp $	*/
+/*	$OpenBSD: extern.h,v 1.34 +1.51 +1.52 +1.54 2010/12/02 04:08:27 tedu Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_EXTERN_H
-#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.29 2016/03/12 13:20:47 tg Exp $"
+#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.30 2016/10/25 18:57:54 tg Exp $"
 
 /*
  * External references from each source file
@@ -269,8 +269,6 @@ extern char *tempfile;
 extern char *tempbase;
 extern int havechd;
 
-int main(int, char **);
-
 /*
  * sel_subs.c
  */
@@ -313,6 +311,7 @@ int chk_flnk(ARCHD *);
 /*
  * tar.c
  */
+extern int tar_nodir;
 extern char *gnu_hack_string;
 int tar_endwr(void);
 off_t tar_endrd(void);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.h,v 1.17 2005/11/09 19:59:06 otto Exp $	*/
+/*	$OpenBSD: pax.h,v 1.17 +1.28 2005/11/09 19:59:06 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_PAX_H
-#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.15 2016/03/12 20:53:12 tg Exp $"
+#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.16 2016/10/25 18:57:56 tg Exp $"
 
 /*
  * BSD PAX global data structures and constants.
@@ -84,7 +84,7 @@ typedef struct pattern {
 	char		*pstr;		/* pattern to match, user supplied */
 	char		*pend;		/* end of a prefix match */
 	char		*chdname;	/* the dir to change to if not NULL.  */
-	int		plen;		/* length of pstr */
+	size_t		plen;		/* length of pstr */
 	int		flgs;		/* processing/state flags */
 #define MTCH		0x1		/* pattern has been matched */
 #define DIR_MTCH	0x2		/* pattern matched a directory */
