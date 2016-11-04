@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.10 2016/10/31 16:29:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.11 2016/11/04 20:10:31 tg Exp $");
 __IDSTRING(rcsid_pat_rep_h, MIRCPIO_PAT_REP_H);
 
 /*
@@ -628,7 +628,7 @@ mod_name(ARCHD *arcn)
 		/* CVE-2016-6321: completely skip names with dotdot in them */
 		const char *p = strstr(arcn->name, "..");
 
-		if ((p == arcn->name || p[-1] == '/') &&
+		if (p && (p == arcn->name || p[-1] == '/') &&
 		    (p[2] == '/' || p[2] == '\0')) {
 			paxwarn(1,
 			    "Skipping pathname with dotdot components: %s",
