@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.60 2016/10/25 19:27:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.61 2017/07/20 21:15:50 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -1945,11 +1945,7 @@ guess_compress_program(int wr __attribute__((__unused__)))
 	}
 
 	/* guess extended format lzma (using xz for decompression) */
-	if (!strcmp(ccp, "lz") ||
-	    !strcmp(ccp, "lzma") ||
-	    !strcmp(ccp, "tlz") ||
-	    !strcmp(ccp, "clz") ||
-	    !strcmp(ccp, "nlz")) {
+	if (!strcmp(ccp, "lzma")) {
 		compress_program = wr ? LZMA_WRCMD : XZ_CMD;
 		return;
 	}
