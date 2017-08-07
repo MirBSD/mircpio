@@ -37,13 +37,13 @@
  */
 
 #ifndef MIRCPIO_CACHE_H
-#define MIRCPIO_CACHE_H "$MirOS: src/bin/pax/cache.h,v 1.3 2016/03/06 14:12:26 tg Exp $"
+#define MIRCPIO_CACHE_H "$MirOS: src/bin/pax/cache.h,v 1.4 2017/08/07 20:10:14 tg Exp $"
 
 /*
  * Constants and data structures used to implement group and password file
  * caches. Traditional passwd/group cache routines perform quite poorly with
  * archives. The chances of hitting a valid lookup with an archive is quite a
- * bit worse than with files already resident on the file system. These misses
+ * bit worse than with files already resident on the filesystem. These misses
  * create a MAJOR performance cost. To address this problem, these routines
  * cache both hits and misses.
  *

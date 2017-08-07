@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.11 2016/11/04 20:10:31 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.12 2017/08/07 20:10:16 tg Exp $");
 __IDSTRING(rcsid_pat_rep_h, MIRCPIO_PAT_REP_H);
 
 /*
@@ -677,7 +677,7 @@ mod_name(ARCHD *arcn)
 	 * anyway). But there are no such requirements for symlinks. On one
 	 * hand the symlink that refers to a file in the archive will have to
 	 * be modified to so it will still work at its new location in the
-	 * file system. On the other hand a symlink that points elsewhere (and
+	 * filesystem. On the other hand a symlink that points elsewhere (and
 	 * should continue to do so) should not be modified. There is clearly
 	 * no perfect solution here. So we handle them like hardlinks. Clearly
 	 * a replacement made by the interactive rename mapping is very likely

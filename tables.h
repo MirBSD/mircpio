@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_TABLES_H
-#define MIRCPIO_TABLES_H "$MirOS: src/bin/pax/tables.h,v 1.6 2016/03/06 14:12:29 tg Exp $"
+#define MIRCPIO_TABLES_H "$MirOS: src/bin/pax/tables.h,v 1.7 2017/08/07 20:10:18 tg Exp $"
 
 /*
  * data structures and constants used by the different databases kept by pax
@@ -61,7 +61,7 @@
 
 /*
  * file hard link structure (hashed by dev/ino and chained) used to find the
- * hard links in a file system or with some archive formats (cpio)
+ * hard links in a filesystem or with some archive formats (cpio)
  */
 typedef struct hrdlnk {
 	char		*name;	/* name of first file seen with this ino/dev */

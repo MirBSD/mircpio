@@ -48,7 +48,7 @@
 #include "ftree.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.8 2016/03/06 14:12:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.9 2017/08/07 20:10:14 tg Exp $");
 __IDSTRING(rcsid_ftree_h, MIRCPIO_FTREE_H);
 
 /*
@@ -402,9 +402,9 @@ next_file(ARCHD *arcn)
 			continue;
 		case FTS_DC:
 			/*
-			 * fts claims a file system cycle
+			 * fts claims a filesystem cycle
 			 */
-			paxwarn(1,"File system cycle found at %s",ftent->fts_path);
+			paxwarn(1,"Filesystem cycle found at %s",ftent->fts_path);
 			continue;
 		case FTS_DNR:
 			syswarn(1, ftent->fts_errno,
@@ -412,7 +412,7 @@ next_file(ARCHD *arcn)
 			continue;
 		case FTS_ERR:
 			syswarn(1, ftent->fts_errno,
-			    "File system traversal error");
+			    "Filesystem traversal error");
 			continue;
 		case FTS_NS:
 		case FTS_NSOK:

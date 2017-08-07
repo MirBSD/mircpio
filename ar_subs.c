@@ -51,7 +51,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.17 2016/10/25 19:27:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.18 2017/08/07 20:10:13 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -226,7 +226,7 @@ extract(void)
 
 		/*
 		 * with -u or -D only extract when the archive member is newer
-		 * than the file with the same name in the file system (no
+		 * than the file with the same name in the filesystem (no
 		 * test of being the same type is required).
 		 * NOTE: this test is done BEFORE name modifications as
 		 * specified by pax. this operation can be confusing to the
@@ -768,7 +768,7 @@ archive(void)
 
 /*
  * copy()
- *	copy files from one part of the file system to another. this does not
+ *	copy files from one part of the filesystem to another. this does not
  *	use any archive storage. The EFFECT OF THE COPY IS THE SAME as if an
  *	archive was written and then extracted in the destination directory
  *	(except the files are forced to be under the destination directory).

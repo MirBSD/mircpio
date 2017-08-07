@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.61 2017/07/20 21:15:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.62 2017/08/07 20:10:15 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -572,7 +572,7 @@ pax_options(int argc, char **argv)
 			break;
 		case 'X':
 			/*
-			 * do not pass over mount points in the file system
+			 * do not pass over mount points in the filesystem
 			 */
 			Xflag = 1;
 			flg |= CXF;
@@ -934,7 +934,7 @@ tar_options(int argc, char **argv)
 			break;
 		case 'X':
 			/*
-			 * do not pass over mount points in the file system
+			 * do not pass over mount points in the filesystem
 			 */
 			Xflag = 1;
 			break;

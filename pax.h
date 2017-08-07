@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_PAX_H
-#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.17 2016/10/25 19:04:26 tg Exp $"
+#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.18 2017/08/07 20:10:17 tg Exp $"
 
 /*
  * BSD PAX global data structures and constants.
@@ -108,7 +108,7 @@ typedef struct {
 	char name[PAXPATHLEN+1];	/* file name */
 	int ln_nlen;			/* link name length */
 	char ln_name[PAXPATHLEN+1];	/* name to link to (if any) */
-	char *org_name;			/* orig name in file system */
+	char *org_name;			/* orig name in filesystem */
 	PATTERN *pat;			/* ptr to pattern match (if any) */
 	struct stat sb;			/* stat buffer see stat(2) */
 	off_t pad;			/* bytes of padding after file xfer */
