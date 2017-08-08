@@ -1,4 +1,4 @@
-/*	$OpenBSD: file_subs.c,v 1.32 +1.46 +1.48 2009/12/22 12:08:30 jasper Exp $	*/
+/*	$OpenBSD: file_subs.c,v 1.32 +1.46 +1.48 +1.50 2009/12/22 12:08:30 jasper Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -531,9 +531,7 @@ badlink:
 			arcn->sb.st_ino = sb.st_ino;
 			add_dir(nm, &(arcn->sb), 0);
 		}
-	}
-
-	if (patime || pmtime)
+	} else if (patime || pmtime)
 		set_ftime(nm, arcn->sb.st_mtime, arcn->sb.st_atime, 0);
 	return(0);
 }
