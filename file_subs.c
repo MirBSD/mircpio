@@ -1,4 +1,4 @@
-/*	$OpenBSD: file_subs.c,v 1.32 +1.46 +1.48 2009/12/22 12:08:30 jasper Exp $	*/
+/*	$OpenBSD: file_subs.c,v 1.32 +1.46 +1.48 +1.50 2009/12/22 12:08:30 jasper Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -57,7 +57,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.24 2017/08/07 20:10:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.25 2017/08/08 16:42:49 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
@@ -634,9 +634,7 @@ node_creat(ARCHD *arcn)
 			arcn->sb.st_ino = sb.st_ino;
 			add_dir(nm, &(arcn->sb), 0);
 		}
-	}
-
-	if (patime || pmtime)
+	} else if (patime || pmtime)
 		set_ftime(nm, arcn->sb.st_mtime, arcn->sb.st_atime, 0);
 	return (0);
 }

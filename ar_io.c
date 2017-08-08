@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_io.c,v 1.39 +1.49 +1.54 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: ar_io.c,v 1.39 +1.45 +1.49 +1.54 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.21 2016/10/25 19:00:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.22 2017/08/08 16:42:49 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -352,14 +352,19 @@ ar_close(void)
 	 * for a quick extract/list, pax frequently exits before the child
 	 * process is done
 	 */
-	if ((act == LIST || act == EXTRACT) && nflag && zpid > 0)
+	if ((act == LIST || act == EXTRACT) && nflag && zpid > 0) {
 		kill(zpid, SIGINT);
+		zpid = -1;
+	}
 
 	(void)close(arfd);
 
 	/* Do not exit before child to ensure data integrity */
-	if (zpid > 0)
+	if (zpid > 0) {
 		waitpid(zpid, &status, 0);
+		if (!WIFEXITED(status) || WEXITSTATUS(status))
+			exit_val = 1;
+	}
 
 	if (vflag && (artyp == ISTAPE)) {
 		(void)fputs("done.\n", listf);
@@ -591,7 +596,7 @@ ar_read(char *buf, int cnt)
 	if (res < 0)
 		syswarn(1, errno, "Failed read on archive volume %d", arvol);
 	else if (!frmt || !frmt->is_uar)
-		paxwarn(0, "End of archive volume %d reached", arvol);
+		paxwarn(1, "End of archive volume %d reached", arvol);
 	return(res);
 }
 
