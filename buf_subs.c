@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf_subs.c,v 1.23 2009/12/22 12:09:36 jasper Exp $	*/
+/*	$OpenBSD: buf_subs.c,v 1.23 +1.30 2009/12/22 12:09:36 jasper Exp $	*/
 /*	$NetBSD: buf_subs.c,v 1.5 1995/03/21 09:07:08 cgd Exp $	*/
 
 /*-
@@ -852,10 +852,13 @@ buf_fill(void)
 
 		/*
 		 * errors require resync, EOF goes to next archive
+		 * but in case we have not determined yet the format,
+		 * this means that we have a very short file, so we
+		 * are done again.
 		 */
 		if (cnt < 0)
 			break;
-		if (ar_next() < 0) {
+		if (frmt == NULL || ar_next() < 0) {
 			fini = 1;
 			return(0);
 		}
