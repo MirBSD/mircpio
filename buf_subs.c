@@ -46,7 +46,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.9 2017/08/08 16:42:49 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.10 2017/10/14 22:03:32 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -393,6 +393,11 @@ rd_skip(off_t skcnt)
 	off_t res;
 	off_t cnt;
 	off_t skipped = 0;
+
+	if (skcnt < 0) {
+		paxwarn(1, "Trying to skip backwards; corrupt archive likely");
+		sig_cleanup(0);
+	}
 
 	/*
 	 * consume what data we have in the buffer. If we have to move forward

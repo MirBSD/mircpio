@@ -2,7 +2,7 @@
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2012, 2015, 2016
+ * Copyright (c) 2012, 2015, 2016, 2017
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -53,10 +53,9 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.24 2017/10/14 21:26:54 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.25 2017/10/14 22:03:31 tg Exp $");
 
 static int gen_init(void);
-static void sig_cleanup(int) __attribute__((__noreturn__));
 
 /*
  * PAX main routines, general globals and some simple start up routines
@@ -309,7 +308,7 @@ main(int argc, char **argv)
  *	never....
  */
 
-static void
+void
 sig_cleanup(int which_sig)
 {
 	/*
@@ -331,6 +330,9 @@ sig_cleanup(int which_sig)
 	/* paxwarn() uses stdio; fake it as well as we can */
 	if (which_sig == SIGXCPU)
 		strlcpy(errbuf, "CPU time limit reached, cleaning up.\n",
+		    sizeof errbuf);
+	else if (!which_sig)
+		strlcpy(errbuf, "Cowardly giving up, trying to clean up.\n",
 		    sizeof errbuf);
 	else
 		strlcpy(errbuf, "Signal caught, cleaning up.\n",
