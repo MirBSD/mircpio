@@ -2,7 +2,7 @@
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2012, 2016
+ * Copyright (c) 2012, 2016, 2017
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.22 2017/08/08 16:42:49 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.23 2017/10/14 00:25:40 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -176,7 +176,9 @@ ar_open(const char *name)
 		return(-1);
 	}
 	if (S_ISDIR(arsb.st_mode)) {
-		paxwarn(0, "Cannot write an archive on top of a directory %s",
+		paxwarn(0, act == LIST || act == EXTRACT ?
+		    "Cannot read an archive from a directory %s" :
+		    "Cannot write an archive on top of a directory %s",
 		    arcname);
 		(void)close(arfd);
 		arfd = -1;
