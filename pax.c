@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.23 2017/08/07 20:10:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.24 2017/10/14 21:26:54 tg Exp $");
 
 static int gen_init(void);
 static void sig_cleanup(int) __attribute__((__noreturn__));
@@ -292,6 +292,7 @@ main(int argc, char **argv)
 	default:
 		/* for ar_io.c etc. */
 		act = LIST;
+		/* FALLTHROUGH */
 	case LIST:
 		list();
 		break;

@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.62 2017/08/07 20:10:15 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.63 2017/10/14 21:26:53 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
@@ -1003,6 +1003,7 @@ tar_options(int argc, char **argv)
 	case EXTRACT:
 		if (to_stdout == 2)
 			to_stdout = 1;
+		/* FALLTHROUGH */
 	case LIST:
 	default:
 		{
