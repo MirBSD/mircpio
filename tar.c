@@ -2,7 +2,7 @@
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2006, 2012, 2016
+ * Copyright (c) 2006, 2012, 2016, 2017
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -49,7 +49,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.18 2017/08/07 20:10:19 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.19 2017/10/21 19:05:43 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -417,7 +417,7 @@ tar_rd(ARCHD *arcn, char *buf)
 	 * have to look at the last character, it may be a '/' and that is used
 	 * to encode this as a directory
 	 */
-	pt = &(arcn->name[arcn->nlen - 1]);
+	pt = arcn->nlen > 0 ? &(arcn->name[arcn->nlen - 1]) : NULL;
 	arcn->pad = 0;
 	arcn->skip = 0;
 	switch (hd->linkflag) {
@@ -470,7 +470,7 @@ tar_rd(ARCHD *arcn, char *buf)
 		 */
 		arcn->ln_name[0] = '\0';
 		arcn->ln_nlen = 0;
-		if (*pt == '/') {
+		if (pt && *pt == '/') {
 			/*
 			 * it is a directory, set the mode for -v printing
 			 */
@@ -494,7 +494,7 @@ tar_rd(ARCHD *arcn, char *buf)
 	/*
 	 * strip off any trailing slash.
 	 */
-	if (*pt == '/') {
+	if (pt && *pt == '/') {
 		*pt = '\0';
 		--arcn->nlen;
 	}
