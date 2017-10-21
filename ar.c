@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2011 mirabilos
+ * Copyright (c) 2011, 2017 mirabilos
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,7 +41,7 @@
 #include "options.h"
 #include "ar.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.8 2016/03/06 13:47:10 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.9 2017/10/21 19:19:38 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -154,7 +154,7 @@ uar_rd(ARCHD *arcn, char *buf)
 	    h->ar_name[2] == 0x2F) {
 		arcn->nlen = uar_atoi32(&(h->ar_name[3]),
 		    sizeof(h->ar_name) - 3);
-		if (arcn->nlen > PAXPATHLEN)
+		if (arcn->nlen < 0 || arcn->nlen > PAXPATHLEN)
 			/*XXX just skip over this file */
 			return (-1);
 		if (rd_wrbuf(arcn->name, arcn->nlen) != arcn->nlen)
