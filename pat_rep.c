@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.12 2017/08/07 20:10:16 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.14 2018/05/09 14:19:56 tg Exp $");
 __IDSTRING(rcsid_pat_rep_h, MIRCPIO_PAT_REP_H);
 
 /*
@@ -548,6 +548,7 @@ fn_match(char *pattern, char *string, char **pend)
 				return (-1);
 			break;
 		case '\\':
+			c = *pattern++;
 		default:
 			if (c != *string++)
 				return (-1);
