@@ -26,7 +26,7 @@ ifeq (0,gmake ignores from here)
  * ser write the following strlcat(3) implementation according to the
  * spec. Both functions below have been optimised according to sugge-
  * stions from Bodo Eggert. mirabilos merged the code with strxfrm(3)
- * (Unicode-only systems) and the wide character variants wcslcat(3),
+ * for UTF-8-only systems and the wide character variants wcslcat(3),
  * wcslcpy(3), and wcsxfrm(3).
  */
 
@@ -39,7 +39,7 @@ ifeq (0,gmake ignores from here)
 #define __RCSID(x)		static const char __rcsid[] = x
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.5 2016/03/06 13:47:13 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.6 2018/08/10 02:53:50 tg Exp $");
 
 #ifdef WIDEC
 #ifdef OUTSIDE_OF_LIBKERN
