@@ -58,7 +58,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.23 2017/10/14 00:25:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.24 2018/10/07 01:10:12 tg Exp $");
 
 /*
  * Routines which deal directly with the archive I/O device/file.
@@ -83,7 +83,7 @@ static int wr_trail = 1;		/* trailer was rewritten in append */
 static int can_unlnk = 0;		/* do we unlink null archives?  */
 const char *arcname;			/* printable name of archive */
 static char *arcname_alloc = NULL;	/* this is so we can free(3) it */
-const char *compress_program;		/* name of compression programme */
+const char *compress_program;		/* name of compression program */
 static pid_t zpid = -1;			/* pid of child process */
 int force_one_volume;			/* 1 if we ignore volume changes */
 
