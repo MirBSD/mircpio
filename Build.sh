@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.4 2018/12/12 04:16:12 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.5 2018/12/12 06:06:07 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1356,6 +1356,7 @@ ac_header vis.h stdlib.h
 # Environment: definitions
 #
 echo '#include <sys/types.h>
+#include <fts.h>
 #include <unistd.h>
 /* check that off_t can represent 2^63-1 correctly, thx FSF */
 #define LARGE_OFF_T ((((off_t)1 << 31) << 31) - 1 + (((off_t)1 << 31) << 31))
