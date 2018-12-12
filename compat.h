@@ -102,7 +102,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.4 2018/12/12 06:53:12 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.5 2018/12/12 08:18:58 tg Exp $");
 #endif
 
 /* arithmetic types: C implementation */
@@ -132,6 +132,10 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #define st_timecpy(x,sbpd,sbps) do {					\
 	(sbpd)->st_ ## x ## tim = (sbps)->st_ ## x ## tim;		\
 } while (/* CONSTCOND */ 0)
+#define st_timexp(x,ts,sbp) do {					\
+	(ts)->tv_sec = (sbp)->st_ ## x ## tim.tv_sec;			\
+	(ts)->tv_nsec = (sbp)->st_ ## x ## tim.tv_nsec;			\
+} while (/* CONSTCOND */ 0)
 #elif HAVE_ST_MTIMENSEC
 #define st_timecmp(x,sbpa,sbpb,op) ( \
 	((sbpa)->st_ ## x ## time == (sbpb)->st_ ## x ## time) ? \
@@ -142,11 +146,19 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 	(sbpd)->st_ ## x ## time = (sbps)->st_ ## x ## time;		\
 	(sbpd)->st_ ## x ## timensec = (sbps)->st_ ## x ## timensec;	\
 } while (/* CONSTCOND */ 0)
+#define st_timexp(x,ts,sbp) do {					\
+	(ts)->tv_sec = (sbp)->st_ ## x ## time;				\
+	(ts)->tv_nsec = (sbp)->st_ ## x ## timensec;			\
+} while (/* CONSTCOND */ 0)
 #else
 #define st_timecmp(x,sbpa,sbpb,op) \
 	((sbpa)->st_ ## x ## time op (sbpb)->st_ ## x ## time)
 #define st_timecpy(x,sbpd,sbps) do {					\
 	(sbpd)->st_ ## x ## time = (sbps)->st_ ## x ## time;		\
+#define st_timexp(x,ts,sbp) do {					\
+	(ts)->tv_sec = (sbp)->st_ ## x ## time;				\
+	(ts)->tv_nsec = 0;						\
+} while (/* CONSTCOND */ 0)
 } while (/* CONSTCOND */ 0)
 #endif
 

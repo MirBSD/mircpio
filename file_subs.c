@@ -799,58 +799,93 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
  */
 
 void
-set_ftime(const char *fnm, const struct stat *sbp, int frc)
+set_ftime(const char *fnm, const struct stat *sbp, int frc,
+    int issymlink MKSH_A_UNUSED)
 {
-	struct timespec tv[2];
+#if HAVE_UTIMENSAT
+	struct timespec ts[2];
+#else
+	struct {
+		time_t tv_sec;
+		long tv_nsec;
+	} ts[2];
+#if HAVE_UTIMES
+	struct timeval tv[2];
+#else
+	struct utimbuf u;
+#endif
+	struct stat sb;
+#endif
+	int rv;
 
-	tv[0] = sbp->st_atim;
-	tv[1] = sbp->st_mtim;
+	/* pre-initialise values to set */
+	st_timexp(a, &ts[0], sbp);
+	st_timexp(m, &ts[1], sbp);
 
-	if (!frc) {
+	if (!frc && (!patime || !pmtime)) {
 		/*
-		 * if we are not forcing, only set those times the user wants
-		 * set.
+		 * If we are not forcing, only set those times the user
+		 * wants set. We get the current values of the times if
+		 * we need them (utimensat does not).
 		 */
+#if HAVE_UTIMENSAT
 		if (!patime)
-			tv[0].tv_nsec = UTIME_OMIT;
+			ts[0].tv_nsec = UTIME_OMIT;
 		if (!pmtime)
-			tv[1].tv_nsec = UTIME_OMIT;
+			ts[1].tv_nsec = UTIME_OMIT;
+#else
+		if (lstat(fnm, &sb) == 0) {
+			if (!patime)
+				st_timexp(a, &ts[0], &sb);
+			if (!pmtime)
+				st_timexp(m, &ts[1], &sb);
+		} else
+			syswarn(0, errno, "Unable to stat %s", fnm);
+#endif
 	}
 
-	/*
-	 * set the times
-	 */
-	if (utimensat(AT_FDCWD, fnm, tv, AT_SYMLINK_NOFOLLOW) < 0)
+	/* set the times */
+#if HAVE_UTIMENSAT
+	rv = utimensat(AT_FDCWD, fnm, tv, AT_SYMLINK_NOFOLLOW);
+#elif HAVE_UTIMES
+	tv[0].tv_sec = ts[0].tv_sec;
+	tv[0].tv_usec = ts[0].tv_nsec / 1000;
+	tv[1].tv_sec = ts[1].tv_sec;
+	tv[1].tv_usec = ts[1].tv_nsec / 1000;
+	rv = (issymlink ? lutimes : utimes)(fnm, tv);
+#else
+	if (issymlink)
+		/* no can do */
+		return;
+	u.actime = ts[0].tv_sec;
+	u.modtime = ts[1].tv_sec;
+	rv = utime(fnm, &u);
+#endif
+
+	if (rv < 0)
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
 }
 
 #ifdef PAX_FSET_FTIME
-void
+static void
 fset_ftime(const char *fnm, int fd, const struct stat *sbp, int frc)
 {
 #if HAVE_FUTIMENS
 	struct timespec ts[2];
 #else
+	struct {
+		time_t tv_sec;
+		long tv_nsec;
+	} ts[2];
 	struct timeval tv[2];
 	struct stat sb;
 #endif
+	int rv;
 
 	/* pre-initialise values to set */
-#if HAVE_FUTIMENS
-	ts[0] = sbp->st_atim;
-	ts[1] = sbp->st_mtim;
-#else
-	tv[0].tv_sec = sbp->st_atime;
-	tv[1].tv_sec = sbp->st_mtime;
-#if HAVE_ST_MTIMENSEC
-	tv[0].tv_usec = sbp->st_atimensec / 1000L;
-	tv[1].tv_usec = sbp->st_mtimensec / 1000L;
-#else
-	tv[0].tv_usec = 0;
-	tv[1].tv_usec = 0;
-#endif
-#endif
+	st_timexp(a, &ts[0], sbp);
+	st_timexp(m, &ts[1], sbp);
 
 	if (!frc && (!patime || !pmtime)) {
 		/*
@@ -865,28 +900,26 @@ fset_ftime(const char *fnm, int fd, const struct stat *sbp, int frc)
 			ts[1].tv_nsec = UTIME_OMIT;
 #else
 		if (fstat(fd, &sb) == 0) {
-			if (!patime) {
-				tv[0].tv_sec = sb.st_atime;
-#if HAVE_ST_MTIMENSEC
-				tv[0].tv_usec = sb.st_atimensec / 1000L;
-#endif
-			}
-			if (!pmtime) {
-				tv[1].tv_sec = sb.st_mtime;
-#if HAVE_ST_MTIMENSEC
-				tv[1].tv_usec = sb.st_mtimensec / 1000L;
-#endif
-			}
+			if (!patime)
+				st_timexp(a, &ts[0], &sb);
+			if (!pmtime)
+				st_timexp(m, &ts[1], &sb);
 		} else
 			syswarn(0, errno, "Unable to stat %s", fnm);
 #endif
+	}
 
 	/* set the times */
 #if HAVE_FUTIMENS
-	if (futimens(fd, ts) < 0)
+	rv = futimens(fd, ts);
 #else
-	if (futimes(fd, tv) < 0)
+	tv[0].tv_sec = ts[0].tv_sec;
+	tv[0].tv_usec = ts[0].tv_nsec / 1000;
+	tv[1].tv_sec = ts[1].tv_sec;
+	tv[1].tv_usec = ts[1].tv_nsec / 1000;
+	rv = futimes(fd, tv);
 #endif
+	if (rv < 0)
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
 }
