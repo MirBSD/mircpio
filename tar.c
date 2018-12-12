@@ -670,6 +670,7 @@ tar_wr(ARCHD *arcn)
 	paxwarn(1, "tar header field is too small for %s", arcn->org_name);
 	return(1);
 }
+#endif
 
 /*
  * Routines for POSIX ustar
