@@ -1,6 +1,8 @@
 .\"	$OpenBSD: pax.1,v 1.74 2018/07/23 19:02:49 kn Exp $
 .\"	$NetBSD: pax.1,v 1.3 1995/03/21 09:07:37 cgd Exp $
 .\"
+.\" Copyright (c) 2005, 2009, 2011, 2012, 2014, 2016, 2017, 2018
+.\"	mirabilos <m@mirbsd.org>
 .\" Copyright (c) 1992 Keith Muller.
 .\" Copyright (c) 1992, 1993
 .\"	The Regents of the University of California.  All rights reserved.
@@ -34,15 +36,172 @@
 .\"
 .\"	@(#)pax.1	8.4 (Berkeley) 4/18/94
 .\"
+.\"-
+.\" Try to make GNU groff and AT&T nroff more compatible
+.\" * ` generates ‘ in gnroff, so use \`
+.\" * ' generates ’ in gnroff, \' generates ´, so use \*(aq
+.\" * - generates ‐ in gnroff, \- generates −, so .tr it to -
+.\"   thus use - for hyphens and \- for minus signs and option dashes
+.\" * ~ is size-reduced and placed atop in groff, so use \*(TI
+.\" * ^ is size-reduced and placed atop in groff, so use \*(ha
+.\" * \(en does not work in nroff, so use \*(en
+.\" * <>| are problematic, so redefine and use \*(Lt\*(Gt\*(Ba
+.\" Also make sure to use \& *before* a punctuation char that is to not
+.\" be interpreted as punctuation, and especially with two-letter words
+.\" but also (after) a period that does not end a sentence (“e.g.\&”).
+.\" The section after the "doc" macropackage has been loaded contains
+.\" additional code to convene between the UCB mdoc macropackage (and
+.\" its variant as BSD mdoc in groff) and the GNU mdoc macropackage.
+.\"
+.ie \n(.g \{\
+.	if \*[.T]ascii .tr \-\N'45'
+.	if \*[.T]latin1 .tr \-\N'45'
+.	if \*[.T]utf8 .tr \-\N'45'
+.	ds <= \[<=]
+.	ds >= \[>=]
+.	ds Rq \[rq]
+.	ds Lq \[lq]
+.	ds sL \(aq
+.	ds sR \(aq
+.	if \*[.T]utf8 .ds sL `
+.	if \*[.T]ps .ds sL `
+.	if \*[.T]utf8 .ds sR '
+.	if \*[.T]ps .ds sR '
+.	ds aq \(aq
+.	ds TI \(ti
+.	ds ha \(ha
+.	ds en \(en
+.\}
+.el \{\
+.	ds aq '
+.	ds TI ~
+.	ds ha ^
+.	ds en \(em
+.\}
+.\"
+.\" Implement .Dd with the Mdocdate RCS keyword
+.\"
+.rn Dd xD
+.de Dd
+.ie \\$1$Mdocdate: \{\
+.	xD \\$2 \\$3, \\$4
+.\}
+.el .xD \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+..
+.\"
+.\" .Dd must come before definition of .Mx, because when called
+.\" with -mandoc, it might implement .Mx itself, but we want to
+.\" use our own definition. And .Dd must come *first*, always.
+.\"
 .Dd $Mdocdate: December 12 2018 $
-.Dt PAX 1
-.Os
+.\"
+.\" Check which macro package we use, and do other -mdoc setup.
+.\"
+.ie \n(.g \{\
+.	if \*[.T]utf8 .tr \[la]\*(Lt
+.	if \*[.T]utf8 .tr \[ra]\*(Gt
+.	ie d volume-ds-1 .ds tT gnu
+.	el .ds tT bsd
+.\}
+.el .ds tT ucb
+.\"
+.\" Implement .Mx (MirBSD)
+.\"
+.ie "\*(tT"gnu" \{\
+.	eo
+.	de Mx
+.	nr curr-font \n[.f]
+.	nr curr-size \n[.ps]
+.	ds str-Mx \f[\n[curr-font]]\s[\n[curr-size]u]
+.	ds str-Mx1 \*[Tn-font-size]\%MirOS\*[str-Mx]
+.	if !\n[arg-limit] \
+.	if \n[.$] \{\
+.	ds macro-name Mx
+.	parse-args \$@
+.	\}
+.	if (\n[arg-limit] > \n[arg-ptr]) \{\
+.	nr arg-ptr +1
+.	ie (\n[type\n[arg-ptr]] == 2) \
+.	as str-Mx1 \~\*[arg\n[arg-ptr]]
+.	el \
+.	nr arg-ptr -1
+.	\}
+.	ds arg\n[arg-ptr] "\*[str-Mx1]
+.	nr type\n[arg-ptr] 2
+.	ds space\n[arg-ptr] "\*[space]
+.	nr num-args (\n[arg-limit] - \n[arg-ptr])
+.	nr arg-limit \n[arg-ptr]
+.	if \n[num-args] \
+.	parse-space-vector
+.	print-recursive
+..
+.	ec
+.	ds sP \s0
+.	ds tN \*[Tn-font-size]
+.\}
+.el \{\
+.	de Mx
+.	nr cF \\n(.f
+.	nr cZ \\n(.s
+.	ds aa \&\f\\n(cF\s\\n(cZ
+.	if \\n(aC==0 \{\
+.		ie \\n(.$==0 \&MirOS\\*(aa
+.		el .aV \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9
+.	\}
+.	if \\n(aC>\\n(aP \{\
+.		nr aP \\n(aP+1
+.		ie \\n(C\\n(aP==2 \{\
+.			as b1 \&MirOS\ #\&\\*(A\\n(aP\\*(aa
+.			ie \\n(aC>\\n(aP \{\
+.				nr aP \\n(aP+1
+.				nR
+.			\}
+.			el .aZ
+.		\}
+.		el \{\
+.			as b1 \&MirOS\\*(aa
+.			nR
+.		\}
+.	\}
+..
+.\}
+.\"-
+.ie \ng==1 \{\
+.	ds nc mircpio
+.	ds np mirpax
+.	ds nt mirtar
+.	ds nm mirpax
+.	Dt MIRPAX 1
+.\}
+.el .ie \ng==2 \{\
+.	ds nc paxcpio
+.	ds np pax
+.	ds nt paxtar
+.	ds nm pax
+.	Dt PAX 1
+.\}
+.el \{\
+.	ds nc cpio
+.	ds np pax
+.	ds nt tar
+.	ds nm pax
+.	Dt PAX 1
+.\}
+.\"-
+.Os MirBSD
 .Sh NAME
+.ie \ng==1 \{\
+.Nm mirpax
+.Nd read and write file archives and copy directory hierarchies
+.\}
+.el \{\
 .Nm pax
 .Nd read and write file archives and copy directory hierarchies
+.\}
 .Sh SYNOPSIS
-.Nm pax
-.Op Fl 0cdjnOvz
+.Bk -words
+.Nm \*(nm
+.Op Fl 0cdJjnOvz
 .Op Fl E Ar limit
 .Op Fl f Ar archive
 .Op Fl G Ar group
@@ -50,34 +209,36 @@
 .Op Fl T Ar range
 .Op Fl U Ar user
 .Op Ar pattern ...
-.Nm pax
+.Nm \*(nm
 .Fl r
-.Op Fl 0cDdijknOuvYZz
+.Op Fl 0cDdiJjknOuvYZz
 .Op Fl E Ar limit
 .Op Fl f Ar archive
 .Op Fl G Ar group
+.Op Fl M Ar flag
 .Op Fl o Ar options
 .Op Fl p Ar string
 .Op Fl s Ar replstr
 .Op Fl T Ar range
 .Op Fl U Ar user
 .Op Ar pattern ...
-.Nm pax
+.Nm \*(nm
 .Fl w
-.Op Fl 0adHijLOPtuvXz
+.Op Fl 0adHiJjLOPtuvXz
 .Op Fl B Ar bytes
 .Op Fl b Ar blocksize
 .Op Fl f Ar archive
 .Op Fl G Ar group
+.Op Fl M Ar flag
 .Op Fl o Ar options
 .Op Fl s Ar replstr
 .Op Fl T Ar range
 .Op Fl U Ar user
 .Op Fl x Ar format
 .Op Ar
-.Nm pax
+.Nm \*(nm
 .Fl rw
-.Op Fl 0DdHijkLlnOPtuvXYZ
+.Op Fl 0DdHiJjkLlnOPtuvXYZ
 .Op Fl G Ar group
 .Op Fl p Ar string
 .Op Fl s Ar replstr
@@ -85,6 +246,7 @@
 .Op Fl U Ar user
 .Op Ar
 .Ar directory
+.Ek
 .Sh DESCRIPTION
 .Nm
 will read, write, and list the members of an archive file
@@ -247,7 +409,13 @@ and to the pathnames written to standard output in list mode.
 This option is expected to be used in concert with the
 .Fl print0
 function in
-.Xr find 1
+.Xr find 1 ,
+the
+.Fl d Ar \*(aq\*(aq
+option to the
+.Ic read
+built-in utility of
+.Xr mksh 1
 or the
 .Fl 0
 flag in
@@ -305,7 +473,8 @@ bytes per write to the archive file.
 The
 .Ar blocksize
 must be a multiple of 512 bytes with a maximum of 64512 bytes.
-Archive block sizes larger than 32256 bytes violate the POSIX
+Archive block sizes larger than 32256 bytes violate the
+.Tn POSIX
 standard and will not be portable to all systems.
 A
 .Ar blocksize
@@ -314,7 +483,9 @@ can end with
 or
 .Sq Li b
 to specify multiplication by 1024 (1K) or 512, respectively.
-A pair of blocksizes can be separated by
+A pair of
+.Ar blocksize Ns s
+can be separated by
 .Sq Li x
 to indicate a product.
 A specific archive device may impose additional restrictions on the size
@@ -413,9 +584,14 @@ will immediately exit with a non-zero exit status if
 is encountered when reading a response or if
 .Pa /dev/tty
 cannot be opened for reading and writing.
+.It Fl J
+Use the xz utility to compress (decompress) the archive
+while writing (reading).
+Incompatible with
+.Fl a .
 .It Fl j
-Use bzip2 to compress (decompress) the archive while writing (reading).
-The bzip2 utility must be installed separately.
+Use the bzip2 utility to compress (decompress) the archive
+while writing (reading).
 Incompatible with
 .Fl a .
 .It Fl k
@@ -430,6 +606,70 @@ In copy mode
 .Pq Fl r Fl w ,
 hard links are made between the source and destination file hierarchies
 whenever possible.
+.It Fl M Ar flag
+Configure the archive normaliser.
+.Ar flag
+is either a numeric value compatible to
+.Xr strtonum 3
+which is directly stored in the flags word, or
+one of the following values, optionally prefixed with
+.Dq no\-
+to turn them off:
+.Pp
+.Bl -tag -width xxxxxx -compact
+.It Ar inodes
+0x0001: Serialise inodes, zero device info.
+.br
+(cpio, sv4cpio, sv4crc)
+.It Ar links
+0x0002: Store content of hard links only once.
+.br
+(cpio, sv4cpio, sv4crc)
+.It Ar mtime
+0x0004: Zero out the file modification time.
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
+.It Ar uidgid
+0x0008: Set owner to 0:0
+.Pq Li root Ns : Ns Li wheel .
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
+.It Ar verb
+0x0010: Debug this option.
+.It Ar debug
+0x0020: Debug file header storage.
+.It Ar lncp
+0x0040: Extract hard links by copy if link fails.
+.It Ar numid
+0x0080: Use only numeric uid and gid values.
+.br
+(ustar)
+.It Ar gslash
+0x0100: Append a slash after directory names.
+.br
+(ustar)
+.It Ar set
+0x0003: Keep ownership and mtime intact.
+.It Ar dist
+0x008B: Clean everything except mtime.
+.It Ar norm
+0x008F: Clean everything.
+.It Ar root
+0x0089: Clean owner and device information.
+.El
+.Pp
+When creating an archive and verbosely listing output, these
+normalisation operations are not reflected in the output,
+because they are made only after the output has been shown.
+.Pp
+This option is only implemented for the ar, cpio, sv4cpio,
+sv4crc, and ustar file format writing routines.
+.Pp
+TODO: The
+.Nm \*(nm
+frontend should be using the
+.Fl o
+option for handling this feature instead.
 .It Fl n
 Select the first archive member that matches each
 .Ar pattern
@@ -622,7 +862,7 @@ The optional trailing
 will cause the final result of a successful substitution to be written to
 standard error in the following format:
 .Pp
-.D1 Em original-pathname No >> Em new-pathname
+.D1 Em original-pathname No \*(Gt\*(Gt Em new-pathname
 .Pp
 File or archive member names that substitute to the empty string
 are not selected and will be skipped.
@@ -632,9 +872,9 @@ time falling within the specified time range.
 The range has the format:
 .Sm off
 .Bd -filled -offset indent
-.Op Ar from_date
-.Op \&, Ar to_date
-.Op / Oo Cm c Oc Op Cm m
+.Oo Ar from_date Oc Oo ,
+.Ar to_date Oc Oo /
+.Oo Cm c Oc Op Cm m Oc
 .Ed
 .Sm on
 .Pp
@@ -724,7 +964,7 @@ The
 .Ar SS
 field may be added independently of the other fields.
 Time ranges are relative to the current time, so
-.Ic -T 1234/cm
+.Ic \-T 1234/cm
 would select all files with a modification or inode change time
 of 12:34 PM today or later.
 Multiple
@@ -734,7 +974,7 @@ time range can be supplied and checking stops with the first match.
 Reset the access times of any file or directory read or accessed by
 .Nm
 to be the same as they were before being read or accessed by
-.Nm pax .
+.Nm \*(nm .
 .It Fl U Ar user
 Select a file based on its
 .Ar user
@@ -770,14 +1010,14 @@ option.
 For pathnames representing a hard link to a previous member of the archive,
 the output has the format:
 .Pp
-.Dl Em ls -l listing No == Em link-name
+.Dl Em ls \-l listing No == Em link-name
 .Pp
 For pathnames representing a symbolic link, the output has the format:
 .Pp
-.Dl Em ls -l listing No -> Em link-name
+.Dl Em ls \-l listing No -\*(Gt Em link-name
 .Pp
 Where
-.Em ls -l listing
+.Em ls \-l listing
 is the output format specified by the
 .Xr ls 1
 utility when used with the
@@ -814,6 +1054,14 @@ Specify the output archive format, with the default format being
 .Nm
 currently supports the following formats:
 .Bl -tag -width "sv4cpio"
+.It Cm ar
+The Unix Archiver library format.
+This format matches APT repositories and the BSD
+.Xr ar 1
+specification, not GNU binutils (which can however read them) or SYSV systems.
+See
+.Xr ar 5
+on some operating systems for more information.
 .It Cm bcpio
 The old binary cpio format.
 The default blocksize for this format is 5120 bytes.
@@ -888,9 +1136,9 @@ This option is the same as the
 option, except that the modification time is checked using the
 pathname created after all the file name modifications have completed.
 .It Fl z
-Use
+Use the
 .Xr gzip 1
-to compress (decompress) the archive while writing (reading).
+utility to compress (decompress) the archive while writing (reading).
 Incompatible with
 .Fl a .
 .El
@@ -898,7 +1146,6 @@ Incompatible with
 The options that operate on the names of files or archive members
 .Po Fl c ,
 .Fl i ,
-.Fl j ,
 .Fl n ,
 .Fl s ,
 .Fl u ,
@@ -986,12 +1233,12 @@ Path in which to store temporary files.
 Copy the contents of the current directory to the device
 .Pa /dev/rst0 :
 .Pp
-.Dl $ pax -w -f /dev/rst0 \&.
+.Dl $ \*(nm \-w \-f /dev/rst0 \&.
 .Pp
 Give the verbose table of contents for an archive stored in
 .Pa filename :
 .Pp
-.Dl $ pax -v -f filename
+.Dl $ \*(nm \-v \-f filename
 .Pp
 This sequence of commands will copy the entire
 .Pa olddir
@@ -1000,7 +1247,7 @@ directory hierarchy to
 .Bd -literal -offset indent
 $ mkdir newdir
 $ cd olddir
-$ pax -rw . ../newdir
+$ \*(nm \-rw . ../newdir
 .Ed
 .Pp
 Extract files from the archive
@@ -1010,13 +1257,13 @@ Files rooted in
 are extracted relative to the current working directory;
 all other files are extracted to their unmodified path.
 .Pp
-.Dl $ pax -r -s ',^/usr/,,' -f a.pax
+.Dl $ \*(nm \-r \-s \*(aq,\*(ha/usr/,,\*(aq \-f a.pax
 .Pp
 This can be used to interactively select the files to copy from the
 current directory to
 .Pa dest_dir :
 .Pp
-.Dl $ pax -rw -i \&. dest_dir
+.Dl $ \*(nm \-rw \-i \&. dest_dir
 .Pp
 Extract all files from the archive
 .Pa a.pax
@@ -1026,7 +1273,7 @@ with group
 .Em bin
 and preserve all file permissions:
 .Pp
-.Dl $ pax -r -pe -U root -G bin -f a.pax
+.Dl "$ \*(nm \-r \-pe \-U root \-G bin \-f a.pax"
 .Pp
 Update (and list) only those files in the destination directory
 .Pa /backup
@@ -1034,7 +1281,7 @@ which are older (less recent inode change or file modification times) than
 files with the same name found in the source file tree
 .Pa home :
 .Pp
-.Dl $ pax -r -w -v -Y -Z home /backup
+.Dl "$ \*(nm \-r \-w \-v \-Y \-Z home /backup"
 .Sh DIAGNOSTICS
 Whenever
 .Nm
@@ -1047,6 +1294,9 @@ and a non-zero exit status will be returned, but processing will continue.
 In the case where
 .Nm
 cannot create a link to a file,
+unless
+.Fl M Ar lncp
+is given,
 .Nm
 will not create a second copy of the file.
 .Pp
@@ -1071,26 +1321,41 @@ and when
 .Nm
 completes it will exit with a non-zero exit status.
 .Sh SEE ALSO
+.Xr ar 1 ,
 .Xr cpio 1 ,
+.if \ng==1 \{\
+.Xr deb 5 ,
+.Xr mircpio 1 ,
+.Xr mirtar 1 ,
+.Xr pax 1 ,
+.\}
+.if \ng==2 \{\
+.Xr deb 5 ,
+.Xr paxcpio 1 ,
+.Xr paxtar 1 ,
+.\}
 .Xr tar 1
 .Sh STANDARDS
 The
 .Nm
-utility is compliant with the
-.St -p1003.1-2008
+utility is mostly compliant with an older version of the IEEE Std 1003.1
+.Pq Dq Tn POSIX
 specification,
-except that the
+except for the known
+.Sx BUGS
+listed below, and that the
 .Cm pax
 archive format and the
 .Cm listopt
 keyword are unsupported.
 .Pp
 The flags
-.Op Fl 0BDEGjOPTUYZz ,
+.Fl 0BDEGHJjLMOPTUYZz ,
 the archive formats
+.Cm ar ,
 .Cm bcpio ,
 .Cm sv4cpio ,
-.Cm sv4crc ,
+.Cm sv4crc
 and
 .Cm tar ,
 the
@@ -1099,7 +1364,7 @@ and
 .Cm x
 additions to the
 .Fl b
-flag,
+flag
 and the flawed archive handling during list and read operations
 are extensions to that specification.
 .Sh HISTORY
@@ -1108,5 +1373,16 @@ A
 utility appeared in
 .Bx 4.4 .
 .Sh AUTHORS
+.An -nosplit
 .An Keith Muller
 at the University of California, San Diego.
+.Mx
+extensions by
+.An mirabilos Aq m@mirbsd.org .
+.Sh BUGS
+The pattern matching does not match either
+.Tn POSIX
+or this documentation completely.
+See also
+.Sx STANDARDS
+above.

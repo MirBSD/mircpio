@@ -2,6 +2,8 @@
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
+ * Copyright (c) 2012, 2015, 2016, 2017
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -70,7 +72,7 @@ static int gen_init(void);
 /*
  * Variables that can be accessed by any routine within pax
  */
-int	act = DEFOP;		/* read/write/append/copy */
+int	act = ERROR;		/* read/write/append/copy */
 FSUB	*frmt = NULL;		/* archive format type */
 int	cflag;			/* match all EXCEPT pattern/file */
 int	cwdfd;			/* starting cwd */
@@ -81,6 +83,7 @@ int	lflag;			/* use hard links when possible */
 int	nflag;			/* select first archive member match */
 int	tflag;			/* restore access time after read */
 int	uflag;			/* ignore older modification time files */
+int	Vflag = 0;		/* print a dot for each file processed */
 int	vflag;			/* produce verbose output */
 int	Dflag;			/* same as uflag except inode change time */
 int	Hflag;			/* follow command line symlinks (write only) */
@@ -89,7 +92,7 @@ int	Xflag;			/* archive files with same device id only */
 int	Yflag;			/* same as Dflag except after name mode */
 int	Zflag;			/* same as uflag except after name mode */
 int	zeroflag;		/* use \0 as pathname terminator */
-int	vfpart;			/* is partial verbose output in progress */
+int	vfpart = 0;		/* is partial verbose output in progress */
 int	patime = 1;		/* preserve file access time */
 int	pmtime = 1;		/* preserve file modification times */
 int	nodirs;			/* do not create directories as needed */
@@ -99,10 +102,10 @@ int	rmleadslash = 0;	/* remove leading '/' from pathnames */
 int	exit_val;		/* exit value */
 int	docrc;			/* check/create file crc */
 char	*dirptr;		/* destination dir in a copy */
-char	*argv0;			/* root of argv[0] */
+const char *argv0;		/* root of argv[0] */
 enum op_mode op_mode;		/* what program are we acting as? */
 sigset_t s_mask;		/* signal mask for cleanup critical sect */
-FILE	*listf = stderr;	/* file pointer to print file list to */
+FILE	*listf;			/* fp to print file list to (default stderr) */
 int	listfd = STDERR_FILENO;	/* fd matching listf, for sighandler output */
 char	*tempfile;		/* tempfile to use for mkstemp(3) */
 char	*tempbase;		/* basename of tempfile to use for mkstemp(3) */
@@ -231,8 +234,11 @@ time_t	 now;			/* time of program start */
 int
 main(int argc, char **argv)
 {
-	char *tmpdir;
+	const char *tmpdir;
 	size_t tdlen;
+
+	/* may not be a constant, thus initialising early */
+	listf = stderr;
 
 	now = time(NULL);
 
@@ -297,6 +303,13 @@ main(int argc, char **argv)
 	}
 #endif
 
+	/* make list fd independent and line-buffered */
+	if (!(listf = fdopen((listfd = dup(fileno(listf))), "wb"))) {
+		syswarn(1, errno, "Can't open list file descriptor");
+		return (exit_val);
+	}
+	setlinebuf(listf);
+
 	/*
 	 * select a primary operation mode
 	 */
@@ -308,14 +321,17 @@ main(int argc, char **argv)
 		archive();
 		break;
 	case APPND:
-		if (gzip_program != NULL)
-			errx(1, "cannot gzip while appending");
+		if (compress_program != NULL)
+			errx(1, "cannot compress while appending");
 		append();
 		break;
 	case COPY:
 		copy();
 		break;
 	default:
+		/* for ar_io.c etc. */
+		act = LIST;
+		/* FALLTHROUGH */
 	case LIST:
 		list();
 		break;
@@ -336,13 +352,17 @@ void
 sig_cleanup(int which_sig)
 {
 	/*
-	 * restore modes and times for any dirs we may have created
-	 * or any dirs we may have read.
+	 * Restore modes and times for any dirs we may have created
+	 * or any dirs we may have read. Set vflag and vfpart so the
+	 * user will clearly see the message on a line by itself.
 	 */
+	vflag = vfpart = 1;
 
 	/* paxwarn() uses stdio; fake it as well as we can */
 	if (which_sig == SIGXCPU)
 		dprintf(STDERR_FILENO, "\nCPU time limit reached, cleaning up.\n");
+	else if (!which_sig)
+		dprintf(STDERR_FILENO, "\nCowardly giving up, trying to clean up.\n");
 	else
 		dprintf(STDERR_FILENO, "\nSignal caught, cleaning up.\n");
 
@@ -414,15 +434,17 @@ gen_init(void)
 	/*
 	 * not really needed, but doesn't hurt
 	 */
+#ifdef RLIMIT_RSS
 	if (getrlimit(RLIMIT_RSS , &reslimit) == 0){
 		reslimit.rlim_cur = reslimit.rlim_max;
 		(void)setrlimit(RLIMIT_RSS , &reslimit);
 	}
+#endif
 
 	/*
 	 * signal handling to reset stored directory times and modes. Since
 	 * we deal with broken pipes via failed writes we ignore it. We also
-	 * deal with any file size limit through failed writes. Cpu time
+	 * deal with any file size limit through failed writes. CPU time
 	 * limits are caught and a cleanup is forced.
 	 */
 	if ((sigemptyset(&s_mask) < 0) || (sigaddset(&s_mask, SIGTERM) < 0) ||
@@ -452,9 +474,9 @@ gen_init(void)
 	if ((sigaction(SIGPIPE, &n_hand, NULL) < 0) ||
 	    (sigaction(SIGXFSZ, &n_hand, NULL) < 0))
 		goto out;
-	return(0);
+	return (0);
 
-    out:
+ out:
 	syswarn(1, errno, "Unable to set up signal handler");
-	return(-1);
+	return (-1);
 }

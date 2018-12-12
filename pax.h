@@ -2,6 +2,8 @@
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2006, 2009, 2011, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -39,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.9 2018/12/12 10:41:27 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.10 2018/12/12 12:43:15 tg Exp $");
 #endif
 
 /*
