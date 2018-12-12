@@ -43,9 +43,10 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.11 2018/12/12 15:33:05 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.12 2018/12/12 15:38:31 tg Exp $");
 #endif
 
+#ifndef PAX_JUST_THE_WARNINGS
 /*
  * ar.c
  */
@@ -361,6 +362,7 @@ void tty_prnt(const char *, ...)
     MKSH_A_NONNULL(1)
     MKSH_A_FORMAT(__printf__, 1, 2);
 char *tty_rd(void);
+#endif
 void paxwarn(int, const char *, ...)
     MKSH_A_NONNULL(2)
     MKSH_A_FORMAT(__printf__, 2, 3);

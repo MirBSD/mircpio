@@ -318,7 +318,7 @@ extract(void)
 			 */
 			if (!to_stdout) {
 				if (PAX_IS_HARDLINK(arcn->type)) {
-					res = lnk_creat(arcn);
+					res = lnk_creat(arcn, &fd);
 					if (fd != -1)
 						goto extdata;
 				}else

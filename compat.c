@@ -30,13 +30,15 @@
 #include <unistd.h>
 
 #include "compat.h"
+#define PAX_JUST_THE_WARNINGS
+#include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.5 2018/12/12 15:00:24 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.6 2018/12/12 15:38:31 tg Exp $");
 
 int
 binopen3(int features, const char *path, int flags, mode_t mode)
 {
-	int rv;
+	int fd;
 
 #ifdef O_BINARY
 	flags |= O_BINARY;
@@ -52,7 +54,7 @@ binopen3(int features, const char *path, int flags, mode_t mode)
 		flags |= O_DIRECTORY;
 #endif
 
-	if ((rv = (features & BO__TWO) ? open(path, flags) :
+	if ((fd = (features & BO__TWO) ? open(path, flags) :
 	    open(path, flags, mode)) != -1) {
 #ifdef __OS2__
 		setmode(fd, O_BINARY);
@@ -62,7 +64,7 @@ binopen3(int features, const char *path, int flags, mode_t mode)
 			syswarn(0, errno,
 			    "Failed to set the close-on-exec flag");
 	}
-	return (rv);
+	return (fd);
 }
 
 ssize_t
