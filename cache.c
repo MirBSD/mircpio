@@ -2,6 +2,7 @@
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2018 mirabilos
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -54,7 +55,7 @@
  * Constants and data structures used to implement group and password file
  * caches. Traditional passwd/group cache routines perform quite poorly with
  * archives. The chances of hitting a valid lookup with an archive is quite a
- * bit worse than with files already resident on the file system. These misses
+ * bit worse than with files already resident on the filesystem. These misses
  * create a MAJOR performance cost. To address this problem, these routines
  * cache both hits and misses.
  *
@@ -204,7 +205,7 @@ grptb_start(void)
  *	Pointer to stored name (or a empty string)
  */
 
-char *
+const char *
 name_uid(uid_t uid, int frc)
 {
 	struct passwd *pw;
@@ -230,7 +231,11 @@ name_uid(uid_t uid, int frc)
 	 * No entry for this uid, we will add it
 	 */
 	if (!pwopn) {
+#if HAVE_SETPGENT
 		setpassent(1);
+#else
+		setpwent();
+#endif
 		++pwopn;
 	}
 	if (ptr == NULL)
@@ -270,7 +275,7 @@ name_uid(uid_t uid, int frc)
  *	Pointer to stored name (or a empty string)
  */
 
-char *
+const char *
 name_gid(gid_t gid, int frc)
 {
 	struct group *gr;
@@ -296,7 +301,11 @@ name_gid(gid_t gid, int frc)
 	 * No entry for this gid, we will add it
 	 */
 	if (!gropn) {
+#if HAVE_SETPGENT
 		setgroupent(1);
+#else
+		setgrent();
+#endif
 		++gropn;
 	}
 	if (ptr == NULL)
@@ -336,7 +345,7 @@ name_gid(gid_t gid, int frc)
  */
 
 int
-uid_name(char *name, uid_t *uid)
+uid_name(const char *name, uid_t *uid)
 {
 	struct passwd *pw;
 	UIDC *ptr;
@@ -363,7 +372,11 @@ uid_name(char *name, uid_t *uid)
 	}
 
 	if (!pwopn) {
+#if HAVE_SETPGENT
 		setpassent(1);
+#else
+		setpwent();
+#endif
 		++pwopn;
 	}
 
@@ -399,7 +412,7 @@ uid_name(char *name, uid_t *uid)
  */
 
 int
-gid_name(char *name, gid_t *gid)
+gid_name(const char *name, gid_t *gid)
 {
 	struct group *gr;
 	GIDC *ptr;
@@ -426,7 +439,11 @@ gid_name(char *name, gid_t *gid)
 	}
 
 	if (!gropn) {
+#if HAVE_SETPGENT
 		setgroupent(1);
+#else
+		setgrent();
+#endif
 		++gropn;
 	}
 	if (ptr == NULL)

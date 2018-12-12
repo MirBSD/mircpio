@@ -39,7 +39,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.5 2018/12/12 04:04:49 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.6 2018/12/12 06:03:14 tg Exp $");
 #endif
 
 /*
@@ -109,7 +109,7 @@ typedef struct {
 	char name[PAXPATHLEN+1];	/* file name */
 	int ln_nlen;			/* link name length */
 	char ln_name[PAXPATHLEN+1];	/* name to link to (if any) */
-	char *org_name;			/* orig name in file system */
+	char *org_name;			/* orig name in filesystem */
 	PATTERN *pat;			/* ptr to pattern match (if any) */
 	struct stat sb;			/* stat buffer see stat(2) */
 	off_t pad;			/* bytes of padding after file xfer */

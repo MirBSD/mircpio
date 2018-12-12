@@ -2,6 +2,8 @@
 /*	$NetBSD: cpio.h,v 1.3 1995/03/21 09:07:15 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2005, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -37,7 +39,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_cpio_h, "$MirOS: src/bin/pax/cpio.h,v 1.1.1.1.2.1 2018/12/12 03:13:31 tg Exp $");
+__IDSTRING(rcsid_cpio_h, "$MirOS: src/bin/pax/cpio.h,v 1.1.1.1.2.2 2018/12/12 06:03:11 tg Exp $");
 #endif
 
 /*
@@ -63,13 +65,13 @@ __IDSTRING(rcsid_cpio_h, "$MirOS: src/bin/pax/cpio.h,v 1.1.1.1.2.1 2018/12/12 03
  */
 typedef struct {
 	char	c_magic[6];		/* magic cookie */
-	char	c_dev[6];		/* device number */
+	char	c_dev[6];		/* device number (device) */
 	char	c_ino[6];		/* inode number */
 	char	c_mode[6];		/* file type/access */
 	char	c_uid[6];		/* owners uid */
 	char	c_gid[6];		/* owners gid */
 	char	c_nlink[6];		/* # of links at archive creation */
-	char	c_rdev[6];		/* block/char major/minor # */
+	char	c_rdev[6];		/* block/char major/minor # (node) */
 	char	c_mtime[11];		/* modification time */
 	char	c_namesize[6];		/* length of pathname */
 	char	c_filesize[11];		/* length of file in bytes */
@@ -136,10 +138,10 @@ typedef struct {
 	char	c_nlink[8];		/* # of links at archive creation */
 	char	c_mtime[8];		/* modification time */
 	char	c_filesize[8];		/* length of file in bytes */
-	char	c_maj[8];		/* block/char major # */
-	char	c_min[8];		/* block/char minor # */
-	char	c_rmaj[8];		/* special file major # */
-	char	c_rmin[8];		/* special file minor # */
+	char	c_maj[8];		/* block/char major # (device) */
+	char	c_min[8];		/* block/char minor # (device) */
+	char	c_rmaj[8];		/* special file major # (node) */
+	char	c_rmin[8];		/* special file minor # (node) */
 	char	c_namesize[8];		/* length of pathname */
 	char	c_chksum[8];		/* 0 OR CRC of bytes of FILE data */
 } HD_VCPIO;

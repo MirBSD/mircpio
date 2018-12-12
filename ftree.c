@@ -412,9 +412,9 @@ next_file(ARCHD *arcn)
 			continue;
 		case FTS_DC:
 			/*
-			 * fts claims a file system cycle
+			 * fts claims a filesystem cycle
 			 */
-			paxwarn(1,"File system cycle found at %s",ftent->fts_path);
+			paxwarn(1,"Filesystem cycle found at %s",ftent->fts_path);
 			continue;
 		case FTS_DNR:
 			syswarn(1, ftent->fts_errno,
@@ -422,7 +422,7 @@ next_file(ARCHD *arcn)
 			continue;
 		case FTS_ERR:
 			syswarn(1, ftent->fts_errno,
-			    "File system traversal error");
+			    "Filesystem traversal error");
 			continue;
 		case FTS_NS:
 		case FTS_NSOK:

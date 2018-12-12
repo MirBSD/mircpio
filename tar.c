@@ -528,7 +528,7 @@ tar_wr(ARCHD *arcn)
 	char hdblk[sizeof(HD_TAR)];
 
 	/*
-	 * check for those file system types which tar cannot store
+	 * check for those filesystem types which tar cannot store
 	 */
 	switch (arcn->type) {
 	case PAX_DIR:
@@ -539,17 +539,17 @@ tar_wr(ARCHD *arcn)
 			return(1);
 		break;
 	case PAX_CHR:
-		paxwarn(1, "Tar cannot archive a character device %s",
+		paxwarn(1, "tar cannot archive a character device %s",
 		    arcn->org_name);
 		return(1);
 	case PAX_BLK:
-		paxwarn(1, "Tar cannot archive a block device %s", arcn->org_name);
+		paxwarn(1, "tar cannot archive a block device %s", arcn->org_name);
 		return(1);
 	case PAX_SCK:
-		paxwarn(1, "Tar cannot archive a socket %s", arcn->org_name);
+		paxwarn(1, "tar cannot archive a socket %s", arcn->org_name);
 		return(1);
 	case PAX_FIF:
-		paxwarn(1, "Tar cannot archive a fifo %s", arcn->org_name);
+		paxwarn(1, "tar cannot archive a fifo %s", arcn->org_name);
 		return(1);
 	case PAX_SLK:
 	case PAX_HLK:
@@ -661,7 +661,7 @@ tar_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "Tar header field is too small for %s", arcn->org_name);
+	paxwarn(1, "tar header field is too small for %s", arcn->org_name);
 	return(1);
 }
 
@@ -944,10 +944,10 @@ ustar_wr(ARCHD *arcn)
 	char *pt, hdblk[sizeof(HD_USTAR)];
 
 	/*
-	 * check for those file system types ustar cannot store
+	 * check for those filesystem types ustar cannot store
 	 */
 	if (arcn->type == PAX_SCK) {
-		paxwarn(1, "Ustar cannot archive a socket %s", arcn->org_name);
+		paxwarn(1, "ustar cannot archive a socket %s", arcn->org_name);
 		return(1);
 	}
 
@@ -1076,7 +1076,7 @@ ustar_wr(ARCHD *arcn)
 		if (uid_warn != arcn->sb.st_uid) {
 			uid_warn = arcn->sb.st_uid;
 			paxwarn(1,
-			    "Ustar header field is too small for uid %lu, "
+			    "ustar header field is too small for uid %lu, "
 			    "using nobody", (u_long)arcn->sb.st_uid);
 		}
 		if (ul_oct(uid_nobody, hd->uid, sizeof(hd->uid), 3))
@@ -1090,7 +1090,7 @@ ustar_wr(ARCHD *arcn)
 		if (gid_warn != arcn->sb.st_gid) {
 			gid_warn = arcn->sb.st_gid;
 			paxwarn(1,
-			    "Ustar header field is too small for gid %lu, "
+			    "ustar header field is too small for gid %lu, "
 			    "using nobody", (u_long)arcn->sb.st_gid);
 		}
 		if (ul_oct(gid_nobody, hd->gid, sizeof(hd->gid), 3))
@@ -1127,7 +1127,7 @@ ustar_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "Ustar header field is too small for %s", arcn->org_name);
+	paxwarn(1, "ustar header field is too small for %s", arcn->org_name);
 	return(1);
 }
 
