@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.14 2018/12/12 13:21:34 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.15 2018/12/12 15:05:23 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1399,6 +1399,11 @@ ac_test can_ucbint16 '!' can_int16type 1 "for UCB 16-bit integer type" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
 	int main(int ac, char **av) { return ((u_int16_t)(size_t)av[ac]); }
+EOF
+ac_test can_ulong '' "for u_long" <<-'EOF'
+	#include <sys/types.h>
+	#include <stddef.h>
+	int main(int ac, char **av) { return ((u_long)(size_t)av[ac]); }
 EOF
 
 #

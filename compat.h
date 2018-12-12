@@ -102,10 +102,11 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.9 2018/12/12 15:00:24 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.10 2018/12/12 15:05:24 tg Exp $");
 #endif
 
-/* arithmetic types: C implementation */
+/* possibly missing types */
+
 #if !HAVE_CAN_INTTYPES
 #if !HAVE_CAN_UCBINTS
 typedef signed int int32_t;
@@ -125,6 +126,12 @@ typedef u_int16_t uint16_t;
 #ifdef MKSH_TYPEDEF_SSIZE_T
 typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #endif
+
+#if !HAVE_CAN_ULONG
+typedef unsigned long u_long;
+#endif
+
+/* macros dealing with struct stat.sb_[acm]time */
 
 #if HAVE_ST_MTIM
 #define st_timecmp(x,sbpa,sbpb,op) \

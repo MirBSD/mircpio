@@ -1765,14 +1765,14 @@ proc_dir(int in_sig)
 
 /*
  * st_hash()
- *	hashes filenames to a u_int for hashing into a table. Looks at the tail
- *	end of file, as this provides far better distribution than any other
- *	part of the name. For performance reasons we only care about the last
- *	MAXKEYLEN chars (should be at LEAST large enough to pick off the file
- *	name). Was tested on 500,000 name file tree traversal from the root
- *	and gave almost a perfectly uniform distribution of keys when used with
- *	prime sized tables (MAXKEYLEN was 128 in test). Hashes (sizeof int)
- *	chars at a time and pads with 0 for last addition.
+ *	hashes filenames to an unsigned int for hashing into a table. It looks
+ *	at the tail end of the file, as this provides far better distribution
+ *	than any other part of the name. For performance reasons we only care
+ *	about the last MAXKEYLEN chars (should be at LEAST large enough to pick
+ *	off the filename). It was tested on a 500'000 name file tree traversal
+ *	from the root and gave almost a perfectly uniform distribution of keys
+ *	when used with prime-sized tables (MAXKEYLEN was 128 in the test).
+ *	Hashes sizeof(int) chars at a time and pads with 0 for last addition.
  * Return:
  *	the hash value of the string MOD (%) the table size.
  */
@@ -1876,7 +1876,7 @@ chk_flnk(ARCHD *arcn)
 {
 	HRDFLNK *pt;
 	HRDFLNK **ppt;
-	u_int indx;
+	unsigned int indx;
 	static ino_t running = 3;
 
 	if (fltab == NULL)
