@@ -39,7 +39,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.6 2018/12/12 06:03:14 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.7 2018/12/12 06:44:40 tg Exp $");
 #endif
 
 /*
@@ -227,10 +227,21 @@ typedef struct {
  * at the given name has the indicated dev+ino.
  */
 struct file_times {
-	ino_t	ft_ino;			/* inode number to verify */
-	struct	timespec ft_mtim;	/* times to set */
-	struct	timespec ft_atim;
+	struct {
+#if HAVE_ST_MTIM
+		struct timespec st_atim;
+		struct timespec st_mtim;
+#else
+		time_t st_atime;
+		time_t st_mtime;
+#if HAVE_ST_MTIMENSEC
+		long st_atimensec;
+		long st_mtimensec;
+#endif
+#endif
+	} sb;				/* times to set */
 	char	*ft_name;		/* name of file to set the times on */
+	ino_t	ft_ino;			/* inode number to verify */
 	dev_t	ft_dev;			/* device number to verify */
 };
 

@@ -108,9 +108,18 @@ typedef struct hrdlnk {
  * handle is greatly increased).
  */
 typedef struct ftm {
-	off_t		seek;		/* location in scratch file */
-	struct timespec	mtim;		/* files last modification time */
 	struct ftm	*fow;
+	off_t		seek;		/* location in scratch file */
+	struct {
+#if HAVE_ST_MTIM
+		struct timespec st_mtim;
+#else
+		time_t st_mtime;
+#if HAVE_ST_MTIMENSEC
+		long st_mtimensec;
+#endif
+#endif
+	} sb;				/* files last modification time */
 	int		namelen;	/* file name length */
 } FTM;
 
@@ -550,11 +559,18 @@ chk_ftime(ARCHD *arcn)
 			/*
 			 * found the file, compare the times, save the newer
 			 */
-			if (timespeccmp(&arcn->sb.st_mtim, &pt->mtim, >)) {
+			if (st_mtim_cmp(&arcn->sb, &pt->sb, >)) {
 				/*
 				 * file is newer
 				 */
-				pt->mtim = arcn->sb.st_mtim;
+#if HAVE_ST_MTIM
+				pt->sb.st_mtim = arcn->sb.st_mtim;
+#else
+				pt->sb.st_mtime = arcn->sb.st_mtime;
+#if HAVE_ST_MTIMENSEC
+				pt->sb.st_mtimensec = arcn->sb.st_mtimensec;
+#endif
+#endif
 				return(0);
 			}
 			/*
@@ -574,7 +590,14 @@ chk_ftime(ARCHD *arcn)
 		 */
 		if ((pt->seek = lseek(ffd, 0, SEEK_END)) >= 0) {
 			if (write(ffd, arcn->name, namelen) == namelen) {
-				pt->mtim = arcn->sb.st_mtim;
+#if HAVE_ST_MTIM
+				pt->sb.st_mtim = arcn->sb.st_mtim;
+#else
+				pt->sb.st_mtime = arcn->sb.st_mtime;
+#if HAVE_ST_MTIMENSEC
+				pt->sb.st_mtimensec = arcn->sb.st_mtimensec;
+#endif
+#endif
 				pt->namelen = namelen;
 				pt->fow = ftab[indx];
 				ftab[indx] = pt;
@@ -1455,8 +1478,8 @@ add_atdir(char *fname, dev_t dev, ino_t ino, const struct timespec *mtimp,
 		if ((pt->ft.ft_name = strdup(fname)) != NULL) {
 			pt->ft.ft_dev = dev;
 			pt->ft.ft_ino = ino;
-			pt->ft.ft_mtim = *mtimp;
-			pt->ft.ft_atim = *atimp;
+			pt->ft.sb.st_mtim = *mtimp;
+			pt->ft.sb.st_atim = *atimp;
 			pt->fow = atab[indx];
 			atab[indx] = pt;
 			sigprocmask(SIG_SETMASK, &savedsigs, NULL);
@@ -1617,8 +1640,8 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 		    " directory: %s", name);
 		return;
 	}
-	dblk->ft.ft_mtim = psb->st_mtim;
-	dblk->ft.ft_atim = psb->st_atim;
+	dblk->ft.sb.st_mtim = psb->st_mtim;
+	dblk->ft.sb.st_atim = psb->st_atim;
 	dblk->ft.ft_ino = psb->st_ino;
 	dblk->ft.ft_dev = psb->st_dev;
 	dblk->mode = psb->st_mode & ABITS;

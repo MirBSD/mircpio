@@ -848,11 +848,11 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 		if (do_mode && (mode & ABITS) != (sb.st_mode & ABITS))
 			fset_pmode(ft->ft_name, fd, mode);
 		if (((force_times || patime) &&
-		    timespeccmp(&ft->ft_atim, &sb.st_atim, !=)) ||
+		    st_atim_cmp(&ft->sb, &sb, !=)) ||
 		    ((force_times || pmtime) &&
-		    timespeccmp(&ft->ft_mtim, &sb.st_mtim, !=)))
-			fset_ftime(ft->ft_name, fd, &ft->ft_mtim,
-			    &ft->ft_atim, force_times);
+		    st_mtim_cmp(&ft->sb, &sb, !=)))
+			fset_ftime(ft->ft_name, fd, &ft->sb.st_mtim,
+			    &ft->sb.st_atim, force_times);
 		r = 0;
 	}
 	close(fd);
