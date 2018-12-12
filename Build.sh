@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.15 2018/12/12 15:05:23 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.16 2018/12/12 15:33:04 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -424,7 +424,7 @@ fi
 rmf a.exe* a.out* conftest.c conftest.exe* *core core.* ${tfn}* *.bc *.dbg \
     *.ll *.o *.cat1 Rebuild.sh lft no x vv.out
 
-SRCS="ar.c ar_io.c ar_subs.c buf_subs.c cache.c compat.c cpio.c"
+SRCS="ar.c ar_io.c ar_subs.c buf_subs.c compat.c cpio.c"
 SRCS="$SRCS file_subs.c ftree.c gen_subs.c getoldopt.c options.c"
 SRCS="$SRCS pat_rep.c pax.c sel_subs.c tables.c tar.c tty_subs.c"
 
@@ -1593,6 +1593,26 @@ ac_test strtonum <<-'EOF'
 	}
 EOF
 
+ac_test ug_from_ugid grp_h 0 'for user_from_uid and group_from_gid' <<-'EOF'
+	#include <sys/types.h>
+	#include <grp.h>
+	#include <pwd.h>
+	int main(void) { return (*user_from_uid(0, 0) ^ *group_from_gid(0, 0)); }
+EOF
+
+ac_test ugid_from_ug ug_from_ugid 0 'for uid_from_user and gid_from_group' <<-'EOF'
+	#include <sys/types.h>
+	#include <grp.h>
+	#include <pwd.h>
+	int main(void) {
+		uid_t uid;
+		gid_t gid;
+		uid_from_user("nobody", &uid);
+		gid_from_group("nobody", &gid);
+		return (uid ^ gid);
+	}
+EOF
+
 ac_test utimensat <<-'EOF'
 	#include <sys/types.h>
 	#include <sys/stat.h>
@@ -1707,7 +1727,7 @@ EOF
 $e ... done.
 rmf vv.out
 
-addsrcs '!' HAVE_STRLCPY strlcpy.c
+addsrcs '!' HAVE_UGID_FROM_UG cache.c
 test 1 = "$HAVE_CAN_VERB" && CFLAGS="$CFLAGS -verbose"
 
 $e $bi$me: Finished configuration testing, now producing output.$ao

@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.10 2018/12/12 10:41:25 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.11 2018/12/12 15:33:05 tg Exp $");
 #endif
 
 /*
@@ -116,17 +116,33 @@ int buf_fill(void);
 int buf_fill_internal(int);
 int buf_flush(int);
 
+#if !HAVE_UGID_FROM_UG
 /*
  * cache.c
  */
+#if !HAVE_UG_FROM_UGID
 int uidtb_start(void);
 int gidtb_start(void);
+#endif
 int usrtb_start(void);
 int grptb_start(void);
+#if HAVE_UG_FROM_UGID
+#define name_uid(u, frc) ((const char *)user_from_uid((u), !(frc)))
+#define name_gid(g, frc) ((const char *)group_from_gid((g), !(frc)))
+#else
 const char *name_uid(uid_t, int);
 const char *name_gid(gid_t, int);
+#endif
 int uid_name(const char *, uid_t *);
 int gid_name(const char *, gid_t *);
+int uid_uncached(const char *, uid_t *);
+int gid_uncached(const char *, gid_t *);
+#else
+#define uid_name uid_from_user
+#define gid_name gid_from_group
+#define uid_uncached uid_from_user
+#define gid_uncached gid_from_group
+#endif
 
 /*
  * cpio.c

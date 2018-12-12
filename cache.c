@@ -51,6 +51,10 @@
 #include "pax.h"
 #include "extern.h"
 
+#if HAVE_UGID_FROM_UG
+# error do not include this file if you do not need it
+#endif
+
 /*
  * Constants and data structures used to implement group and password file
  * caches. Traditional passwd/group cache routines perform quite poorly with
@@ -96,11 +100,14 @@ typedef struct gidc {
 
 static	int pwopn = 0;		/* is password file open */
 static	int gropn = 0;		/* is group file open */
+#if !HAVE_UG_FROM_UGID
 static UIDC **uidtb = NULL;	/* uid to name cache */
 static GIDC **gidtb = NULL;	/* gid to name cache */
+#endif
 static UIDC **usrtb = NULL;	/* user name to uid cache */
 static GIDC **grptb = NULL;	/* group name to gid cache */
 
+#if !HAVE_UG_FROM_UGID
 /*
  * uidtb_start
  *	creates an empty uidtb
@@ -148,6 +155,7 @@ gidtb_start(void)
 	}
 	return(0);
 }
+#endif
 
 /*
  * usrtb_start
@@ -197,6 +205,7 @@ grptb_start(void)
 	return(0);
 }
 
+#if !HAVE_UG_FROM_UGID
 /*
  * name_uid()
  *	caches the name (if any) for the uid. If frc set, we always return the
@@ -336,6 +345,7 @@ name_gid(gid_t gid, int frc)
 	}
 	return(ptr->name);
 }
+#endif
 
 /*
  * uid_name()
@@ -469,4 +479,26 @@ gid_name(const char *name, gid_t *gid)
 	ptr->valid = VALID;
 	*gid = ptr->gid = gr->gr_gid;
 	return(0);
+}
+
+int
+uid_uncached(const char *name, uid_t *uid)
+{
+	struct passwd *pw;
+
+	if ((pw = getpwnam(name)) == NULL)
+		return (-1);
+	*uid = pw->pw_uid;
+	return (0);
+}
+
+int
+gid_uncached(const char *name, gid_t *gid)
+{
+	struct group *gr;
+
+	if ((gr = getgrnam(name)) == NULL)
+		return (-1);
+	*gid = gr->gr_gid;
+	return (0);
 }

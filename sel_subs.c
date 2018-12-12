@@ -145,7 +145,6 @@ usr_add(char *str)
 {
 	unsigned int indx;
 	USRT *pt;
-	struct passwd *pw;
 	uid_t uid;
 
 	/*
@@ -168,11 +167,10 @@ usr_add(char *str)
 		 */
 		if ((str[0] == '\\') && (str[1] == '#'))
 			++str;
-		if ((pw = getpwnam(str)) == NULL) {
+		if (uid_uncached(str, &uid) < 0) {
 			paxwarn(1, "Unable to find uid for user: %s", str);
 			return(-1);
 		}
-		uid = (uid_t)pw->pw_uid;
 	} else
 		uid = (uid_t)strtoul(str+1, NULL, 10);
 	endpwent();
@@ -242,7 +240,6 @@ grp_add(char *str)
 {
 	unsigned int indx;
 	GRPT *pt;
-	struct group *gr;
 	gid_t gid;
 
 	/*
@@ -265,11 +262,10 @@ grp_add(char *str)
 		 */
 		if ((str[0] == '\\') && (str[1] == '#'))
 			++str;
-		if ((gr = getgrnam(str)) == NULL) {
+		if (gid_uncached(str, &gid) < 0) {
 			paxwarn(1,"Cannot determine gid for group name: %s", str);
 			return(-1);
 		}
-		gid = (gid_t)gr->gr_gid;
 	} else
 		gid = (gid_t)strtoul(str+1, NULL, 10);
 	endgrent();

@@ -99,8 +99,10 @@ list(void)
 	    ((*frmt->st_rd)() < 0))
 		return;
 
+#if !HAVE_UG_FROM_UGID
 	if (vflag && ((uidtb_start() < 0) || (gidtb_start() < 0)))
 		return;
+#endif
 
 	/*
 	 * step through the archive until the format says it is done

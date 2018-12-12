@@ -685,8 +685,10 @@ tar_wr(ARCHD *arcn)
 int
 ustar_strd(void)
 {
+#if !HAVE_UGID_FROM_UG
 	if ((usrtb_start() < 0) || (grptb_start() < 0))
 		return(-1);
+#endif
 	return(0);
 }
 
@@ -700,8 +702,10 @@ ustar_strd(void)
 int
 ustar_stwr(int is_app MKSH_A_UNUSED)
 {
+#if !HAVE_UG_FROM_UGID
 	if ((uidtb_start() < 0) || (gidtb_start() < 0))
 		return(-1);
+#endif
 	return(0);
 }
 
