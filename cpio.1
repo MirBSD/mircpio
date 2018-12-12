@@ -1,7 +1,8 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.39 2017/03/29 01:52:30 tg Exp $
-.\"	$OpenBSD: cpio.1,v 1.34 2011/09/03 22:59:08 jmc Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.40 2018/12/12 18:08:42 tg Exp $
+.\"	$OpenBSD: cpio.1,v 1.35 2014/09/08 01:27:54 schwarze Exp $
 .\"
-.\" Copyright (c) 2005, 2009, 2011, 2012, 2014, 2015, 2016, 2017
+.\" Copyright (c) 2005, 2009, 2011, 2012, 2014, 2015, 2016,
+.\"		  2017, 2018
 .\"	mirabilos <m@mirbsd.org>
 .\" Copyright (c) 1997 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -82,7 +83,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: March 29 2017 $
+.Dd $Mdocdate: December 12 2018 $
 .\"
 .\" Check which macro package we use, and do other -mdoc setup.
 .\"
@@ -192,6 +193,7 @@
 .Nd copy file archives in and out
 .\}
 .Sh SYNOPSIS
+.Bk -words
 .Nm \*(nm
 .Fl o
 .Op Fl 0AaBcJjLVvZz
@@ -218,6 +220,7 @@
 .Op Fl 0adLlmuVv
 .Ar destination-directory
 .No \*(Lt Ar name-list
+.Ek
 .Sh DESCRIPTION
 The
 .Nm
@@ -238,7 +241,13 @@ and to the pathnames written to standard output in list mode.
 This option is expected to be used in concert with the
 .Fl print0
 function in
-.Xr find 1
+.Xr find 1 ,
+the
+.Fl d Ar \*(aq\*(aq
+option to the
+.Ic read
+built-in utility of
+.Xr mksh 1
 or the
 .Fl 0
 flag in
@@ -299,11 +308,11 @@ Old tar format.
 POSIX ustar format.
 .It "\ "
 .It Ar bin
-These four formats...
+These four formats...\&
 .It Ar crc
-\&...are supported...
+\&...are supported...\&
 .It Ar newc
-\&...for backwards...
+\&...for backwards...\&
 .It Ar odc
 \&...compatibility only.
 .El
@@ -337,7 +346,8 @@ to turn them off:
 .br
 (ar, cpio, sv4cpio, sv4crc, ustar)
 .It Ar uidgid
-0x0008: Set owner to 0:0 (root:wheel).
+0x0008: Set owner to 0:0
+.Pq Li root Ns : Ns Li wheel .
 .br
 (ar, cpio, sv4cpio, sv4crc, ustar)
 .It Ar verb
@@ -451,11 +461,11 @@ Old tar format.
 POSIX ustar format.
 .It "\ "
 .It Ar bin
-These four formats...
+These four formats...\&
 .It Ar crc
-\&...are supported...
+\&...are supported...\&
 .It Ar newc
-\&...for backwards...
+\&...for backwards...\&
 .It Ar odc
 \&...compatibility only.
 .El
@@ -606,6 +616,7 @@ be used for larger files.
 .It ar Ta "10 Gigabytes \- 1 Byte"
 .It bcpio Ta "4 Gibibytes"
 .It sv4cpio Ta "4 Gibibytes"
+.It sv4crc Ta "4 Gibibytes"
 .It cpio Ta "8 Gibibytes"
 .It tar Ta "8 Gibibytes"
 .It ustar Ta "8 Gibibytes"

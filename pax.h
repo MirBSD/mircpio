@@ -2,7 +2,7 @@
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2011, 2012, 2016, 2017
+ * Copyright (c) 2006, 2009, 2011, 2012, 2016, 2017
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -38,8 +38,11 @@
  *	@(#)pax.h	8.2 (Berkeley) 4/18/94
  */
 
-#ifndef MIRCPIO_PAX_H
-#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.20 2018/12/12 00:23:07 tg Exp $"
+#include "compat.h"
+
+#ifdef EXTERN
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.21 2018/12/12 18:08:46 tg Exp $");
+#endif
 
 /*
  * BSD PAX global data structures and constants.
@@ -54,7 +57,7 @@
 #define DEVBLK		8192	/* default read blksize for devices */
 #define FILEBLK		10240	/* default read blksize for files */
 #define PAXPATHLEN	3072	/* maximum path length for pax. MUST be */
-				/* longer than the system MAXPATHLEN */
+				/* longer than the system PATH_MAX */
 
 /*
  * pax modes of operation
@@ -116,7 +119,7 @@ typedef struct {
 					/* IMPORTANT. The st_size field does */
 					/* not always indicate the amount of */
 					/* data following the header. */
-	u_int32_t crc;			/* file crc */
+	uint32_t crc;			/* file crc */
 	int type;			/* type of file node */
 #define PAX_DIR		1		/* directory */
 #define PAX_CHR		2		/* character device */
@@ -132,6 +135,10 @@ typedef struct {
 #define PAX_GLF		12		/* GNU long file */
 #define PAX_LINKOR	0x80000000	/* hard link detection OR */
 } ARCHD;
+
+#define PAX_IS_REG(type)	((type) == PAX_REG || (type) == PAX_CTG)
+#define PAX_IS_HARDLINK(type)	((type) == PAX_HLK || (type) == PAX_HRG)
+#define PAX_IS_LINK(type)	((type) == PAX_SLK || PAX_IS_HARDLINK(type))
 
 /*
  * Format Specific Routine Table
@@ -222,20 +229,6 @@ typedef struct {
 } FSUB;
 
 /*
- * Time data for a given file.  This is usually embedded in a structure
- * indexed by dev+ino, by name, by order in the archive, etc.  set_attr()
- * takes one of these and will only change the times or mode if the file
- * at the given name has the indicated dev+ino.
- */
-struct file_times {
-	ino_t	ft_ino;		/* inode number to verify */
-	time_t	ft_mtime;	/* times to set */
-	time_t	ft_atime;
-	char	*ft_name;	/* name of file to set the times on */
-	dev_t	ft_dev;		/* device number to verify */
-};
-
-/*
  * Format Specific Options List
  *
  * Used to pass format options to the format options handler
@@ -247,17 +240,50 @@ typedef struct oplist {
 } OPLIST;
 
 /*
+ * Archive manipulation code
+ */
+
+#define	ANON_INODES	0x0001
+#define	ANON_HARDLINKS	0x0002
+#define	ANON_MTIME	0x0004
+#define	ANON_UIDGID	0x0008
+#define	ANON_VERBOSE	0x0010
+#define	ANON_DEBUG	0x0020
+#define	ANON_LNCP	0x0040
+#define	ANON_NUMID	0x0080
+#define	ANON_DIRSLASH	0x0100
+#define	ANON_MAXVAL	0x01FF
+
+/* format table, see FSUB fsub[] in options.c */
+
+enum fsub_order {
+#ifndef SMALL
+	FSUB_AR,
+	FSUB_BCPIO,
+#endif
+	FSUB_CPIO,
+	FSUB_DIST,
+	FSUB_SV4CPIO,
+	FSUB_SV4CRC,
+#ifndef SMALL
+	FSUB_TAR,
+#endif
+	FSUB_USTAR,
+	FSUB_V4NORM,
+	FSUB_V4ROOT,
+#ifndef SMALL
+	FSUBFAIL_Z,
+	FSUBFAIL_XZ,
+	FSUBFAIL_BZ2,
+	FSUBFAIL_GZ,
+#endif
+	FSUB_MAX
+};
+
+/*
  * General Macros
  */
-#ifndef MIN
-#define MIN(a,b)	(((a)<(b))?(a):(b))
-#endif
-#ifdef __INTERIX
-#include <sys/mkdev.h>
-#endif
-#ifdef HAVE_SYS_SYSMACROS_H
-#include <sys/sysmacros.h>
-#endif
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
 #ifdef __INTERIX
@@ -266,45 +292,9 @@ typedef struct oplist {
 #define TODEV		makedev
 #endif
 
-#if !defined(__INTERIX) && !defined(__APPLE__)
-#define HAS_TAPE	1
-#else
-#define HAS_TAPE	0
-#endif
-
-#if defined(MirBSD) && (MirBSD >= 0x09A1) && \
-    defined(__ELF__) && defined(__GNUC__) && \
-    !defined(__llvm__) && !defined(__NWCC__)
-/*
- * We got usable __IDSTRING __COPYRIGHT __RCSID __SCCSID macros
- * which work for all cases; no need to redefine them using the
- * "portable" macros from below when we might have the "better"
- * gcc+ELF specific macros or other system dependent ones.
- */
-#else
-#undef __IDSTRING
-#undef __IDSTRING_CONCAT
-#undef __IDSTRING_EXPAND
-#undef __COPYRIGHT
-#undef __RCSID
-#undef __SCCSID
-#define __IDSTRING_CONCAT(l,p)		__LINTED__ ## l ## _ ## p
-#define __IDSTRING_EXPAND(l,p)		__IDSTRING_CONCAT(l,p)
-#ifdef MKSH_DONT_EMIT_IDSTRING
-#define __IDSTRING(prefix, string)	/* nothing */
-#else
-#define __IDSTRING(prefix, string)				\
-	static const char __IDSTRING_EXPAND(__LINE__,prefix) []	\
-	    __attribute__((__used__)) = "@(""#)" #prefix ": " string
-#endif
-#define __COPYRIGHT(x)		__IDSTRING(copyright,x)
-#define __RCSID(x)		__IDSTRING(rcsid,x)
-#define __SCCSID(x)		__IDSTRING(sccsid,x)
-#endif
-
-#define FILEBITS		(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
-#define SETBITS			(S_ISUID | S_ISGID)
-#define ABITS			(FILEBITS | SETBITS)
+#define FILEBITS	(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
+#define SETBITS		(S_ISUID | S_ISGID)
+#define ABITS		(FILEBITS | SETBITS)
 
 /*
  * General Defines
@@ -313,17 +303,8 @@ typedef struct oplist {
 #define OCT		8
 #define _PAX_		1
 #define _TFILE_BASE	"paxXXXXXXXXXX"
-#define MAX_TIME_T	(sizeof(time_t) == sizeof(long long) ? \
-			    LLONG_MAX : INT_MAX)
-
-#ifndef LONG_OFF_T
-#define OT_FMT		"llu"
-typedef unsigned long long ot_type;
+#if HAVE_TIMET_LLONG
+#define MAX_TIME_T	LLONG_MAX
 #else
-#define OT_FMT		"lu"
-typedef unsigned long ot_type;
-#endif
-
-void sig_cleanup(int) __attribute__((__noreturn__));
-
+#define MAX_TIME_T	LONG_MAX
 #endif

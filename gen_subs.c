@@ -1,4 +1,4 @@
-/*	$OpenBSD: gen_subs.c,v 1.20 +1.27 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: gen_subs.c,v 1.32 2016/08/26 05:06:14 guenther Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -36,26 +36,40 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
+#if HAVE_BOTH_TIME_H
 #include <sys/time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#ifdef __INTERIX
-#include <utmpx.h>
-#else
-#include <utmp.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
 #endif
-#include <unistd.h>
+#include <sys/stat.h>
+#if HAVE_GRP_H
+#include <grp.h>
+#endif
+#include <pwd.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#ifdef HAVE_VIS
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+#if HAVE_UTMP_H
+#include <utmp.h>
+#elif HAVE_UTMPX_H
+#include <utmpx.h>
+#endif
+#if HAVE_VIS_H
 #include <vis.h>
 #endif
+
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.19 2016/10/25 19:04:26 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.20 2018/12/12 18:08:44 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -66,10 +80,12 @@ __RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.19 2016/10/25 19:04:26 tg Exp $");
  */
 #define MODELEN 20
 #define DATELEN 64
-#define SIXMONTHS	(86400 * 365 / 2)
+#define SIXMONTHS	(24 * 60 * 60 * 365 / 2)
 #define CURFRMT		"%b %e %H:%M"
 #define OLDFRMT		"%b %e  %Y"
 #define NAME_WIDTH	8
+#define	TIMEFMT(t) \
+	(((t) + SIXMONTHS <= now || (t) > now) ? OLDFRMT : CURFRMT)
 
 /*
  * ls_list()
@@ -77,7 +93,7 @@ __RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.19 2016/10/25 19:04:26 tg Exp $");
  */
 
 void
-ls_list(ARCHD *arcn, time_t now, FILE *fp)
+ls_list(ARCHD *arcn, FILE *fp)
 {
 	struct stat *sbp;
 	char f_mode[MODELEN];
@@ -108,22 +124,23 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	/*
 	 * print file mode, link count, uid, gid and time
 	 */
-	if (strftime(f_date, DATELEN, ((sbp->st_mtime + SIXMONTHS) <= now) ?
-	    OLDFRMT : CURFRMT, localtime(&(sbp->st_mtime))) == 0)
+	if (strftime(f_date, sizeof(f_date), TIMEFMT(sbp->st_mtime),
+	    localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
 	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode,
-		(unsigned)sbp->st_nlink,
-		NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
-		NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
+	    (unsigned int)sbp->st_nlink,
+	    NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
+	    NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
 
 	/*
 	 * print device id's for devices, or sizes for other nodes
 	 */
 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
-		(void)fprintf(fp, "%4lu,%4lu ", (unsigned long)MAJOR(sbp->st_rdev),
+		(void)fprintf(fp, "%4lu, %4lu ",
+		    (unsigned long)MAJOR(sbp->st_rdev),
 		    (unsigned long)MINOR(sbp->st_rdev));
 	else
-		(void)fprintf(fp, "%9" OT_FMT " ", (ot_type)sbp->st_size);
+		(void)fprintf(fp, "%9llu ", sbp->st_size);
 
 	/*
 	 * print name and link info for hard and soft links
@@ -131,7 +148,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	(void)fputs(f_date, fp);
 	(void)putc(' ', fp);
 	safe_print(arcn->name, fp);
-	if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG)) {
+	if (PAX_IS_HARDLINK(arcn->type)) {
 		fputs(" == ", fp);
 		safe_print(arcn->ln_name, fp);
 	} else if (arcn->type == PAX_SLK) {
@@ -140,7 +157,6 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	}
 	(void)putc(term, fp);
 	(void)fflush(fp);
-	return;
 }
 
 /*
@@ -157,19 +173,17 @@ ls_tty(ARCHD *arcn)
 	/*
 	 * convert time to string, and print
 	 */
-	if (strftime(f_date, DATELEN,
-	    ((arcn->sb.st_mtime + SIXMONTHS) <= time(NULL)) ? OLDFRMT :
-	    CURFRMT, localtime(&(arcn->sb.st_mtime))) == 0)
+	if (strftime(f_date, DATELEN, TIMEFMT(arcn->sb.st_mtime),
+	    localtime(&(arcn->sb.st_mtime))) == 0)
 		f_date[0] = '\0';
 	strmode(arcn->sb.st_mode, f_mode);
 	tty_prnt("%s%s %s\n", f_mode, f_date, arcn->name);
-	return;
 }
 
 void
 safe_print(const char *str, FILE *fp)
 {
-#ifdef HAVE_VIS
+#if HAVE_VIS_H
 	char visbuf[5];
 	const char *cp;
 
@@ -261,13 +275,15 @@ ul_asc(u_long val, char *str, int len, int base)
 				*pt-- = '0' + (char)digit;
 			else
 				*pt-- = 'a' + (char)(digit - 10);
-			if ((val = (val >> 4)) == (u_long)0)
+			val >>= 4;
+			if (val == 0)
 				break;
 		}
 	} else {
 		while (pt >= str) {
 			*pt-- = '0' + (char)(val & 0x7);
-			if ((val = (val >> 3)) == (u_long)0)
+			val >>= 3;
+			if (val == 0)
 				break;
 		}
 	}
@@ -277,26 +293,26 @@ ul_asc(u_long val, char *str, int len, int base)
 	 */
 	while (pt >= str)
 		*pt-- = '0';
-	if (val != (u_long)0)
+	if (val != 0)
 		return(-1);
 	return(0);
 }
 
 /*
- * asc_ot()
- *	convert hex/octal character string into a ot_type. We do not have
- *	to check for overflow! (the headers in all supported formats are
- *	not large enough to create an overflow).
+ * asc_ull()
+ *	Convert hex/octal character string into a unsigned long long.
+ *	We do not have to check for overflow!  (The headers in all
+ *	supported formats are not large enough to create an overflow).
  *	NOTE: strings passed to us are NOT TERMINATED.
  * Return:
- *	ot_type value
+ *	unsigned long long value
  */
 
-ot_type
-asc_ot(char *str, int len, int base)
+unsigned long long
+asc_ull(char *str, int len, int base)
 {
 	char *stop;
-	ot_type tval = 0;
+	unsigned long long tval = 0;
 
 	stop = str + len;
 
@@ -325,21 +341,21 @@ asc_ot(char *str, int len, int base)
 		while ((str < stop) && (*str >= '0') && (*str <= '7'))
 			tval = (tval << 3) + (*str++ - '0');
 	}
-	return (tval);
+	return(tval);
 }
 
 /*
- * ot_asc()
- *	convert an ot_type into a hex/oct ascii string.
- *	pads with LEADING ascii 0s to fill string completely.
+ * ull_asc()
+ *	Convert an unsigned long long into a hex/oct ascii string.
+ *	Pads with LEADING ascii 0's to fill string completely
  *	NOTE: the string created is NOT TERMINATED.
  */
 
 int
-ot_asc(ot_type val, char *str, int len, int base)
+ull_asc(unsigned long long val, char *str, int len, int base)
 {
 	char *pt;
-	ot_type digit;
+	unsigned long long digit;
 
 	/*
 	 * WARNING str is not '\0' terminated by this routine
@@ -357,13 +373,15 @@ ot_asc(ot_type val, char *str, int len, int base)
 				*pt-- = '0' + (char)digit;
 			else
 				*pt-- = 'a' + (char)(digit - 10);
-			if ((val = (val >> 4)) == (ot_type)0)
+			val >>= 4;
+			if (val == 0)
 				break;
 		}
 	} else {
 		while (pt >= str) {
 			*pt-- = '0' + (char)(val & 0x7);
-			if ((val = (val >> 3)) == (ot_type)0)
+			val >>= 3;
+			if (val == 0)
 				break;
 		}
 	}
@@ -373,9 +391,9 @@ ot_asc(ot_type val, char *str, int len, int base)
 	 */
 	while (pt >= str)
 		*pt-- = '0';
-	if (val != (ot_type)0)
-		return (-1);
-	return (0);
+	if (val != 0)
+		return(-1);
+	return(0);
 }
 
 /*
@@ -399,15 +417,3 @@ fieldcpy(char *buf, size_t bufsz, const char *field, size_t fieldsz)
 		*p = '\0';
 	return(i);
 }
-
-#ifndef HAVE_STRMODE
-#include ".linked/strmode.inc"
-#endif
-
-#ifndef HAVE_STRLCPY
-#undef WIDEC
-#define OUTSIDE_OF_LIBKERN
-#define L_strlcat
-#define L_strlcpy
-#include ".linked/strlfun.inc"
-#endif

@@ -34,22 +34,34 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <fts.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+
 #include "pax.h"
-#include "ftree.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.10 2018/12/12 00:23:06 tg Exp $");
-__IDSTRING(rcsid_ftree_h, MIRCPIO_FTREE_H);
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.11 2018/12/12 18:08:44 tg Exp $");
+
+/*
+ * Data structure used to store the file args to be handed to fts().
+ * It keeps track of which args generated a "selected" member.
+ */
+typedef struct ftree {
+	char		*fname;		/* file tree name */
+	int		refcnt;		/* has tree had a selected file? */
+	int		newercnt;	/* skipped due to -u/-D */
+	int		chflg;		/* change directory flag */
+	struct ftree	*fow;		/* pointer to next entry on list */
+} FTREE;
 
 /*
  * routines to interface with the fts library function.
@@ -156,7 +168,7 @@ ftree_add(char *str, int chflg)
 	 * processed in the same order they were passed to pax). Get rid of any
 	 * trailing / the user may pass us. (watch out for / by itself).
 	 */
-	if ((ft = (FTREE *)malloc(sizeof(FTREE))) == NULL) {
+	if ((ft = malloc(sizeof(FTREE))) == NULL) {
 		paxwarn(0, "Unable to allocate memory for filename");
 		return(-1);
 	}
@@ -404,7 +416,7 @@ next_file(ARCHD *arcn)
 			/*
 			 * fts claims a filesystem cycle
 			 */
-			paxwarn(1,"Filesystem cycle found at %s",ftent->fts_path);
+			paxwarn(1, "Filesystem cycle found at %s", ftent->fts_path);
 			continue;
 		case FTS_DNR:
 			syswarn(1, ftent->fts_errno,
@@ -446,9 +458,7 @@ next_file(ARCHD *arcn)
 			arcn->type = PAX_DIR;
 			if (!tflag)
 				break;
-			add_atdir(ftent->fts_path, arcn->sb.st_dev,
-			    arcn->sb.st_ino, arcn->sb.st_mtime,
-			    arcn->sb.st_atime);
+			add_atdir(ftent->fts_path, &arcn->sb);
 			break;
 		case S_IFCHR:
 			arcn->type = PAX_CHR;
@@ -479,7 +489,7 @@ next_file(ARCHD *arcn)
 			}
 			/*
 			 * set link name length, watch out readlink does not
-			 * always NUL terminate the link path
+			 * NUL terminate the link path
 			 */
 			arcn->ln_name[cnt] = '\0';
 			arcn->ln_nlen = cnt;
@@ -552,7 +562,7 @@ getpathname(char *buf, int buflen)
 		term = '\n';
 	}
 	while ((ch = getchar()) != term && ch != EOF)
-		;
+		continue;
 	paxwarn(1, "Ignoring too-long pathname: %s", buf);
 	return(NULL);
 }

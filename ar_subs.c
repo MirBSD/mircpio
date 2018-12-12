@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_subs.c,v 1.33 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: ar_subs.c,v 1.48 2016/08/26 05:06:14 guenther Exp $	*/
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
 /*-
@@ -36,22 +36,31 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
+#if HAVE_BOTH_TIME_H
 #include <sys/time.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <string.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <time.h>
-#include "pax.h"
-#include "extern.h"
-#include "options.h"
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
+#include <sys/stat.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.18 2017/08/07 20:10:13 tg Exp $");
+#include "pax.h"
+#include "ftimes.h"
+#include "extern.h"
+
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.19 2018/12/12 18:08:41 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -79,7 +88,6 @@ list(void)
 	ARCHD *arcn;
 	int res;
 	ARCHD archd;
-	time_t now;
 
 	arcn = &archd;
 	/*
@@ -93,10 +101,10 @@ list(void)
 	    ((*frmt->st_rd)() < 0))
 		return;
 
+#if !HAVE_UG_FROM_UGID
 	if (vflag && ((uidtb_start() < 0) || (gidtb_start() < 0)))
 		return;
-
-	now = time(NULL);
+#endif
 
 	/*
 	 * step through the archive until the format says it is done
@@ -134,7 +142,7 @@ list(void)
 			if ((res = mod_name(arcn)) < 0)
 				break;
 			if (res == 0)
-				ls_list(arcn, now, stdout);
+				ls_list(arcn, stdout);
 		}
 
 		/*
@@ -151,8 +159,28 @@ list(void)
 	 */
 	(void)(*frmt->end_rd)();
 	(void)sigprocmask(SIG_BLOCK, &s_mask, NULL);
-	ar_close();
+	ar_close(0);
 	pat_chk();
+}
+
+static int
+cmp_file_times(int mtime_flag, int ctime_flag, ARCHD *arcn, struct stat *sbp)
+{
+	struct stat sb;
+
+	if (sbp == NULL) {
+		if (lstat(arcn->name, &sb) != 0)
+			return (0);
+		sbp = &sb;
+	}
+
+	if (ctime_flag && mtime_flag)
+		return (st_timecmp(m, &arcn->sb, sbp, <=) &&
+		    st_timecmp(c, &arcn->sb, sbp, <=));
+	else if (ctime_flag)
+		return (st_timecmp(c, &arcn->sb, sbp, <=));
+	else
+		return (st_timecmp(m, &arcn->sb, sbp, <=));
 }
 
 /*
@@ -168,9 +196,7 @@ extract(void)
 	int res;
 	off_t cnt;
 	ARCHD archd;
-	struct stat sb;
 	int fd;
-	time_t now;
 
 	sltab_start();
 
@@ -190,8 +216,6 @@ extract(void)
 	 */
 	if (iflag && (name_start() < 0))
 		return;
-
-	now = time(NULL);
 
 	/*
 	 * step through each entry on the archive until the format read routine
@@ -234,22 +258,10 @@ extract(void)
 		 * file AFTER the name mod. In honesty the pax spec is probably
 		 * flawed in this respect.
 		 */
-		if ((uflag || Dflag) && ((lstat(arcn->name, &sb) == 0))) {
-			if (uflag && Dflag) {
-				if ((arcn->sb.st_mtime <= sb.st_mtime) &&
-				    (arcn->sb.st_ctime <= sb.st_ctime)) {
-					(void)rd_skip(arcn->skip + arcn->pad);
-					continue;
-				}
-			} else if (Dflag) {
-				if (arcn->sb.st_ctime <= sb.st_ctime) {
-					(void)rd_skip(arcn->skip + arcn->pad);
-					continue;
-				}
-			} else if (arcn->sb.st_mtime <= sb.st_mtime) {
-				(void)rd_skip(arcn->skip + arcn->pad);
-				continue;
-			}
+		if ((uflag || Dflag) &&
+		    cmp_file_times(uflag, Dflag, arcn, NULL)) {
+			(void)rd_skip(arcn->skip + arcn->pad);
+			continue;
 		}
 
 		/*
@@ -270,27 +282,15 @@ extract(void)
 		 * Non standard -Y and -Z flag. When the existing file is
 		 * same age or newer skip
 		 */
-		if ((Yflag || Zflag) && ((lstat(arcn->name, &sb) == 0))) {
-			if (Yflag && Zflag) {
-				if ((arcn->sb.st_mtime <= sb.st_mtime) &&
-				    (arcn->sb.st_ctime <= sb.st_ctime)) {
-					(void)rd_skip(arcn->skip + arcn->pad);
-					continue;
-				}
-			} else if (Yflag) {
-				if (arcn->sb.st_ctime <= sb.st_ctime) {
-					(void)rd_skip(arcn->skip + arcn->pad);
-					continue;
-				}
-			} else if (arcn->sb.st_mtime <= sb.st_mtime) {
-				(void)rd_skip(arcn->skip + arcn->pad);
-				continue;
-			}
+		if ((Yflag || Zflag) &&
+		    cmp_file_times(Yflag, Zflag, arcn, NULL)) {
+			(void)rd_skip(arcn->skip + arcn->pad);
+			continue;
 		}
 
 		if (vflag) {
 			if (vflag > 1)
-				ls_list(arcn, now, listf);
+				ls_list(arcn, listf);
 			else {
 				(void)safe_print(arcn->name, listf);
 				vfpart = 1;
@@ -312,18 +312,18 @@ extract(void)
 		/*
 		 * all ok, extract this member based on type
 		 */
-		if ((arcn->type != PAX_REG) && (arcn->type != PAX_CTG)) {
+		if (!PAX_IS_REG(arcn->type)) {
 			/*
 			 * process archive members that are not regular files.
 			 * throw out padding and any data that might follow the
 			 * header (as determined by the format).
 			 */
 			if (!to_stdout) {
-				if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG)) {
+				if (PAX_IS_HARDLINK(arcn->type)) {
 					res = lnk_creat(arcn, &fd);
 					if (fd != -1)
 						goto extdata;
-				} else
+				}else
 					res = node_creat(arcn);
 			}
 
@@ -380,9 +380,9 @@ extract(void)
 	 */
 	(void)(*frmt->end_rd)();
 	(void)sigprocmask(SIG_BLOCK, &s_mask, NULL);
-	ar_close();
+	ar_close(0);
 	sltab_process(0);
-	proc_dir();
+	proc_dir(0);
 	pat_chk();
 }
 
@@ -401,7 +401,6 @@ wr_archive(ARCHD *arcn, int is_app)
 	off_t cnt;
 	int (*wrf)(ARCHD *);
 	int fd = -1;
-	time_t now;
 
 	/*
 	 * if this format supports hard link storage, start up the database
@@ -435,8 +434,6 @@ wr_archive(ARCHD *arcn, int is_app)
 	if (iflag && (name_start() < 0))
 		return;
 
-	now = time(NULL);
-
 	/*
 	 * while there are files to archive, process them one at at time
 	 */
@@ -468,17 +465,16 @@ wr_archive(ARCHD *arcn, int is_app)
 		if (hlk && (chk_lnk(arcn) < 0))
 			break;
 
-		if ((arcn->type == PAX_REG) || (arcn->type == PAX_HRG) ||
-		    (arcn->type == PAX_CTG)) {
+		if (PAX_IS_REG(arcn->type) || (arcn->type == PAX_HRG)) {
 			/*
 			 * we will have to read this file. by opening it now we
 			 * can avoid writing a header to the archive for a file
 			 * we were later unable to read (we also purge it from
 			 * the link table).
 			 */
-			if ((fd = open(arcn->org_name, O_RDONLY, 0)) < 0) {
-				syswarn(1,errno, "Unable to open %s to read",
-					arcn->org_name);
+			if ((fd = binopen3(0, arcn->org_name, O_RDONLY, 0)) < 0) {
+				syswarn(1, errno, "Unable to open %s to read",
+				    arcn->org_name);
 				purg_lnk(arcn);
 				continue;
 			}
@@ -509,7 +505,7 @@ wr_archive(ARCHD *arcn, int is_app)
 
 		if (vflag) {
 			if (vflag > 1)
-				ls_list(arcn, now, listf);
+				ls_list(arcn, listf);
 			else {
 				(void)safe_print(arcn->name, listf);
 				vfpart = 1;
@@ -580,9 +576,9 @@ wr_archive(ARCHD *arcn, int is_app)
 		wr_fin();
 	}
 	(void)sigprocmask(SIG_BLOCK, &s_mask, NULL);
-	ar_close();
+	ar_close(0);
 	if (tflag)
-		proc_dir();
+		proc_dir(0);
 	ftree_chk();
 }
 
@@ -879,14 +875,7 @@ copy(void)
 
 			if (res == 0) {
 				ftree_skipped_newer();
-				if (uflag && Dflag) {
-					if ((arcn->sb.st_mtime<=sb.st_mtime) &&
-					    (arcn->sb.st_ctime<=sb.st_ctime))
-						continue;
-				} else if (Dflag) {
-					if (arcn->sb.st_ctime <= sb.st_ctime)
-						continue;
-				} else if (arcn->sb.st_mtime <= sb.st_mtime)
+				if (cmp_file_times(uflag, Dflag, arcn, &sb))
 					continue;
 			}
 		}
@@ -911,17 +900,9 @@ copy(void)
 		 * Non standard -Y and -Z flag. When the existing file is
 		 * same age or newer skip
 		 */
-		if ((Yflag || Zflag) && ((lstat(arcn->name, &sb) == 0))) {
-			if (Yflag && Zflag) {
-				if ((arcn->sb.st_mtime <= sb.st_mtime) &&
-				    (arcn->sb.st_ctime <= sb.st_ctime))
-					continue;
-			} else if (Yflag) {
-				if (arcn->sb.st_ctime <= sb.st_ctime)
-					continue;
-			} else if (arcn->sb.st_mtime <= sb.st_mtime)
-				continue;
-		}
+		if ((Yflag || Zflag) &&
+		    cmp_file_times(Yflag, Zflag, arcn, NULL))
+			continue;
 
 		if (vflag) {
 			(void)safe_print(arcn->name, listf);
@@ -952,11 +933,11 @@ copy(void)
 		/*
 		 * have to create a new file
 		 */
-		if ((arcn->type != PAX_REG) && (arcn->type != PAX_CTG)) {
+		if (!PAX_IS_REG(arcn->type)) {
 			/*
 			 * create a link or special file
 			 */
-			if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG))
+			if (PAX_IS_HARDLINK(arcn->type))
 				res = lnk_creat(arcn, NULL);
 			else
 				res = node_creat(arcn);
@@ -973,7 +954,7 @@ copy(void)
 		 * have to copy a regular file to the destination directory.
 		 * first open source file and then create the destination file
 		 */
-		if ((fdsrc = open(arcn->org_name, O_RDONLY, 0)) < 0) {
+		if ((fdsrc = binopen3(0, arcn->org_name, O_RDONLY, 0)) < 0) {
 			syswarn(1, errno, "Unable to open %s to read",
 			    arcn->org_name);
 			purg_lnk(arcn);
@@ -1004,9 +985,9 @@ copy(void)
 	 * multiple entry into the cleanup code.
 	 */
 	(void)sigprocmask(SIG_BLOCK, &s_mask, NULL);
-	ar_close();
+	ar_close(0);
 	sltab_process(0);
-	proc_dir();
+	proc_dir(0);
 	ftree_chk();
 }
 

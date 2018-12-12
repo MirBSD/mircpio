@@ -1,6 +1,3 @@
-/*	$OpenBSD: ftree.h,v 1.5 2008/05/06 06:54:28 henning Exp $	*/
-/*	$NetBSD: ftree.h,v 1.3 1995/03/21 09:07:23 cgd Exp $	*/
-
 /*-
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -33,24 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ftree.h	8.1 (Berkeley) 5/31/93
+ *	@(#)pax.h	8.2 (Berkeley) 4/18/94
  */
 
-#ifndef MIRCPIO_FTREE_H
-#define MIRCPIO_FTREE_H "$MirOS: src/bin/pax/ftree.h,v 1.3 2016/03/06 14:12:27 tg Exp $"
+#ifdef EXTERN
+__IDSTRING(rcsid_ftimes_h, "$MirOS: src/bin/pax/ftimes.h,v 1.2 2018/12/12 18:08:44 tg Exp $");
+#endif
 
 /*
- * Data structure used by the ftree.c routines to store the file args to be
- * handed to fts(). It keeps a reference count of which args generated a
- * "selected" member
+ * Time data for a given file.  This is usually embedded in a structure
+ * indexed by dev+ino, by name, by order in the archive, etc.  set_attr()
+ * takes one of these and will only change the times or mode if the file
+ * at the given name has the indicated dev+ino.
  */
-
-typedef struct ftree {
-	char		*fname;		/* file tree name */
-	int		refcnt;		/* has tree had a selected file? */
-	int		newercnt;	/* skipped due to -u/-D */
-	int		chflg;		/* change directory flag */
-	struct ftree	*fow;		/* pointer to next entry on list */
-} FTREE;
-
-#endif
+struct file_times {
+	char	*ft_name;		/* name of file to set the times on */
+	ino_t	ft_ino;			/* inode number to verify */
+	dev_t	ft_dev;			/* device number to verify */
+	struct stat sb;			/* times to set (atime, mtime) */
+};

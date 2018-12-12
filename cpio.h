@@ -38,8 +38,9 @@
  *	@(#)cpio.h	8.1 (Berkeley) 5/31/93
  */
 
-#ifndef MIRCPIO_CPIO_H
-#define MIRCPIO_CPIO_H "$MirOS: src/bin/pax/cpio.h,v 1.5 2016/03/06 14:12:27 tg Exp $"
+#ifdef EXTERN
+__IDSTRING(rcsid_cpio_h, "$MirOS: src/bin/pax/cpio.h,v 1.6 2018/12/12 18:08:43 tg Exp $");
+#endif
 
 /*
  * Defines common to all versions of cpio
@@ -153,5 +154,3 @@ typedef struct {
 #define VCPIO_PAD(x)	((4 - ((x) & 3)) & 3)	/* pad to next 4 byte word */
 #define VCPIO_MASK	0xffffffff	/* mask for dev/ino fields */
 #endif /* _PAX_ */
-
-#endif

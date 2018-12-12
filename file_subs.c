@@ -6,6 +6,7 @@
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2018
  *	Jonathan de Boyne Pollard <J.deBoynePollard-newsgroups@NTLWorld.COM>
+ *	mirabilos <t.glaser@tarent.de>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
  * Copyright (c) 1992 Keith Muller.
@@ -40,59 +41,51 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/uio.h>
+#if HAVE_BOTH_TIME_H
+#include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
-#ifdef __INTERIX
+#if HAVE_UTIME_H
 #include <utime.h>
 #endif
+
 #include "pax.h"
-#include "options.h"
+#define EXTERN
+#include "ftimes.h"
+#undef EXTERN
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.27 2018/12/12 00:23:05 tg Exp $");
-
-#ifndef __GLIBC_PREREQ
-#define __GLIBC_PREREQ(maj,min)	0
-#endif
-
-#if defined(__INTERIX)
-#define PAX_UTIME
-#elif defined(__GLIBC__) && !defined(PAX_DONT_USE_AT_FUNCTIONS)
-/*XXX this really needs autoconfiguration */
-/*XXX WRONG for old glibc, or glibc on non-*at() OS */
-#define PAX_UTIMENSAT
-#define PAX_FUTIMENS
-#else
-#define PAX_UTIMES
-#if (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 3))
-/*XXX also wrong, could also use futimens() here */
-#define PAX_FUTIMES
-#endif
-#endif
-
-#if defined(PAX_FUTIMES) || defined(PAX_FUTIMENS)
-#define PAX_FSET_FTIME
-#endif
-
-static int mk_link(char *, struct stat *, char *, int);
-#ifdef PAX_FSET_FTIME
-static void fset_ftime(char *, int, time_t, time_t, int);
-#endif
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.28 2018/12/12 18:08:43 tg Exp $");
 
 /*
  * routines that deal with file operations such as: creating, removing;
  * and setting access modes, uid/gid and times of files
  */
+
+#if HAVE_FUTIMENS || HAVE_FUTIMES
+#define PAX_FSET_FTIME
+#endif
+
+static int mk_link(char *, struct stat *, char *, int);
+#ifdef PAX_FSET_FTIME
+static void fset_ftime(const char *, int, const struct stat *, int);
+#endif
 
 /*
  * file_creat()
@@ -120,9 +113,9 @@ file_creat(ARCHD *arcn)
 	 * first with lstat.
 	 */
 	file_mode = arcn->sb.st_mode & FILEBITS;
-	if ((fd = open(arcn->name, O_WRONLY | O_CREAT | O_EXCL,
+	if ((fd = binopen3(0, arcn->name, O_WRONLY | O_CREAT | O_EXCL,
 	    file_mode)) >= 0)
-		return(fd);
+		return (fd);
 
 	/*
 	 * the file seems to exist. First we try to get rid of it (found to be
@@ -138,7 +131,7 @@ file_creat(ARCHD *arcn)
 		 * the path and give it a final try. if chk_path() finds that
 		 * it cannot fix anything, we will skip the last attempt
 		 */
-		if ((fd = open(arcn->name, O_WRONLY | O_CREAT | O_TRUNC,
+		if ((fd = binopen3(0, arcn->name, O_WRONLY | O_CREAT | O_TRUNC,
 		    file_mode)) >= 0)
 			break;
 		oerrno = errno;
@@ -186,8 +179,7 @@ file_close(ARCHD *arcn, int fd)
 		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
 #ifdef PAX_FSET_FTIME
 	if (patime || pmtime)
-		fset_ftime(arcn->name, fd, arcn->sb.st_mtime,
-		    arcn->sb.st_atime, 0);
+		fset_ftime(arcn->name, fd, &arcn->sb, 0);
 #endif
 	if (close(fd) < 0)
 		syswarn(0, errno, "Unable to close file descriptor on %s",
@@ -207,7 +199,7 @@ int
 lnk_creat(ARCHD *arcn, int *fdp)
 {
 	struct stat sb;
-	int rv;
+	int res;
 
 	/*
 	 * we may be running as root, so we have to be sure that link target
@@ -225,30 +217,31 @@ lnk_creat(ARCHD *arcn, int *fdp)
 		return(-1);
 	}
 
-	rv = mk_link(arcn->ln_name, &sb, arcn->name, 0);
-	if (rv == 0) {
+	res = mk_link(arcn->ln_name, &sb, arcn->name, 0);
+	if (res == 0) {
 		/* check for a hardlink to a placeholder symlink */
-		rv = sltab_add_link(arcn->name, &sb);
+		res = sltab_add_link(arcn->name, &sb);
 
-		if (rv < 0) {
+		if (res < 0) {
 			/* arrgh, it failed, clean up */
 			unlink(arcn->name);
 		}
 	}
-	if (fdp != NULL && rv == 0 && sb.st_size == 0 && arcn->skip > 0) {
+
+	if (fdp != NULL && res == 0 && sb.st_size == 0 && arcn->skip > 0) {
 		/* request to write out file data late (broken archive) */
 		if (pmode)
 			set_pmode(arcn->name, 0600, /*XXX I think */ 0);
-		if ((*fdp = open(arcn->name, O_WRONLY | O_TRUNC)) == -1) {
-			rv = errno;
-			syswarn(1, rv, "Unable to re-open %s", arcn->name);
+		if ((*fdp = binopen2(0, arcn->name, O_WRONLY | O_TRUNC)) == -1) {
+			res = errno;
+			syswarn(1, res, "Unable to re-open %s", arcn->name);
 			if (pmode)
 				set_pmode(arcn->name, sb.st_mode, 0);
 		}
-		rv = 0;
+		res = 0;
 	} else if (fdp != NULL)
 		*fdp = -1;
-	return (rv);
+	return (res);
 }
 
 /*
@@ -385,7 +378,11 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 	 * try again)
 	 */
 	for (;;) {
+#if HAVE_LINKAT
+		if (linkat(AT_FDCWD, to, AT_FDCWD, from, 0) == 0)
+#else
 		if (link(to, from) == 0)
+#endif
 			break;
 		oerrno = errno;
 		if (S_ISLNK(to_sb->st_mode)) {
@@ -407,7 +404,7 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 			int fdsrc, fddest;
 			ARCHD tarcn;
 
-			if ((fdsrc = open(to, O_RDONLY, 0)) < 0) {
+			if ((fdsrc = binopen3(0, to, O_RDONLY, 0)) < 0) {
 				if (!ign)
 					syswarn(1, errno,
 					    "Unable to open %s to read", to);
@@ -459,7 +456,7 @@ node_creat(ARCHD *arcn)
 	int pass = 0;
 	mode_t file_mode;
 	struct stat sb;
-	char *target = NULL;
+	char *allocd = NULL;
 	char *nm = arcn->name;
 	int len, defer_pmode = 0;
 
@@ -479,11 +476,12 @@ node_creat(ARCHD *arcn)
 			 * potential symlink chain before trying to create the
 			 * directory.
 			 */
-			if (strcmp(NM_TAR, argv0) == 0 && Lflag) {
+			if (op_mode == OP_TAR && Lflag) {
 				while (lstat(nm, &sb) == 0 &&
 				    S_ISLNK(sb.st_mode)) {
-					target = malloc(sb.st_size + 1);
+					char *target = malloc(sb.st_size + 1);
 					if (target == NULL) {
+						free(allocd);
 						oerrno = ENOMEM;
 						syswarn(1, oerrno,
 						    "Out of memory");
@@ -500,6 +498,8 @@ node_creat(ARCHD *arcn)
 					}
 					target[len] = '\0';
 					nm = target;
+					free(allocd);
+					allocd = target;
 				}
 			}
 			res = mkdir(nm, file_mode);
@@ -526,7 +526,7 @@ node_creat(ARCHD *arcn)
 			paxwarn(0,
 			    "%s skipped. Sockets cannot be copied or extracted",
 			    nm);
-			free(target);
+			free(allocd);
 			return (-1);
 		case PAX_SLK:
 			if (arcn->ln_name[0] != '/' &&
@@ -554,8 +554,8 @@ node_creat(ARCHD *arcn)
 			 * we should never get here
 			 */
 			paxwarn(0, "%s has an unknown file type, skipping",
-				nm);
-			free(target);
+			    nm);
+			free(allocd);
 			return (-1);
 		}
 
@@ -572,7 +572,7 @@ node_creat(ARCHD *arcn)
 		 */
 		oerrno = errno;
 		if ((ign = unlnk_exist(nm, arcn->type)) < 0) {
-			free(target);
+			free(allocd);
 			return (-1);
 		}
 
@@ -581,19 +581,17 @@ node_creat(ARCHD *arcn)
 
 		if (nodirs || chk_path(nm,arcn->sb.st_uid,arcn->sb.st_gid) < 0) {
 			syswarn(1, oerrno, "Could not create: %s", nm);
-			free(target);
+			free(allocd);
 			return (-1);
 		}
 	}
-	free(target);
 
 	/*
 	 * we were able to create the node. set uid/gid, modes and times
 	 */
 	if (pids)
-		res = ((arcn->type == PAX_SLK) ?
-		    set_lids(nm, arcn->sb.st_uid, arcn->sb.st_gid) :
-		    set_ids(nm, arcn->sb.st_uid, arcn->sb.st_gid));
+		res = set_ids(nm, arcn->sb.st_uid, arcn->sb.st_gid,
+		    arcn->type == PAX_SLK);
 	else
 		res = 0;
 
@@ -607,7 +605,7 @@ node_creat(ARCHD *arcn)
 	if (pmode && !defer_pmode)
 		set_pmode(nm, arcn->sb.st_mode, arcn->type == PAX_SLK);
 
-	if (arcn->type == PAX_DIR && strcmp(NM_CPIO, argv0) != 0) {
+	if (arcn->type == PAX_DIR && op_mode != OP_CPIO) {
 		/*
 		 * Dirs must be processed again at end of extract to set times
 		 * and modes to agree with those stored in the archive. However
@@ -646,8 +644,8 @@ node_creat(ARCHD *arcn)
 			add_dir(nm, &(arcn->sb), 0);
 		}
 	} else if (patime || pmtime)
-		set_ftime(nm, arcn->sb.st_mtime, arcn->sb.st_atime, 0,
-		    arcn->type == PAX_SLK);
+		set_ftime(nm, &arcn->sb, 0, arcn->type == PAX_SLK);
+	free(allocd);
 	return (0);
 }
 
@@ -781,7 +779,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 		 */
 		retval = 0;
 		if (pids)
-			(void)set_ids(name, st_uid, st_gid);
+			(void)set_ids(name, st_uid, st_gid, 0);
 
 		/*
 		 * make sure the user doesn't have some strange umask that
@@ -814,21 +812,28 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
  */
 
 void
-set_ftime(char *fnm, time_t mtime, time_t atime, int frc,
-    int issymlink __attribute__((__unused__)))
+set_ftime(const char *fnm, const struct stat *sbp, int frc,
+    int issymlink MKSH_A_UNUSED)
 {
-#if defined(PAX_UTIMENSAT)
-	static struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
-#elif defined(PAX_UTIMES)
-	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
-	struct stat sb;
-#elif defined(PAX_UTIME)
-	struct utimbuf u;
-	struct stat sb;
+#if HAVE_UTIMENSAT
+	struct timespec ts[2];
 #else
-# error define one of PAX_UTIMENSAT, PAX_UTIMES, PAX_UTIME
+	struct {
+		time_t tv_sec;
+		long tv_nsec;
+	} ts[2];
+#if HAVE_UTIMES
+	struct timeval tv[2];
+#else
+	struct utimbuf u;
+#endif
+	struct stat sb;
 #endif
 	int rv;
+
+	/* pre-initialise values to set */
+	st_timexp(a, &ts[0], sbp);
+	st_timexp(m, &ts[1], sbp);
 
 	if (!frc && (!patime || !pmtime)) {
 		/*
@@ -836,7 +841,7 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc,
 		 * wants set. We get the current values of the times if
 		 * we need them (utimensat does not).
 		 */
-#if defined(PAX_UTIMENSAT)
+#if HAVE_UTIMENSAT
 		if (!patime)
 			ts[0].tv_nsec = UTIME_OMIT;
 		if (!pmtime)
@@ -844,48 +849,59 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc,
 #else
 		if (lstat(fnm, &sb) == 0) {
 			if (!patime)
-				atime = sb.st_atime;
+				st_timexp(a, &ts[0], &sb);
 			if (!pmtime)
-				mtime = sb.st_mtime;
+				st_timexp(m, &ts[1], &sb);
 		} else
 			syswarn(0, errno, "Unable to stat %s", fnm);
 #endif
 	}
 
 	/* set the times */
-#if defined(PAX_UTIMENSAT)
-	ts[0].tv_sec = atime;
-	ts[1].tv_sec = mtime;
-	rv = utimensat(AT_FDCWD, fnm, ts, AT_SYMLINK_NOFOLLOW);
-#elif defined(PAX_UTIMES)
-	tv[0].tv_sec = atime;
-	tv[1].tv_sec = mtime;
+#if HAVE_UTIMENSAT
+	rv = utimensat(AT_FDCWD, fnm, tv, AT_SYMLINK_NOFOLLOW);
+#elif HAVE_UTIMES
+	tv[0].tv_sec = ts[0].tv_sec;
+	tv[0].tv_usec = ts[0].tv_nsec / 1000;
+	tv[1].tv_sec = ts[1].tv_sec;
+	tv[1].tv_usec = ts[1].tv_nsec / 1000;
 	rv = (issymlink ? lutimes : utimes)(fnm, tv);
+	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
+		/* might be glibc */
+		return;
 #else
 	if (issymlink)
 		/* no can do */
 		return;
-	u.actime = atime;
-	u.modtime = mtime;
+	u.actime = ts[0].tv_sec;
+	u.modtime = ts[1].tv_sec;
 	rv = utime(fnm, &u);
 #endif
+
 	if (rv < 0)
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
-	return;
 }
 
 #ifdef PAX_FSET_FTIME
 static void
-fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
+fset_ftime(const char *fnm, int fd, const struct stat *sbp, int frc)
 {
-#if defined(PAX_FUTIMENS)
-	static struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
+#if HAVE_FUTIMENS
+	struct timespec ts[2];
 #else
-	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
+	struct {
+		time_t tv_sec;
+		long tv_nsec;
+	} ts[2];
+	struct timeval tv[2];
 	struct stat sb;
 #endif
 	int rv;
+
+	/* pre-initialise values to set */
+	st_timexp(a, &ts[0], sbp);
+	st_timexp(m, &ts[1], sbp);
 
 	if (!frc && (!patime || !pmtime)) {
 		/*
@@ -893,7 +909,7 @@ fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
 		 * wants set. We get the current values of the times if
 		 * we need them (futimens does not).
 		 */
-#if defined(PAX_FUTIMENS)
+#if HAVE_FUTIMENS
 		if (!patime)
 			ts[0].tv_nsec = UTIME_OMIT;
 		if (!pmtime)
@@ -901,22 +917,22 @@ fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
 #else
 		if (fstat(fd, &sb) == 0) {
 			if (!patime)
-				atime = sb.st_atime;
+				st_timexp(a, &ts[0], &sb);
 			if (!pmtime)
-				mtime = sb.st_mtime;
+				st_timexp(m, &ts[1], &sb);
 		} else
 			syswarn(0, errno, "Unable to stat %s", fnm);
 #endif
 	}
 
 	/* set the times */
-#if defined(PAX_FUTIMENS)
-	ts[0].tv_sec = atime;
-	ts[1].tv_sec = mtime;
+#if HAVE_FUTIMENS
 	rv = futimens(fd, ts);
 #else
-	tv[0].tv_sec = atime;
-	tv[1].tv_sec = mtime;
+	tv[0].tv_sec = ts[0].tv_sec;
+	tv[0].tv_usec = ts[0].tv_nsec / 1000;
+	tv[1].tv_sec = ts[1].tv_sec;
+	tv[1].tv_usec = ts[1].tv_nsec / 1000;
 	rv = futimes(fd, tv);
 #endif
 	if (rv < 0)
@@ -933,24 +949,39 @@ fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
  */
 
 int
-set_ids(char *fnm, uid_t uid, gid_t gid)
+set_ids(char *fnm, uid_t uid, gid_t gid, int issymlink MKSH_A_UNUSED)
 {
-	if (chown(fnm, uid, gid) < 0) {
+	int rv;
+
+#if HAVE_FCHOWNAT
+	rv = fchownat(AT_FDCWD, fnm, uid, gid, AT_SYMLINK_NOFOLLOW);
+#elif HAVE_LCHOWN
+	rv = (issymlink ? lchown : chown)(fnm, uid, gid);
+	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
+		/* might be glibc */
+		return (0);
+#else
+	if (issymlink)
+		/* no can do */
+		return (0);
+	rv = chown(fnm, uid, gid);
+#endif
+
+	if (rv < 0) {
 		/*
 		 * ignore EPERM unless in verbose mode or being run by root.
 		 * if running as pax, POSIX requires a warning.
 		 */
-		if (strcmp(NM_PAX, argv0) == 0
+		if (/* portability, imake style though */
 #ifndef __INTERIX
-		    || errno != EPERM || vflag ||
-		    geteuid() == 0
+		    errno != EPERM || vflag || geteuid() == 0 ||
 #endif
-		    )
+		    op_mode == OP_PAX)
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
-		return(-1);
+		return (-1);
 	}
-	return(0);
+	return (0);
 }
 
 int
@@ -961,43 +992,16 @@ fset_ids(char *fnm, int fd, uid_t uid, gid_t gid)
 		 * ignore EPERM unless in verbose mode or being run by root.
 		 * if running as pax, POSIX requires a warning.
 		 */
-		if (strcmp(NM_PAX, argv0) == 0 || errno != EPERM || vflag ||
-		    geteuid() == 0)
-			syswarn(1, errno, "Unable to set file uid/gid of %s",
-			    fnm);
-		return(-1);
-	}
-	return(0);
-}
-
-/*
- * set_lids()
- *	set the uid and gid of a filesystem node
- * Return:
- *	0 when set, -1 on failure
- */
-
-int
-set_lids(char *fnm, uid_t uid, gid_t gid)
-{
-#ifndef __APPLE__
-	if (lchown(fnm, uid, gid) < 0) {
-		/*
-		 * ignore EPERM unless in verbose mode or being run by root.
-		 * if running as pax, POSIX requires a warning.
-		 */
-		if (strcmp(NM_PAX, argv0) == 0
+		if (/* portability, imake style though */
 #ifndef __INTERIX
-		    || errno != EPERM || vflag ||
-		    geteuid() == 0
+		    errno != EPERM || vflag || geteuid() == 0 ||
 #endif
-		    )
+		    op_mode == OP_PAX)
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
-		return(-1);
+		return (-1);
 	}
-#endif
-	return(0);
+	return (0);
 }
 
 /*
@@ -1006,38 +1010,29 @@ set_lids(char *fnm, uid_t uid, gid_t gid)
  */
 
 void
-set_pmode(char *fnm, mode_t mode, int issymlink __attribute__((__unused__)))
+set_pmode(char *fnm, mode_t mode, int issymlink MKSH_A_UNUSED)
 {
 	int rv;
 
 	mode &= ABITS;
-#if defined(__MirBSD__)
-	rv = (issymlink ? lchmod : chmod)(fnm, mode);
-#elif defined(__OpenBSD__)
+#if HAVE_FCHMODAT
 	rv = fchmodat(AT_FDCWD, fnm, mode, AT_SYMLINK_NOFOLLOW);
-#else
-	if (!issymlink) {
+	if (rv < 0 && (errno == ENOSYS || errno == ENOTSUP)) {
+		/* glibc sucks */
+		if (issymlink)
+			return;
 		rv = chmod(fnm, mode);
-		goto out;
 	}
-	/*
-	 * glibc has both fchmodat and lchmod, but they (the former
-	 * with AT_SYMLINK_NOFOLLOW given) always return ENOTSUP or
-	 * ENOSYS; other OSes likely don’t have them at all
-	 */
-#ifdef HAVE_LCHMOD
-	if (!(rv = lchmod(fnm, mode)) || errno != ENOSYS)
-		goto out;
-#endif
-#if defined(HAVE_FCHMODAT) && defined(AT_SYMLINK_NOFOLLOW)
-	if (!(rv = fchmodat(AT_FDCWD, fnm, mode, AT_SYMLINK_NOFOLLOW)) ||
-	    errno != ENOTSUP)
-		goto out;
-#endif
-	/* cannot set the mode of a symbolic link, silently ignore */
-	return;
-
- out:
+#elif HAVE_LCHMOD
+	rv = (issymlink ? lchmod : chmod)(fnm, mode);
+	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
+		/* similarily glibc */
+		return;
+#else
+	if (issymlink)
+		/* no can do */
+		return (0);
+	rv = chmod(fnm, mode);
 #endif
 	if (rv < 0)
 		syswarn(1, errno, "Could not set permissions on %s", fnm);
@@ -1049,7 +1044,6 @@ fset_pmode(char *fnm, int fd, mode_t mode)
 	mode &= ABITS;
 	if (fchmod(fd, mode) < 0)
 		syswarn(1, errno, "Could not set permissions on %s", fnm);
-	return;
 }
 
 /*
@@ -1072,11 +1066,7 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 	 * so do *not* use O_NOFOLLOW.  The dev+ino check will
 	 * protect us from evil.
 	 */
-	fd = open(ft->ft_name, O_RDONLY
-#ifdef O_DIRECTORY
-	    | O_DIRECTORY
-#endif
-	    );
+	fd = binopen2(BO_MAYBE_DIR, ft->ft_name, O_RDONLY);
 	if (fd == -1) {
 		if (!in_sig)
 			syswarn(1, errno, "Unable to restore mode and times"
@@ -1105,17 +1095,17 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 		/* Whew, it's a match!  Is there anything to change? */
 		if (do_mode && (mode & ABITS) != (sb.st_mode & ABITS))
 			fset_pmode(ft->ft_name, fd, mode);
-		if (((force_times || patime) && ft->ft_atime != sb.st_atime) ||
-		    ((force_times || pmtime) && ft->ft_mtime != sb.st_mtime))
-			fset_ftime(ft->ft_name, fd, ft->ft_mtime,
-			    ft->ft_atime, force_times);
+#ifdef PAX_FSET_FTIME
+		if (((force_times || patime) && st_timecmp(a, &ft->sb, &sb, !=)) ||
+		    ((force_times || pmtime) && st_timecmp(m, &ft->sb, &sb, !=)))
+			fset_ftime(ft->ft_name, fd, &ft->sb, force_times);
+#endif
 		r = 0;
 	}
 	close(fd);
 
 	return (r);
 }
-
 
 /*
  * file_write()
@@ -1193,7 +1183,7 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 		 * only examine up to the end of the current file block or
 		 * remaining characters to write, whatever is smaller
 		 */
-		wcnt = MIN(cnt, *rem);
+		wcnt = MINIMUM(cnt, *rem);
 		cnt -= wcnt;
 		*rem -= wcnt;
 		if (*isempt) {
@@ -1215,12 +1205,12 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 				 * skip, buf is empty so far
 				 */
 				if (fd > -1 &&
-				    lseek(fd, (off_t)wcnt, SEEK_CUR) < 0) {
+				    lseek(fd, wcnt, SEEK_CUR) < 0) {
 					if (errno == ESPIPE)
 						goto isapipe;
-					syswarn(1,errno,"File seek on %s",
-					    name);
-					return(-1);
+					syswarn(1, errno,
+					    "File seek on %s", name);
+					return (-1);
 				}
 				st = pt;
 				continue;
@@ -1288,14 +1278,13 @@ file_flush(int fd, char *fname, int isempt)
 	/*
 	 * move back one byte and write a zero
 	 */
-	if (lseek(fd, (off_t)-1, SEEK_CUR) < 0) {
+	if (lseek(fd, -1, SEEK_CUR) < 0) {
 		syswarn(1, errno, "Failed seek on file %s", fname);
 		return;
 	}
 
 	if (write(fd, blnk, 1) < 0)
 		syswarn(1, errno, "Failed write to file %s", fname);
-	return;
 }
 
 /*
@@ -1305,7 +1294,7 @@ file_flush(int fd, char *fname, int isempt)
  */
 
 void
-rdfile_close(ARCHD *arcn, int *fd)
+rdfile_close(ARCHD *arcn MKSH_A_UNUSED, int *fd)
 {
 	/*
 	 * make sure the file is open
@@ -1316,9 +1305,10 @@ rdfile_close(ARCHD *arcn, int *fd)
 	/*
 	 * user wants last access time reset
 	 */
+#ifdef PAX_FSET_FTIME
 	if (tflag)
-		fset_ftime(arcn->org_name, *fd, arcn->sb.st_mtime,
-		    arcn->sb.st_atime, 1);
+		fset_ftime(arcn->org_name, *fd, &arcn->sb, 1);
+#endif
 
 	(void)close(*fd);
 	*fd = -1;
@@ -1338,9 +1328,9 @@ set_crc(ARCHD *arcn, int fd)
 {
 	int i;
 	int res;
-	off_t cpcnt = 0L;
+	off_t cpcnt = 0;
 	size_t size;
-	u_int32_t crc = 0;
+	uint32_t crc = 0;
 	char tbuf[FILEBLK];
 	struct stat sb;
 
@@ -1348,11 +1338,11 @@ set_crc(ARCHD *arcn, int fd)
 		/*
 		 * hmm, no fd, should never happen. well no crc then.
 		 */
-		arcn->crc = 0L;
+		arcn->crc = 0;
 		return(0);
 	}
 
-	if ((size = (size_t)arcn->sb.st_blksize) > sizeof(tbuf))
+	if ((size = arcn->sb.st_blksize) > sizeof(tbuf))
 		size = sizeof(tbuf);
 
 	/*
@@ -1375,9 +1365,9 @@ set_crc(ARCHD *arcn, int fd)
 		paxwarn(1, "File changed size %s", arcn->org_name);
 	else if (fstat(fd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
-	else if (arcn->sb.st_mtime != sb.st_mtime)
+	else if (st_timecmp(m, &arcn->sb, &sb, !=))
 		paxwarn(1, "File %s was modified during read", arcn->org_name);
-	else if (lseek(fd, (off_t)0L, SEEK_SET) < 0)
+	else if (lseek(fd, 0, SEEK_SET) < 0)
 		syswarn(1, errno, "File rewind failed on: %s", arcn->org_name);
 	else {
 		arcn->crc = crc;

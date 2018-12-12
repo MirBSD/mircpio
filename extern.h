@@ -1,4 +1,4 @@
-/*	$OpenBSD: extern.h,v 1.58 2017/09/12 17:11:11 otto Exp $	*/
+/*	$OpenBSD: extern.h,v 1.59 2018/09/13 12:33:43 millert Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -38,25 +38,26 @@
  *	@(#)extern.h	8.2 (Berkeley) 4/18/94
  */
 
-#ifndef MIRCPIO_EXTERN_H
-#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.33 2018/12/12 00:23:05 tg Exp $"
-
 /*
  * External references from each source file
  */
 
+#ifdef EXTERN
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.34 2018/12/12 18:08:43 tg Exp $");
+#endif
 
+#ifndef PAX_JUST_THE_WARNINGS
 /*
  * ar.c
  */
 int uar_stwr(int);
 int uar_ismagic(char *);
-int uar_id(char *, int) __attribute__((__noreturn__));
+int uar_id(char *, int) MKSH_A_NORETURN;
 int uar_rd(ARCHD *, char *);
 int uar_wr(ARCHD *);
 int uar_wr_data(ARCHD *, int, off_t *);
 off_t uar_endrd(void);
-int uar_trail(ARCHD *, char *, int, int *) __attribute__((__noreturn__));
+int uar_trail(ARCHD *, char *, int, int *) MKSH_A_NORETURN;
 
 /*
  * ar_io.c
@@ -65,7 +66,7 @@ extern const char *arcname;
 extern const char *compress_program;
 extern int force_one_volume;
 int ar_open(const char *);
-void ar_close(void);
+void ar_close(int _in_sig);
 void ar_drain(void);
 int ar_set_wr(void);
 int ar_app_ok(void);
@@ -116,17 +117,33 @@ int buf_fill(void);
 int buf_fill_internal(int);
 int buf_flush(int);
 
+#if !HAVE_UGID_FROM_UG
 /*
  * cache.c
  */
+#if !HAVE_UG_FROM_UGID
 int uidtb_start(void);
 int gidtb_start(void);
+#endif
 int usrtb_start(void);
 int grptb_start(void);
+#if HAVE_UG_FROM_UGID
+#define name_uid(u, frc) ((const char *)user_from_uid((u), !(frc)))
+#define name_gid(g, frc) ((const char *)group_from_gid((g), !(frc)))
+#else
 const char *name_uid(uid_t, int);
 const char *name_gid(gid_t, int);
+#endif
 int uid_name(const char *, uid_t *);
 int gid_name(const char *, gid_t *);
+int uid_uncached(const char *, uid_t *);
+int gid_uncached(const char *, gid_t *);
+#else
+#define uid_name uid_from_user
+#define gid_name gid_from_group
+#define uid_uncached uid_from_user
+#define gid_uncached gid_from_group
+#endif
 
 /*
  * cpio.c
@@ -157,7 +174,6 @@ int bcpio_wr(ARCHD *);
 /*
  * file_subs.c
  */
-extern char *gnu_name_string, *gnu_link_string;
 int file_creat(ARCHD *);
 void file_close(ARCHD *, int);
 int lnk_creat(ARCHD *, int *);
@@ -166,14 +182,14 @@ int chk_same(ARCHD *);
 int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
-void set_ftime(char *, time_t, time_t, int, int);
-int set_ids(char *, uid_t, gid_t);
+void set_ftime(const char *, const struct stat *, int, int);
+int set_ids(char *, uid_t, gid_t, int);
 int fset_ids(char *, int, uid_t, gid_t);
-int set_lids(char *, uid_t, gid_t);
 void set_pmode(char *, mode_t, int);
 void fset_pmode(char *, int, mode_t);
-int set_attr(const struct file_times *, int _force_times, mode_t, int _do_mode,
-    int _in_sig);
+struct file_times; /* avoid pulling time.h globally */
+int set_attr(const struct file_times *, int _force_times, mode_t,
+    int _do_mode, int _in_sig);
 int file_write(int, char *, int, int *, int *, int, char *);
 void file_flush(int, char *, int);
 void rdfile_close(ARCHD *, int *);
@@ -192,13 +208,13 @@ int next_file(ARCHD *);
 /*
  * gen_subs.c
  */
-void ls_list(ARCHD *, time_t, FILE *);
+void ls_list(ARCHD *, FILE *);
 void ls_tty(ARCHD *);
 void safe_print(const char *, FILE *);
 u_long asc_ul(char *, int, int);
 int ul_asc(u_long, char *, int, int);
-ot_type asc_ot(char *, int, int);
-int ot_asc(ot_type, char *, int, int);
+unsigned long long asc_ull(char *, int, int);
+int ull_asc(unsigned long long, char *, int, int);
 size_t fieldcpy(char *, size_t, const char *, size_t);
 
 /*
@@ -211,11 +227,14 @@ int getoldopt(int, char **, const char *);
  */
 extern FSUB fsub[];
 extern const int ford[];
+extern int anonarch;
+extern int to_stdout;
 void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
 void guess_compress_program(int);
+void anonarch_init(void);
 extern char *chdname;
 
 /*
@@ -264,10 +283,15 @@ extern int exit_val;
 extern int docrc;
 extern char *dirptr;
 extern const char *argv0;
+extern enum op_mode { OP_PAX, OP_TAR, OP_CPIO } op_mode;
 extern FILE *listf;
+extern int listfd;
 extern char *tempfile;
 extern char *tempbase;
 extern int havechd;
+extern time_t now;
+
+void sig_cleanup(int) MKSH_A_NORETURN;
 
 /*
  * sel_subs.c
@@ -298,13 +322,13 @@ int add_dev(ARCHD *);
 int map_dev(ARCHD *, u_long, u_long);
 int atdir_start(void);
 void atdir_end(void);
-void add_atdir(char *, dev_t, ino_t, time_t, time_t);
+void add_atdir(const char *, const struct stat *);
 int do_atdir(const char *, dev_t, ino_t);
 int dir_start(void);
 void add_dir(char *, struct stat *, int);
 void delete_dir(dev_t, ino_t);
-void proc_dir(void);
-u_int st_hash(const char *, int, int);
+void proc_dir(int _in_sig);
+unsigned int st_hash(const char *, int, int);
 int flnk_start(void);
 int chk_flnk(ARCHD *);
 
@@ -314,7 +338,7 @@ int chk_flnk(ARCHD *);
 #ifndef SMALL
 extern int tar_nodir;
 #endif
-extern char *gnu_hack_string;
+extern char *gnu_name_string, *gnu_link_string;
 int tar_endwr(void);
 off_t tar_endrd(void);
 int tar_trail(ARCHD *, char *, int, int *);
@@ -335,23 +359,13 @@ extern char fdgetline_err;
 char *fdgetline(int);
 int tty_init(void);
 void tty_prnt(const char *, ...)
-    __attribute__((__format__(__printf__, 1, 2)));
+    MKSH_A_NONNULL(1)
+    MKSH_A_FORMAT(__printf__, 1, 2);
 char *tty_rd(void);
+#endif
 void paxwarn(int, const char *, ...)
-    __attribute__((__format__(__printf__, 2, 3)));
+    MKSH_A_NONNULL(2)
+    MKSH_A_FORMAT(__printf__, 2, 3);
 void syswarn(int, int, const char *, ...)
-    __attribute__((__format__(__printf__, 3, 4)));
-
-/*
- * portability glue
- */
-#ifndef HAVE_STRLCPY
-size_t strlcat(char *, const char *, size_t);
-size_t strlcpy(char *, const char *, size_t);
-#endif
-
-#ifndef HAVE_STRMODE
-void strmode(mode_t, char *);
-#endif
-
-#endif
+    MKSH_A_NONNULL(3)
+    MKSH_A_FORMAT(__printf__, 3, 4);

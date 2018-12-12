@@ -1,47 +1,47 @@
 /*-
- * Copyright (c) 2011, 2017 mirabilos
+ * Copyright © 2011, 2017
+ *	mirabilos <m@mirbsd.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * Provided that these terms and disclaimer and all copyright notices
+ * are retained or reproduced in an accompanying document, permission
+ * is granted to deal in this work without restriction, including un‐
+ * limited rights to use, publicly perform, distribute, sell, modify,
+ * merge, give away, or sublicence.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
+ * This work is provided “AS IS” and WITHOUT WARRANTY of any kind, to
+ * the utmost extent permitted by applicable law, neither express nor
+ * implied; without malicious intent or gross negligence. In no event
+ * may a licensor, author or contributor be held liable for indirect,
+ * direct, other damage, loss, or other issues arising in any way out
+ * of dealing in the work, even if advised of the possibility of such
+ * damage or existence of a defect, except proven that it results out
+ * of said person’s immediate fault when using the work as intended.
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
+#if HAVE_BOTH_TIME_H
 #include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
 #include <sys/stat.h>
 #include <err.h>
-#include <string.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <time.h>
-#include "pax.h"
-#include "extern.h"
-#include "options.h"
-#include "ar.h"
+#include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.9 2017/10/21 19:19:38 tg Exp $");
+#include "pax.h"
+#include "ar.h"
+#include "extern.h"
+
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.10 2018/12/12 18:08:40 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -50,7 +50,6 @@ __RCSID("$MirOS: src/bin/pax/ar.c,v 1.9 2017/10/21 19:19:38 tg Exp $");
 static /*const*/ char magic[8] = {
 	0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A
 };
-
 
 /*
  * initialisation for ar write
@@ -76,8 +75,7 @@ uar_ismagic(char *buf)
  * used during format identification, but we differ
  */
 int
-uar_id(char *buf __attribute__((__unused__)),
-    int len __attribute__((__unused__)))
+uar_id(char *buf MKSH_A_UNUSED, int len MKSH_A_UNUSED)
 {
 	errx(1, "internal error: %s should never have been called",
 	    "uar_id");
@@ -273,10 +271,12 @@ uar_wr(ARCHD *arcn)
 		return (1);
 	}
 
+#ifndef SMALL
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing mode %8lo user %ld:%ld "
 		    "mtime %08lX name '%s'", t_mode[0],
 		    t_uid, t_gid, (u_long)t_mtime, extname);
+#endif
 
 	memset(&h, ' ', sizeof(HD_AR));
 
@@ -330,10 +330,8 @@ uar_endrd(void)
  * another artefact of paxtar integration
  */
 int
-uar_trail(ARCHD *ignore __attribute__((__unused__)),
-    char *buf __attribute__((__unused__)),
-    int in_resync __attribute__((__unused__)),
-    int *cnt __attribute__((__unused__)))
+uar_trail(ARCHD *ignore MKSH_A_UNUSED, char *buf MKSH_A_UNUSED,
+    int in_resync MKSH_A_UNUSED, int *cnt MKSH_A_UNUSED)
 {
 	errx(1, "internal error: %s should never have been called",
 	    "uar_trail");

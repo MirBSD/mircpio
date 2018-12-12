@@ -1,7 +1,8 @@
-/*	$OpenBSD: cache.c,v 1.19 2009/12/22 12:09:36 jasper Exp $	*/
+/*	$OpenBSD: cache.c,v 1.23 2016/08/26 04:08:18 guenther Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2018 mirabilos
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,22 +35,63 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/stat.h>
-#include <string.h>
-#include <stdio.h>
-#include <pwd.h>
+#if HAVE_GRP_H
 #include <grp.h>
-#include <unistd.h>
+#endif
+#include <pwd.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 #include "pax.h"
-#include "cache.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.9 2016/03/06 14:12:26 tg Exp $");
-__IDSTRING(rcsid_cache_h, MIRCPIO_CACHE_H);
+#if HAVE_UGID_FROM_UG
+# error do not include this file if you do not need it
+#endif
+
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.10 2018/12/12 18:08:41 tg Exp $");
+
+/*
+ * Constants and data structures used to implement group and password file
+ * caches. Traditional passwd/group cache routines perform quite poorly with
+ * archives. The chances of hitting a valid lookup with an archive is quite a
+ * bit worse than with files already resident on the filesystem. These misses
+ * create a MAJOR performance cost. To address this problem, these routines
+ * cache both hits and misses.
+ *
+ * NOTE:  name lengths must be as large as those stored in ANY PROTOCOL and
+ * as stored in the passwd and group files. CACHE SIZES MUST BE PRIME
+ */
+#define UNMLEN		32	/* >= user name found in any protocol */
+#define GNMLEN		32	/* >= group name found in any protocol */
+#define UID_SZ		317	/* size of user_name/uid cache */
+#define UNM_SZ		317	/* size of user_name/uid cache */
+#define GID_SZ		251	/* size of gid cache */
+#define GNM_SZ		317	/* size of group name cache */
+#define VALID		1	/* entry and name are valid */
+#define INVALID		2	/* entry valid, name NOT valid */
+
+/*
+ * Node structures used in the user, group, uid, and gid caches.
+ */
+
+typedef struct uidc {
+	int valid;		/* is this a valid or a miss entry */
+	char name[UNMLEN];	/* uid name */
+	uid_t uid;		/* cached uid */
+} UIDC;
+
+typedef struct gidc {
+	int valid;		/* is this a valid or a miss entry */
+	char name[GNMLEN];	/* gid name */
+	gid_t gid;		/* cached gid */
+} GIDC;
 
 /*
  * routines that control user, group, uid and gid caches (for the archive
@@ -60,11 +102,14 @@ __IDSTRING(rcsid_cache_h, MIRCPIO_CACHE_H);
 
 static	int pwopn = 0;		/* is password file open */
 static	int gropn = 0;		/* is group file open */
+#if !HAVE_UG_FROM_UGID
 static UIDC **uidtb = NULL;	/* uid to name cache */
 static GIDC **gidtb = NULL;	/* gid to name cache */
+#endif
 static UIDC **usrtb = NULL;	/* user name to uid cache */
 static GIDC **grptb = NULL;	/* group name to gid cache */
 
+#if !HAVE_UG_FROM_UGID
 /*
  * uidtb_start
  *	creates an empty uidtb
@@ -81,7 +126,7 @@ uidtb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((uidtb = (UIDC **)calloc(UID_SZ, sizeof(UIDC *))) == NULL) {
+	if ((uidtb = calloc(UID_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
 		paxwarn(1, "Unable to allocate memory for user id cache table");
 		return(-1);
@@ -105,13 +150,14 @@ gidtb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((gidtb = (GIDC **)calloc(GID_SZ, sizeof(GIDC *))) == NULL) {
+	if ((gidtb = calloc(GID_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
 		paxwarn(1, "Unable to allocate memory for group id cache table");
 		return(-1);
 	}
 	return(0);
 }
+#endif
 
 /*
  * usrtb_start
@@ -129,7 +175,7 @@ usrtb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((usrtb = (UIDC **)calloc(UNM_SZ, sizeof(UIDC *))) == NULL) {
+	if ((usrtb = calloc(UNM_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
 		paxwarn(1, "Unable to allocate memory for user name cache table");
 		return(-1);
@@ -153,7 +199,7 @@ grptb_start(void)
 		return(0);
 	if (fail)
 		return(-1);
-	if ((grptb = (GIDC **)calloc(GNM_SZ, sizeof(GIDC *))) == NULL) {
+	if ((grptb = calloc(GNM_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
 		paxwarn(1,"Unable to allocate memory for group name cache table");
 		return(-1);
@@ -161,6 +207,7 @@ grptb_start(void)
 	return(0);
 }
 
+#if !HAVE_UG_FROM_UGID
 /*
  * name_uid()
  *	caches the name (if any) for the uid. If frc set, we always return the
@@ -195,10 +242,10 @@ name_uid(uid_t uid, int frc)
 	 * No entry for this uid, we will add it
 	 */
 	if (!pwopn) {
-#if defined(__GLIBC__)
-		setpwent();
-#elif !defined(__INTERIX)
+#if HAVE_SETPGENT
 		setpassent(1);
+#else
+		setpwent();
 #endif
 		++pwopn;
 	}
@@ -265,10 +312,10 @@ name_gid(gid_t gid, int frc)
 	 * No entry for this gid, we will add it
 	 */
 	if (!gropn) {
-#if defined(__GLIBC__)
-		setgrent();
-#elif !defined(__INTERIX) && !defined(__CYGWIN__)
+#if HAVE_SETPGENT
 		setgroupent(1);
+#else
+		setgrent();
 #endif
 		++gropn;
 	}
@@ -300,6 +347,7 @@ name_gid(gid_t gid, int frc)
 	}
 	return(ptr->name);
 }
+#endif
 
 /*
  * uid_name()
@@ -336,17 +384,17 @@ uid_name(const char *name, uid_t *uid)
 	}
 
 	if (!pwopn) {
-#if defined(__GLIBC__)
-		setpwent();
-#elif !defined(__INTERIX)
+#if HAVE_SETPGENT
 		setpassent(1);
+#else
+		setpwent();
 #endif
 		++pwopn;
 	}
 
 	if (ptr == NULL)
 		ptr = usrtb[st_hash(name, namelen, UNM_SZ)] =
-		  (UIDC *)malloc(sizeof(UIDC));
+		  malloc(sizeof(UIDC));
 
 	/*
 	 * no match, look it up, if no match store it as an invalid entry,
@@ -403,16 +451,16 @@ gid_name(const char *name, gid_t *gid)
 	}
 
 	if (!gropn) {
-#if defined(__GLIBC__)
-		setgrent();
-#elif !defined(__INTERIX) && !defined(__CYGWIN__)
+#if HAVE_SETPGENT
 		setgroupent(1);
+#else
+		setgrent();
 #endif
 		++gropn;
 	}
 	if (ptr == NULL)
 		ptr = grptb[st_hash(name, namelen, GID_SZ)] =
-		  (GIDC *)malloc(sizeof(GIDC));
+		  malloc(sizeof(GIDC));
 
 	/*
 	 * no match, look it up, if no match store it as an invalid entry,
@@ -433,4 +481,26 @@ gid_name(const char *name, gid_t *gid)
 	ptr->valid = VALID;
 	*gid = ptr->gid = gr->gr_gid;
 	return(0);
+}
+
+int
+uid_uncached(const char *name, uid_t *uid)
+{
+	struct passwd *pw;
+
+	if ((pw = getpwnam(name)) == NULL)
+		return (-1);
+	*uid = pw->pw_uid;
+	return (0);
+}
+
+int
+gid_uncached(const char *name, gid_t *gid)
+{
+	struct group *gr;
+
+	if ((gr = getgrnam(name)) == NULL)
+		return (-1);
+	*gid = gr->gr_gid;
+	return (0);
 }

@@ -10,16 +10,19 @@
  * in the Public Domain for your edification and enjoyment.
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
+
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.5 2012/05/20 16:13:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.6 2018/12/12 18:08:44 tg Exp $");
 
 int
 getoldopt(int argc, char **argv, const char *optstring)

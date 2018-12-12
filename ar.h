@@ -27,8 +27,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef MIRCPIO_AR_H
-#define MIRCPIO_AR_H "$MirOS: src/bin/pax/ar.h,v 1.3 2016/03/06 14:12:26 tg Exp $"
+#ifdef EXTERN
+__IDSTRING(rcsid_ar_h, "$MirOS: src/bin/pax/ar.h,v 1.4 2018/12/12 18:08:41 tg Exp $");
+#endif
 
 /****************************************************
 
@@ -88,7 +89,6 @@ last member section (including the padding).
 
 ****************************************************/
 
-
 typedef struct {
 	char ar_name[16];
 	char ar_mtime[12];
@@ -98,5 +98,3 @@ typedef struct {
 	char ar_size[10];
 	char ar_magic[2];
 } HD_AR;
-
-#endif

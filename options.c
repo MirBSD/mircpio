@@ -1,8 +1,8 @@
-/*	$OpenBSD: options.c,v 1.101 2016/12/26 23:43:52 krw Exp $	*/
+/*	$OpenBSD: options.c,v 1.102 2018/09/13 12:33:43 millert Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006, 2007, 2012, 2014, 2016
+ * Copyright (c) 2005, 2006, 2007, 2009, 2011, 2012, 2014, 2016
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -36,45 +36,113 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/time.h>
+#include <sys/types.h>
+#if HAVE_SYS_MTIO_H
+#include <sys/mtio.h>
+#endif
 #include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <limits.h>
+#if HAVE_PATHS_H
 #include <paths.h>
-#include <time.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+
+#define EXTERN
 #include "pax.h"
-#include "options.h"
+#include "ar.h"
 #include "cpio.h"
 #include "tar.h"
-#include "ar.h"
 #include "extern.h"
 
-#if HAS_TAPE
-#include <sys/mtio.h>
-#endif
-
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.64 2018/12/12 00:23:06 tg Exp $");
-__IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
-__IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
-__IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);
-__IDSTRING(rcsid_options_h, MIRCPIO_OPTIONS_H);
-__IDSTRING(rcsid_pax_h, MIRCPIO_PAX_H);
-__IDSTRING(rcsid_tar_h, MIRCPIO_TAR_H);
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.65 2018/12/12 18:08:44 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
 #endif
 
-#ifdef __GLIBC__
-char *fgetln(FILE *, size_t *);
-#endif
+/*
+ * argv[0] names. Used for tar and cpio emulation
+ */
+
+#define NM_TAR  "tar"
+#define NM_CPIO "cpio"
+#define NM_PAX  "pax"
+
+/*
+ * Constants used to specify the legal sets of flags in pax. For each major
+ * operation mode of pax, a set of illegal flags is defined. If any one of
+ * those illegal flags are found set, we scream and exit
+ */
+
+/*
+ * flags (one for each option).
+ */
+#define	AF	0x00000001
+#define	BF	0x00000002
+#define	CF	0x00000004
+#define	DF	0x00000008
+#define	FF	0x00000010
+#define	IF	0x00000020
+#define	KF	0x00000040
+#define	LF	0x00000080
+#define	NF	0x00000100
+#define	OF	0x00000200
+#define	PF	0x00000400
+#define	RF	0x00000800
+#define	SF	0x00001000
+#define	TF	0x00002000
+#define	UF	0x00004000
+#define	VF	0x00008000
+#define	WF	0x00010000
+#define	XF	0x00020000
+#define	CBF	0x00040000	/* nonstandard extension */
+#define	CDF	0x00080000	/* nonstandard extension */
+#define	CEF	0x00100000	/* nonstandard extension */
+#define	CGF	0x00200000	/* nonstandard extension */
+#define	CHF	0x00400000	/* nonstandard extension */
+#define	CLF	0x00800000	/* nonstandard extension */
+#define	CPF	0x01000000	/* nonstandard extension */
+#define	CTF	0x02000000	/* nonstandard extension */
+#define	CUF	0x04000000	/* nonstandard extension */
+#define	CXF	0x08000000
+#define	CYF	0x10000000	/* nonstandard extension */
+#define	CZF	0x20000000	/* nonstandard extension */
+#define	C0F	0x40000000	/* nonstandard extension */
+
+/*
+ * ascii string indexed by bit position above (alter the above and you must
+ * alter this string) used to tell the user what flags caused us to complain
+ */
+#define FLGCH	"abcdfiklnoprstuvwxBDEGHLPTUXYZ0"
+
+/*
+ * legal pax operation bit patterns
+ */
+
+#define ISLIST(x)	(((x) & (RF|WF)) == 0)
+#define	ISEXTRACT(x)	(((x) & (RF|WF)) == RF)
+#define ISARCHIVE(x)	(((x) & (AF|RF|WF)) == WF)
+#define ISAPPND(x)	(((x) & (AF|RF|WF)) == (AF|WF))
+#define	ISCOPY(x)	(((x) & (RF|WF)) == (RF|WF))
+#define	ISWRITE(x)	(((x) & (RF|WF)) == WF)
+
+/*
+ * Illegal option flag subsets based on pax operation
+ */
+
+#define	BDEXTR	(AF|BF|LF|TF|WF|XF|CBF|CHF|CLF|CPF|CXF)
+#define	BDARCH	(CF|KF|LF|NF|PF|RF|CDF|CEF|CYF|CZF)
+#define	BDCOPY	(AF|BF|FF|OF|XF|CBF|CEF)
+#define	BDLIST	(AF|BF|IF|KF|LF|OF|PF|RF|TF|UF|WF|XF|CBF|CDF|CHF|CLF|CPF|CXF|CYF|CZF)
 
 /*
  * Routines which handle command line options
@@ -88,20 +156,24 @@ static OPLIST *optail = NULL;	/* option tail */
 static int no_op(void);
 static int no_op_i(int);
 #endif
+static int mkpath(char *);
+static void process_M(const char *, void (*)(void));
 static void printflg(unsigned int);
 static int c_frmt(const void *, const void *);
 static off_t str_offt(char *);
 static void pax_options(int, char **);
-static void pax_usage(void) __attribute__((__noreturn__));
+static void pax_usage(void) MKSH_A_NORETURN;
 static void tar_set_action(int);
 static void tar_options(int, char **);
-static void tar_usage(void) __attribute__((__noreturn__));
+static void tar_usage(void) MKSH_A_NORETURN;
 static void cpio_set_action(int);
 static void cpio_options(int, char **);
-static void cpio_usage(void) __attribute__((__noreturn__));
-int mkpath(char *);
+static void cpio_usage(void) MKSH_A_NORETURN;
 
-static void process_M(const char *, void (*)(void));
+static int compress_id(char *_blk, int _size);
+static int gzip_id(char *_blk, int _size);
+static int bzip2_id(char *_blk, int _size);
+static int xz_id(char *_blk, int _size);
 
 /* command to run as gzip */
 static const char GZIP_CMD[] = "gzip";
@@ -121,11 +193,11 @@ static const char LZOP_CMD[] = "lzop";
 #define COMPRESS_GUESS_CMD ((const void *)&compress_program)
 
 /*
- *	Format specific routine table - MUST BE IN SORTED ORDER BY NAME
- *	(see enum fsub_order in options.h for index)
+ *	Format specific routine table, MUST be in sorted order
+ *	and MUST match enum fsub_order in pax.h
  *	(see pax.h for description of each function)
  *
- * 	name, blksz, hdsz, udev, hlk, blkagn, inhead, id, st_read,
+ *	name, blksz, hdsz, udev, hlk, blkagn, inhead, id, st_read,
  *	read, end_read, st_write, write, end_write, trail,
  *	rd_data, wr_data, options, is_uar
  */
@@ -173,7 +245,7 @@ FSUB fsub[] = {
 /* FSUB_USTAR: POSIX USTAR */
 	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, tar_opt, 0},
 
 /* FSUB_V4NORM: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
 	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
@@ -184,6 +256,25 @@ FSUB fsub[] = {
 	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
+
+#ifndef SMALL
+/* FSUBFAIL_Z: compress, to detect failure to use -Z */
+	{NULL, 0, 4, 0, 0, 0, 0, compress_id, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, 0},
+/* FSUBFAIL_XZ: xz, to detect failure to decompress it */
+	{NULL, 0, 6, 0, 0, 0, 0, xz_id, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, 0},
+/* FSUBFAIL_BZ2: bzip2, to detect failure to use -j */
+	{NULL, 0, 4, 0, 0, 0, 0, bzip2_id, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, 0},
+/* FSUBFAIL_GZ: gzip, to detect failure to use -z */
+	{NULL, 0, 4, 0, 0, 0, 0, gzip_id, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, 0},
+#endif
 };
 
 /*
@@ -195,6 +286,10 @@ const int ford[] = {
 	FSUB_USTAR,
 #ifndef SMALL
 	FSUB_TAR,
+	FSUBFAIL_GZ,
+	FSUBFAIL_BZ2,
+	FSUBFAIL_XZ,
+	FSUBFAIL_Z,
 #endif
 	FSUB_SV4CRC,
 	FSUB_SV4CPIO,
@@ -229,16 +324,22 @@ options(int argc, char **argv)
 	size_t n;
 
 	/*
-	 * are we acting like pax, tar or cpio (based on argv[0])
+	 * Are we acting like pax, tar or cpio (based on argv[0])
 	 */
-	if ((n = strlen(argv[0])) >= 3 && !strcmp(argv[0] + n - 3, NM_TAR)) {
+	n = strlen(argv[0]);
+
+	if (n >= 3 && !strcmp(argv[0] + (n - 3), NM_TAR)) {
 		argv0 = NM_TAR;
+		op_mode = OP_TAR;
 		tar_options(argc, argv);
-	} else if (n >= 4 && !strcmp(argv[0] + n - 4, NM_CPIO)) {
+	} else if (n >= 4 && !strcmp(argv[0] + (n - 4), NM_CPIO)) {
 		argv0 = NM_CPIO;
+		op_mode = OP_CPIO;
 		cpio_options(argc, argv);
 	} else {
+		/* assume pax as the default */
 		argv0 = NM_PAX;
+		op_mode = OP_PAX;
 		pax_options(argc, argv);
 	}
 }
@@ -253,9 +354,10 @@ static void
 pax_options(int argc, char **argv)
 {
 	int c;
-	size_t i;
+	unsigned i;
 	unsigned int flg = 0;
 	unsigned int bflg = 0;
+	const char *errstr;
 	char *pt;
 	FSUB tmp;
 
@@ -265,11 +367,35 @@ pax_options(int argc, char **argv)
 	while ((c = getopt(argc, argv,
 	    "0aB:b:cDdE:f:G:HiJjkLlM:nOo:Pp:rs:T:tU:uvwXx:YZz")) != -1) {
 		switch (c) {
+		case '0':
+			/*
+			 * Use \0 as pathname terminator.
+			 * (For use with the -print0 option of find(1).)
+			 */
+			zeroflag = 1;
+			flg |= C0F;
+			break;
 		case 'a':
 			/*
 			 * append
 			 */
 			flg |= AF;
+			break;
+		case 'B':
+			/*
+			 * non-standard option on number of bytes written on a
+			 * single archive volume.
+			 */
+			if ((wrlimit = str_offt(optarg)) <= 0) {
+				paxwarn(1, "Invalid write limit %s", optarg);
+				pax_usage();
+			}
+			if (wrlimit % BLKMULT) {
+				paxwarn(1, "Write limit is not a %d byte multiple",
+				    BLKMULT);
+				pax_usage();
+			}
+			flg |= CBF;
 			break;
 		case 'b':
 			/*
@@ -288,6 +414,14 @@ pax_options(int argc, char **argv)
 			cflag = 1;
 			flg |= CF;
 			break;
+		case 'D':
+			/*
+			 * On extraction check file inode change time before the
+			 * modification of the file name. Non standard option.
+			 */
+			Dflag = 1;
+			flg |= CDF;
+			break;
 		case 'd':
 			/*
 			 * match only dir on extract, not the subtree at dir
@@ -295,12 +429,43 @@ pax_options(int argc, char **argv)
 			dflag = 1;
 			flg |= DF;
 			break;
+		case 'E':
+			/*
+			 * non-standard limit on read faults
+			 * 0 indicates stop after first error, values
+			 * indicate a limit
+			 */
+			flg |= CEF;
+			maxflt = strtonum(optarg, 0, INT_MAX, &errstr);
+			if (errstr) {
+				paxwarn(1, "Error count value: %s", errstr);
+				pax_usage();
+			}
+			break;
 		case 'f':
 			/*
 			 * filename where the archive is stored
 			 */
 			arcname = optarg;
 			flg |= FF;
+			break;
+		case 'G':
+			/*
+			 * non-standard option for selecting files within an
+			 * archive by group (gid or name)
+			 */
+			if (grp_add(optarg) < 0) {
+				pax_usage();
+				break;
+			}
+			flg |= CGF;
+			break;
+		case 'H':
+			/*
+			 * follow command line symlinks only
+			 */
+			Hflag = 1;
+			flg |= CHF;
 			break;
 		case 'i':
 			/*
@@ -330,12 +495,25 @@ pax_options(int argc, char **argv)
 			kflag = 1;
 			flg |= KF;
 			break;
+		case 'L':
+			/*
+			 * follow symlinks
+			 */
+			Lflag = 1;
+			flg |= CLF;
+			break;
 		case 'l':
 			/*
 			 * try to link src to dest with copy (-rw)
 			 */
 			lflag = 1;
 			flg |= LF;
+			break;
+		case 'M':
+			/*
+			 * MirOS extension: archive normaliser
+			 */
+			process_M(optarg, pax_usage);
 			break;
 		case 'n':
 			/*
@@ -344,6 +522,12 @@ pax_options(int argc, char **argv)
 			nflag = 1;
 			flg |= NF;
 			break;
+		case 'O':
+			/*
+			 * Force one volume.  Non standard option.
+			 */
+			force_one_volume = 1;
+			break;
 		case 'o':
 			/*
 			 * pass format specific options
@@ -351,6 +535,13 @@ pax_options(int argc, char **argv)
 			flg |= OF;
 			if (opt_add(optarg) < 0)
 				pax_usage();
+			break;
+		case 'P':
+			/*
+			 * do NOT follow symlinks (default)
+			 */
+			Lflag = 0;
+			flg |= CPF;
 			break;
 		case 'p':
 			/*
@@ -416,12 +607,34 @@ pax_options(int argc, char **argv)
 			}
 			flg |= SF;
 			break;
+		case 'T':
+			/*
+			 * non-standard option for selecting files within an
+			 * archive by modification time range (lower,upper)
+			 */
+			if (trng_add(optarg) < 0) {
+				pax_usage();
+				break;
+			}
+			flg |= CTF;
+			break;
 		case 't':
 			/*
 			 * preserve access time on filesystem nodes we read
 			 */
 			tflag = 1;
 			flg |= TF;
+			break;
+		case 'U':
+			/*
+			 * non-standard option for selecting files within an
+			 * archive by user (uid or name)
+			 */
+			if (usr_add(optarg) < 0) {
+				pax_usage();
+				break;
+			}
+			flg |= CUF;
 			break;
 		case 'u':
 			/*
@@ -434,7 +647,7 @@ pax_options(int argc, char **argv)
 			/*
 			 * verbose operation mode
 			 */
-			vflag++;
+			++vflag;
 			flg |= VF;
 			break;
 		case 'w':
@@ -442,6 +655,13 @@ pax_options(int argc, char **argv)
 			 * write an archive
 			 */
 			flg |= WF;
+			break;
+		case 'X':
+			/*
+			 * do not pass over mount points in the filesystem
+			 */
+			Xflag = 1;
+			flg |= CXF;
 			break;
 		case 'x':
 			/*
@@ -456,126 +676,11 @@ pax_options(int argc, char **argv)
 			paxwarn(1, "Unknown -x format: %s", optarg);
 			(void)fputs("pax: Known -x formats are:", stderr);
 			for (i = 0; i < (sizeof(fsub)/sizeof(FSUB)); ++i)
-				(void)fprintf(stderr, " %s", fsub[i].name);
+				if (fsub[i].name != NULL)
+					(void)fprintf(stderr, " %s",
+					    fsub[i].name);
 			(void)fputs("\n\n", stderr);
 			pax_usage();
-			break;
-		case 'z':
-			/*
-			 * use gzip (non-standard option)
-			 */
-			compress_program = GZIP_CMD;
-			break;
-		case 'B':
-			/*
-			 * non-standard option on number of bytes written on a
-			 * single archive volume.
-			 */
-			if ((wrlimit = str_offt(optarg)) <= 0) {
-				paxwarn(1, "Invalid write limit %s", optarg);
-				pax_usage();
-			}
-			if (wrlimit % BLKMULT) {
-				paxwarn(1, "Write limit is not a %d byte multiple",
-				    BLKMULT);
-				pax_usage();
-			}
-			flg |= CBF;
-			break;
-		case 'D':
-			/*
-			 * on extraction check file inode change time before the
-			 * modification of the file name (non-standard option)
-			 */
-			Dflag = 1;
-			flg |= CDF;
-			break;
-		case 'E':
-			/*
-			 * non-standard limit on read faults
-			 * 0 indicates stop after first error, values
-			 * indicate a limit, "NONE" try forever
-			 */
-			flg |= CEF;
-			if (strcmp(NONE, optarg) == 0)
-				maxflt = -1;
-			else if ((maxflt = atoi(optarg)) < 0) {
-				paxwarn(1, "Error count value must be positive");
-				pax_usage();
-			}
-			break;
-		case 'G':
-			/*
-			 * non-standard option for selecting files within an
-			 * archive by group (gid or name)
-			 */
-			if (grp_add(optarg) < 0) {
-				pax_usage();
-				break;
-			}
-			flg |= CGF;
-			break;
-		case 'H':
-			/*
-			 * follow command line symlinks only
-			 */
-			Hflag = 1;
-			flg |= CHF;
-			break;
-		case 'L':
-			/*
-			 * follow symlinks
-			 */
-			Lflag = 1;
-			flg |= CLF;
-			break;
-		case 'M':
-			/*
-			 * MirOS extension: archive normaliser
-			 */
-			process_M(optarg, pax_usage);
-			break;
-		case 'O':
-			/*
-			 * Force one volume.  Non standard option.
-			 */
-			force_one_volume = 1;
-			break;
-		case 'P':
-			/*
-			 * do NOT follow symlinks (default)
-			 */
-			Lflag = 0;
-			flg |= CPF;
-			break;
-		case 'T':
-			/*
-			 * non-standard option for selecting files within an
-			 * archive by modification time range (lower,upper)
-			 */
-			if (trng_add(optarg) < 0) {
-				pax_usage();
-				break;
-			}
-			flg |= CTF;
-			break;
-		case 'U':
-			/*
-			 * non-standard option for selecting files within an
-			 * archive by user (uid or name)
-			 */
-			if (usr_add(optarg) < 0) {
-				pax_usage();
-				break;
-			}
-			flg |= CUF;
-			break;
-		case 'X':
-			/*
-			 * do not pass over mount points in the filesystem
-			 */
-			Xflag = 1;
-			flg |= CXF;
 			break;
 		case 'Y':
 			/*
@@ -593,13 +698,11 @@ pax_options(int argc, char **argv)
 			Zflag = 1;
 			flg |= CZF;
 			break;
-		case '0':
+		case 'z':
 			/*
-			 * Use \0 as pathname terminator.
-			 * (For use with the -print0 option of find(1).)
+			 * use gzip (non-standard option)
 			 */
-			zeroflag = 1;
-			flg |= C0F;
+			compress_program = GZIP_CMD;
 			break;
 		default:
 			pax_usage();
@@ -674,7 +777,6 @@ pax_options(int argc, char **argv)
 	}
 }
 
-
 /*
  * tar_options()
  *	look at the user specified flags. set globals as required and check if
@@ -693,7 +795,6 @@ static void
 tar_options(int argc, char **argv)
 {
 	int c;
-	int fstdin = 0;
 	int Oflag = FSUB_USTAR;
 	int nincfiles = 0;
 	int incfiles_max = 0;
@@ -704,7 +805,7 @@ tar_options(int argc, char **argv)
 	struct incfile *incfiles = NULL;
 
 	/*
-	 * set default values
+	 * Set default values.
 	 */
 	rmleadslash = 1;
 
@@ -714,6 +815,24 @@ tar_options(int argc, char **argv)
 	while ((c = getoldopt(argc, argv,
 	    "014578AaBb:C:cef:HhI:JjLM:mNOoPpqRrSs:tuvwXxZz")) != -1) {
 		switch (c) {
+		case '0':
+			arcname = DEV_0;
+			break;
+		case '1':
+			arcname = DEV_1;
+			break;
+		case '4':
+			arcname = DEV_4;
+			break;
+		case '5':
+			arcname = DEV_5;
+			break;
+		case '7':
+			arcname = DEV_7;
+			break;
+		case '8':
+			arcname = DEV_8;
+			break;
 #ifndef SMALL
 		case 'A':
 			Oflag = FSUB_AR;
@@ -726,6 +845,11 @@ tar_options(int argc, char **argv)
 			 */
 			compress_program = COMPRESS_GUESS_CMD;
 			break;
+		case 'B':
+			/*
+			 * Nothing to do here, this is pax default
+			 */
+			break;
 		case 'b':
 			/*
 			 * specify blocksize in 512-byte blocks
@@ -736,6 +860,10 @@ tar_options(int argc, char **argv)
 			}
 			/* XXX - check for integer overflow */
 			wrblksz *= 512;
+			break;
+		case 'C':
+			havechd++;
+			chdname = optarg;
 			break;
 		case 'c':
 			/*
@@ -753,22 +881,37 @@ tar_options(int argc, char **argv)
 			/*
 			 * filename where the archive is stored
 			 */
-			if ((optarg[0] == '-') && (optarg[1]== '\0')) {
-				/*
-				 * treat a - as stdin
-				 */
-				fstdin = 1;
-				arcname = NULL;
-				break;
-			}
-			fstdin = 0;
 			arcname = optarg;
+			break;
+		case 'H':
+			/*
+			 * follow command line symlinks only
+			 */
+			Hflag = 1;
 			break;
 		case 'h':
 			/*
 			 * follow symlinks
 			 */
 			Lflag = 1;
+			break;
+		case 'I':
+			if (++nincfiles > incfiles_max) {
+				size_t n = nincfiles + 3;
+				struct incfile *p;
+
+				p = reallocarray(incfiles, n,
+				    sizeof(*incfiles));
+				if (p == NULL) {
+					paxwarn(0, "Unable to allocate space "
+					    "for option list");
+					exit(1);
+				}
+				incfiles = p;
+				incfiles_max = n;
+			}
+			incfiles[nincfiles - 1].file = optarg;
+			incfiles[nincfiles - 1].dir = chdname;
 			break;
 #ifndef SMALL
 		case 'J':
@@ -784,11 +927,27 @@ tar_options(int argc, char **argv)
 			compress_program = BZIP2_CMD;
 			break;
 #endif
+		case 'L':
+			/*
+			 * follow symlinks
+			 */
+			Lflag = 1;
+			break;
+		case 'M':
+			/*
+			 * MirOS extension: archive normaliser
+			 */
+			process_M(optarg, tar_usage);
+			break;
 		case 'm':
 			/*
 			 * do not preserve modification time
 			 */
 			pmtime = 0;
+			break;
+		case 'N':
+			/* numeric uid and gid only */
+			anonarch |= ANON_NUMID;
 			break;
 		case 'O':
 #ifndef SMALL
@@ -804,6 +963,12 @@ tar_options(int argc, char **argv)
 			tar_nodir = 1;
 			break;
 #endif
+		case 'P':
+			/*
+			 * do not remove leading '/' from pathnames
+			 */
+			rmleadslash = 0;
+			break;
 		case 'p':
 			/*
 			 * preserve uid/gid and file mode, regardless of umask
@@ -817,16 +982,16 @@ tar_options(int argc, char **argv)
 			 */
 			nflag = 1;
 			break;
+		case 'R':
+			Oflag = FSUB_SV4CPIO;
+			anonarch |= ANON_INODES | ANON_HARDLINKS;
+			break;
 		case 'r':
 		case 'u':
 			/*
 			 * append to the archive
 			 */
 			tar_set_action(APPND);
-			break;
-		case 'R':
-			Oflag = FSUB_SV4CPIO;
-			anonarch |= ANON_INODES | ANON_HARDLINKS;
 			break;
 		case 'S':
 			Oflag = FSUB_SV4CRC;
@@ -847,6 +1012,7 @@ tar_options(int argc, char **argv)
 			 */
 			tar_set_action(LIST);
 			break;
+		/* u: see r */
 		case 'v':
 			/*
 			 * verbose operation mode
@@ -859,6 +1025,12 @@ tar_options(int argc, char **argv)
 			 */
 			iflag = 1;
 			break;
+		case 'X':
+			/*
+			 * do not pass over mount points in the filesystem
+			 */
+			Xflag = 1;
+			break;
 		case 'x':
 			/*
 			 * extract an archive, preserving mode,
@@ -866,77 +1038,6 @@ tar_options(int argc, char **argv)
 			 */
 			tar_set_action(EXTRACT);
 			pmtime = 1;
-			break;
-		case 'z':
-			/*
-			 * use gzip (non-standard option)
-			 */
-			compress_program = GZIP_CMD;
-			break;
-		case 'B':
-			/*
-			 * nothing to do here, this is pax default
-			 */
-			break;
-		case 'C':
-			havechd++;
-			chdname = optarg;
-			break;
-		case 'H':
-			/*
-			 * follow command line symlinks only
-			 */
-			Hflag = 1;
-			break;
-		case 'I':
-			if (++nincfiles > incfiles_max) {
-				size_t n = nincfiles + 3;
-				struct incfile *p;
-
-				p = realloc(incfiles,
-				    sizeof(*incfiles) * n);
-				if (p == NULL) {
-					free(incfiles);
-					incfiles = NULL;
-					paxwarn(0, "Unable to allocate space "
-					    "for option list");
-					exit(1);
-				}
-				incfiles = p;
-				incfiles_max = n;
-			}
-			incfiles[nincfiles - 1].file = optarg;
-			incfiles[nincfiles - 1].dir = chdname;
-			break;
-		case 'L':
-			/*
-			 * follow symlinks
-			 */
-			Lflag = 1;
-			break;
-		case 'M':
-			/*
-			 * MirOS extension: archive normaliser
-			 */
-			process_M(optarg, tar_usage);
-			break;
-		case 'N':
-			/*
-			 * numeric uid and gid only
-			 */
-			anonarch |= ANON_NUMID;
-			break;
-		case 'P':
-			/*
-			 * do not remove leading '/' from pathnames
-			 */
-			rmleadslash = 0;
-			break;
-		case 'X':
-			/*
-			 * do not pass over mount points in the filesystem
-			 */
-			Xflag = 1;
 			break;
 #ifndef SMALL
 		case 'Z':
@@ -946,23 +1047,11 @@ tar_options(int argc, char **argv)
 			compress_program = COMPRESS_CMD;
 			break;
 #endif
-		case '0':
-			arcname = DEV_0;
-			break;
-		case '1':
-			arcname = DEV_1;
-			break;
-		case '4':
-			arcname = DEV_4;
-			break;
-		case '5':
-			arcname = DEV_5;
-			break;
-		case '7':
-			arcname = DEV_7;
-			break;
-		case '8':
-			arcname = DEV_8;
+		case 'z':
+			/*
+			 * use gzip (non-standard option)
+			 */
+			compress_program = GZIP_CMD;
 			break;
 		default:
 			tar_usage();
@@ -976,23 +1065,22 @@ tar_options(int argc, char **argv)
 	if (act == ERROR)
 		tar_usage();
 
-	if (!fstdin && ((arcname == NULL) || (*arcname == '\0'))) {
+	if ((arcname == NULL) || (*arcname == '\0')) {
 		arcname = getenv("TAPE");
 		if ((arcname == NULL) || (*arcname == '\0'))
 			arcname = _PATH_DEFTAPE;
-		else if ((arcname[0] == '-') && (arcname[1]== '\0')) {
-			arcname = NULL;
-			fstdin = 1;
-		}
 	}
+	if ((arcname[0] == '-') && (arcname[1] == '\0'))
+		arcname = NULL;
 
-	/* traditional tar behaviour (pax uses stderr unless in list mode) */
-	if (fstdin == 1 && act == ARCHIVE)
-		listf = stderr;
-	else
+	/*
+	 * Traditional tar behaviour: list-like output goes to stdout unless
+	 * writing the archive there.  (pax uses stderr unless in list mode)
+	 */
+        if (act == LIST || act == EXTRACT || arcname != NULL)
 		listf = stdout;
 
-	/* traditional tar behaviour (pax wants to read file list from stdin) */
+	/* Traditional tar behaviour (pax wants to read file list from stdin) */
 	if ((act == ARCHIVE || act == APPND) && argc == 0 && nincfiles == 0)
 		exit(0);
 
@@ -1036,8 +1124,9 @@ tar_options(int argc, char **argv)
 
 					if (strcmp(file, "-") == 0)
 						fd = STDIN_FILENO;
-					else if ((fd = open(file, O_RDONLY)) == -1) {
-						paxwarn(1, "Unable to open file '%s' for read", file);
+					else if ((fd = binopen2(0, file, O_RDONLY)) == -1) {
+						syswarn(1, errno,
+						    "Unable to open %s", file);
 						tar_usage();
 					}
 					while ((str = fdgetline(fd)) != NULL) {
@@ -1048,8 +1137,10 @@ tar_options(int argc, char **argv)
 					if (fd != STDIN_FILENO)
 						close(fd);
 					if (fdgetline_err) {
-						paxwarn(1, "Problem with file '%s'",
-						    file);
+						paxwarn(1,
+						    "Unable to read from %s",
+						    strcmp(file, "-") ? file :
+						    "stdin");
 						tar_usage();
 					}
 				} else if (strcmp(*argv, "-C") == 0) {
@@ -1105,10 +1196,10 @@ tar_options(int argc, char **argv)
 			} else
 				file = NULL;
 			if (file != NULL) {
-				char *str;
 				int fd;
+				char *str;
 
-				/* set directory if needed */
+				/* Set directory if needed */
 				if (dir) {
 					if (ftree_add(dir, 1) < 0)
 						tar_usage();
@@ -1116,8 +1207,9 @@ tar_options(int argc, char **argv)
 
 				if (strcmp(file, "-") == 0)
 					fd = STDIN_FILENO;
-				else if ((fd = open(file, O_RDONLY)) == -1) {
-					paxwarn(1, "Unable to open file '%s' for read", file);
+				else if ((fd = binopen2(0, file, O_RDONLY)) == -1) {
+					syswarn(1, errno, "Unable to open %s",
+					    file);
 					tar_usage();
 				}
 				while ((str = fdgetline(fd)) != NULL) {
@@ -1127,8 +1219,9 @@ tar_options(int argc, char **argv)
 				if (fd != STDIN_FILENO)
 					close(fd);
 				if (fdgetline_err) {
-					paxwarn(1, "Problem with file '%s'",
-					    file);
+					paxwarn(1,
+					    "Unable to read from %s",
+					    strcmp(file, "-") ? file : "stdin");
 					tar_usage();
 				}
 			} else if (strcmp(*argv, "-C") == 0) {
@@ -1150,7 +1243,7 @@ tar_options(int argc, char **argv)
 		to_stdout = 0;
 }
 
-int
+static int
 mkpath(char *path)
 {
 	struct stat sb;
@@ -1183,6 +1276,12 @@ mkpath(char *path)
 	return (0);
 }
 
+/*
+ * cpio_options()
+ *	look at the user specified flags. set globals as required and check if
+ *	the user specified a legal set of flags. If not, complain and exit
+ */
+
 static void
 cpio_set_action(int op)
 {
@@ -1196,21 +1295,16 @@ cpio_set_action(int op)
 		act = op;
 }
 
-/*
- * cpio_options()
- *	look at the user specified flags. set globals as required and check if
- *	the user specified a legal set of flags. If not, complain and exit
- */
-
 static void
 cpio_options(int argc, char **argv)
 {
-	int c;
-	size_t i;
+	const char *errstr;
+	int c, list_only = 0;
+	unsigned i;
 	char *str;
-	FSUB tmp;
 	int fd;
 	const char *optstr;
+	FSUB tmp;
 
 	kflag = 1;
 	pids = 1;
@@ -1223,16 +1317,54 @@ cpio_options(int argc, char **argv)
 	opterr = 0;
 	while ((c = getopt(argc, argv, optstr)) != -1) {
 		switch (c) {
+		case '0':
+			/*
+			 * Use \0 as pathname terminator.
+			 * (For use with the -print0 option of find(1).)
+			 */
+			zeroflag = 1;
+			break;
+#ifndef SMALL
+		case '6':
+			/*
+			 * process Version 6 cpio format
+			 */
+			frmt = &(fsub[FSUB_BCPIO]);
+			break;
+#endif
+		case 'A':
+			/*
+			 * append mode
+			 */
+			cpio_set_action(APPND);
+			break;
 		case 'a':
 			/*
 			 * preserve access time on files read
 			 */
 			tflag = 1;
 			break;
+		case 'B':
+			/*
+			 * Use 5120 byte block size
+			 */
+			wrblksz = 5120;
+			break;
 		case 'b':
 			/*
 			 * swap bytes and half-words when reading data
 			 */
+			break;
+		case 'C':
+			/*
+			 * set block size in bytes
+			 */
+			wrblksz = strtonum(optarg, 0, INT_MAX, &errstr);
+			if (errstr) {
+				paxwarn(1, "Invalid block size %s: %s",
+				    optarg, errstr);
+				pax_usage();
+			}
 			break;
 		case 'c':
 			/*
@@ -1246,125 +1378,13 @@ cpio_options(int argc, char **argv)
 			 */
 			nodirs = 0;
 			break;
-		case 'f':
-			/*
-			 * invert meaning of pattern list
-			 */
-			cflag = 1;
-			break;
-		case 'i':
-			/*
-			 * restore an archive
-			 */
-			cpio_set_action(EXTRACT);
-			break;
-#ifndef SMALL
-		case 'J':
-			/*
-			 * use xz (non-standard option)
-			 */
-			compress_program = XZ_CMD;
-			break;
-		case 'j':
-			/*
-			 * use bzip2 (non-standard option)
-			 */
-			compress_program = BZIP2_CMD;
-			break;
-#endif
-		case 'k':
-			break;
-		case 'l':
-			/*
-			 * use links instead of copies when possible
-			 */
-			lflag = 1;
-			break;
-		case 'm':
-			/*
-			 * preserve modification time
-			 */
-			pmtime = 1;
-			break;
-		case 'o':
-			/*
-			 * create an archive
-			 */
-			cpio_set_action(ARCHIVE);
-			frmt = &(fsub[FSUB_SV4CRC]);
-			break;
-		case 'p':
-			/*
-			 * copy-pass mode
-			 */
-			cpio_set_action(COPY);
-			break;
-		case 'r':
-			/*
-			 * interactively rename files
-			 */
-			iflag = 1;
-			break;
-		case 's':
-			/*
-			 * swap bytes after reading data
-			 */
-			break;
-		case 't':
-			/*
-			 * list contents of archive
-			 */
-			cpio_set_action(LIST);
-			listf = stdout;
-			break;
-		case 'u':
-			/*
-			 * replace newer files
-			 */
-			kflag = 0;
-			break;
-		case 'V':
-			/*
-			 * print a dot for each file processed
-			 */
-			Vflag++;
-			break;
-		case 'v':
-			/*
-			 * verbose operation mode
-			 */
-			vflag++;
-			break;
-		case 'z':
-			/*
-			 * use gzip (non-standard option)
-			 */
-			compress_program = GZIP_CMD;
-			break;
-		case 'A':
-			/*
-			 * append mode
-			 */
-			cpio_set_action(APPND);
-			break;
-		case 'B':
-			/*
-			 * use 5120 byte block size
-			 */
-			wrblksz = 5120;
-			break;
-		case 'C':
-			/*
-			 * set block size in bytes
-			 */
-			wrblksz = atoi(optarg);
-			break;
 		case 'E':
 			/*
 			 * file with patterns to extract or list
 			 */
-			if ((fd = open(optarg, O_RDONLY)) == -1) {
-				paxwarn(1, "Unable to open file '%s' for read", optarg);
+			if ((fd = binopen2(0, optarg, O_RDONLY)) == -1) {
+				syswarn(1, errno, "Unable to open %s",
+				    optarg);
 				cpio_usage();
 			}
 			while ((str = fdgetline(fd)) != NULL) {
@@ -1372,7 +1392,8 @@ cpio_options(int argc, char **argv)
 			}
 			close(fd);
 			if (fdgetline_err) {
-				paxwarn(1, "Problem with file '%s'", optarg);
+				paxwarn(1,
+				    "Unable to read from %s", optarg);
 				cpio_usage();
 			}
 			break;
@@ -1390,6 +1411,12 @@ cpio_options(int argc, char **argv)
 				break;
 			}
 			arcname = optarg;
+			break;
+		case 'f':
+			/*
+			 * invert meaning of pattern list
+			 */
+			cflag = 1;
 			break;
 		case 'H':
 			/*
@@ -1412,9 +1439,34 @@ cpio_options(int argc, char **argv)
 			paxwarn(1, "Unknown -H format: %s", optarg);
 			(void)fputs("cpio: Known -H formats are:", stderr);
 			for (i = 0; i < (sizeof(fsub)/sizeof(FSUB)); ++i)
-				(void)fprintf(stderr, " %s", fsub[i].name);
+				if (fsub[i].name != NULL)
+					(void)fprintf(stderr, " %s",
+					    fsub[i].name);
 			(void)fputs("\n\n", stderr);
 			cpio_usage();
+			break;
+		/* I: see F */
+		case 'i':
+			/*
+			 * restore an archive
+			 */
+			cpio_set_action(EXTRACT);
+			break;
+#ifndef SMALL
+		case 'J':
+			/*
+			 * use xz (non-standard option)
+			 */
+			compress_program = XZ_CMD;
+			break;
+		case 'j':
+			/*
+			 * use bzip2 (non-standard option)
+			 */
+			compress_program = BZIP2_CMD;
+			break;
+#endif
+		case 'k':
 			break;
 		case 'L':
 			/*
@@ -1422,16 +1474,77 @@ cpio_options(int argc, char **argv)
 			 */
 			Lflag = 1;
 			break;
+		case 'l':
+			/*
+			 * use links instead of copies when possible
+			 */
+			lflag = 1;
+			break;
 		case 'M':
 			/*
 			 * MirOS extension: archive normaliser
 			 */
 			process_M(optarg, cpio_usage);
 			break;
+		case 'm':
+			/*
+			 * preserve modification time
+			 */
+			pmtime = 1;
+			break;
+		/* O: see F */
+		case 'o':
+			/*
+			 * create an archive
+			 */
+			cpio_set_action(ARCHIVE);
+			frmt = &(fsub[FSUB_SV4CRC]);
+			break;
+		case 'p':
+			/*
+			 * copy-pass mode
+			 */
+			cpio_set_action(COPY);
+			break;
+		case 'r':
+			/*
+			 * interactively rename files
+			 */
+			iflag = 1;
+			break;
 		case 'S':
 			/*
 			 * swap halfwords after reading data
 			 */
+			break;
+		case 's':
+			/*
+			 * swap bytes after reading data
+			 */
+			break;
+		case 't':
+			/*
+			 * list contents of archive
+			 */
+			list_only = 1;
+			break;
+		case 'u':
+			/*
+			 * replace newer files
+			 */
+			kflag = 0;
+			break;
+		case 'V':
+			/*
+			 * print a dot for each file processed
+			 */
+			Vflag++;
+			break;
+		case 'v':
+			/*
+			 * verbose operation mode
+			 */
+			++vflag;
 			break;
 #ifndef SMALL
 		case 'Z':
@@ -1441,21 +1554,12 @@ cpio_options(int argc, char **argv)
 			compress_program = COMPRESS_CMD;
 			break;
 #endif
-		case '0':
+		case 'z':
 			/*
-			 * Use \0 as pathname terminator.
-			 * (For use with the -print0 option of find(1).)
+			 * use gzip (non-standard option)
 			 */
-			zeroflag = 1;
+			compress_program = GZIP_CMD;
 			break;
-#ifndef SMALL
-		case '6':
-			/*
-			 * process Version 6 cpio format
-			 */
-			frmt = &(fsub[FSUB_BCPIO]);
-			break;
-#endif
 		case '?':
 		default:
 			if (opterr == 0) {
@@ -1476,8 +1580,16 @@ cpio_options(int argc, char **argv)
 	 * process the args as they are interpreted by the operation mode
 	 */
 	switch (act) {
-	case LIST:
 	case EXTRACT:
+		if (list_only) {
+			act = LIST;
+
+			/*
+			 * cpio is like pax: list to stderr
+			 * unless in list mode
+			 */
+			listf = stdout;
+		}
 		while (*argv != NULL)
 			if (pat_add(*argv++, NULL) < 0)
 				cpio_usage();
@@ -1505,7 +1617,8 @@ cpio_options(int argc, char **argv)
 			ftree_add(str, 0);
 		}
 		if (fdgetline_err) {
-			paxwarn(1, "Problem while reading stdin");
+			paxwarn(1, "Unable to read from %s",
+			    "stdin");
 			cpio_usage();
 		}
 		break;
@@ -1528,7 +1641,7 @@ printflg(unsigned int flg)
 
 	(void)fprintf(stderr,"%s: Invalid combination of options:", argv0);
 	while ((nxt = ffs(flg)) != 0) {
-		flg = flg >> nxt;
+		flg >>= nxt;
 		pos += nxt;
 		(void)fprintf(stderr, " -%c", flgch[pos-1]);
 	}
@@ -1629,7 +1742,7 @@ opt_add(const char *str)
 			free(dstr);
 			return(-1);
 		}
-		if ((opt = (OPLIST *)malloc(sizeof(OPLIST))) == NULL) {
+		if ((opt = malloc(sizeof(OPLIST))) == NULL) {
 			paxwarn(0, "Unable to allocate space for option list");
 			free(dstr);
 			return(-1);
@@ -1658,7 +1771,7 @@ opt_add(const char *str)
 /*
  * str_offt()
  *	Convert an expression of the following forms to an off_t > 0.
- * 	1) A positive decimal number.
+ *	1) A positive decimal number.
  *	2) A positive decimal number followed by a b (mult by 512).
  *	3) A positive decimal number followed by a k (mult by 1024).
  *	4) A positive decimal number followed by a m (mult by 512).
@@ -1670,19 +1783,19 @@ opt_add(const char *str)
  *	0 for an error, a positive value o.w.
  */
 
-#ifndef LONG_OFF_T
-#define OT_MAX	ULLONG_MAX
-#define strtoot	strtoull
+#if HAVE_OFFT_LLONG
+#define OT_MAX	LLONG_MAX
+#define strtoot	strtoll
 #else
-#define OT_MAX	ULONG_MAX
-#define strtoot	strtoul
+#define OT_MAX	LONG_MAX
+#define strtoot	strtol
 #endif
 
 static off_t
 str_offt(char *val)
 {
 	char *expr;
-	ot_type num, t;
+	off_t num, t;
 
 	num = strtoot(val, &expr, 0);
 	if ((num == OT_MAX) || (num <= 0) || (expr == val))
@@ -1727,12 +1840,12 @@ str_offt(char *val)
 		t = num;
 		num *= str_offt(expr + 1);
 		if (t > num)
-			return (0);
+			return(0);
 		break;
 	default:
-		return (0);
+		return(0);
 	}
-	return ((off_t)num);
+	return (num);
 }
 
 #ifndef SMALL
@@ -1746,13 +1859,13 @@ str_offt(char *val)
 static int
 no_op(void)
 {
-	return(0);
+	return (0);
 }
 
 static int
-no_op_i(int is_app __attribute__((__unused__)))
+no_op_i(int is_app MKSH_A_UNUSED)
 {
-	return(0);
+	return (0);
 }
 #endif
 
@@ -1831,7 +1944,7 @@ process_M(const char *arg, void (*call_usage)(void))
 	int j, k = 0;
 
 	if ((arg[0] >= '0') && (arg[0] <= '9')) {
-#ifdef __OpenBSD__
+#if HAVE_STRTONUM
 		const char *s;
 		int64_t i = strtonum(arg, 0,
 		    ANON_MAXVAL, &s);
@@ -1961,3 +2074,48 @@ guess_compress_program(int wr __attribute__((__unused__)))
 	/* no sugar */
 	compress_program = NULL;
 }
+
+#ifndef SMALL
+static int
+compress_id(char *blk, int size)
+{
+	if (size >= 2 && blk[0] == '\037' && blk[1] == '\235') {
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "compress", 'Z');
+		exit(1);
+	}
+	return (-1);
+}
+
+static int
+gzip_id(char *blk, int size)
+{
+	if (size >= 2 && blk[0] == '\037' && blk[1] == '\213') {
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "gzip", 'z');
+		exit(1);
+	}
+	return (-1);
+}
+
+static int
+bzip2_id(char *blk, int size)
+{
+	if (size >= 3 && blk[0] == 'B' && blk[1] == 'Z' && blk[2] == 'h') {
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "bzip2", 'j');
+		exit(1);
+	}
+	return (-1);
+}
+
+static int
+xz_id(char *blk, int size)
+{
+	if (size >= 6 && memcmp(blk, "\xFD\x37\x7A\x58\x5A", 6) == 0) {
+		paxwarn(0, "input compressed with xz");
+		exit(1);
+	}
+	return (-1);
+}
+#endif /* !SMALL */

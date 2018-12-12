@@ -1,4 +1,4 @@
-/*	$OpenBSD: tar.h,v 1.7 2003/06/02 23:32:09 millert Exp $	*/
+/*	$OpenBSD: tar.h,v 1.9 2014/01/08 06:43:34 deraadt Exp $	*/
 /*	$NetBSD: tar.h,v 1.3 1995/03/21 09:07:51 cgd Exp $	*/
 
 /*-
@@ -36,8 +36,9 @@
  *	@(#)tar.h	8.2 (Berkeley) 4/18/94
  */
 
-#ifndef MIRCPIO_TAR_H
-#define MIRCPIO_TAR_H "$MirOS: src/bin/pax/tar.h,v 1.3 2016/03/06 14:12:29 tg Exp $"
+#ifdef EXTERN
+__IDSTRING(rcsid_tar_h, "$MirOS: src/bin/pax/tar.h,v 1.4 2018/12/12 18:08:48 tg Exp $");
+#endif
 
 /*
  * defines and data structures common to all tar formats
@@ -63,6 +64,12 @@
 #define	DIRTYPE		'5'		/* Directory */
 #define	FIFOTYPE	'6'		/* FIFO */
 #define	CONTTYPE	'7'		/* high perf file */
+
+/*
+ * Extended header - POSIX.1-2001
+ */
+#define	XHDRTYPE	'x'		/* Extended header */
+#define	GHDRTYPE	'g'		/* Global header*/
 
 /*
  * GNU tar compatibility;
@@ -99,8 +106,8 @@
  */
 typedef struct {
 	char name[TNMSZ];		/* name of entry */
-	char mode[8]; 			/* mode */
-	char uid[8]; 			/* uid */
+	char mode[8];			/* mode */
+	char uid[8];			/* uid */
 	char gid[8];			/* gid */
 	char size[12];			/* size */
 	char mtime[12];			/* modification time */
@@ -138,8 +145,8 @@ typedef struct {
 
 typedef struct {
 	char name[TNMSZ];		/* name of entry */
-	char mode[8]; 			/* mode */
-	char uid[8]; 			/* uid */
+	char mode[8];			/* mode */
+	char uid[8];			/* uid */
 	char gid[8];			/* gid */
 	char size[12];			/* size */
 	char mtime[12];			/* modification time */
@@ -154,5 +161,3 @@ typedef struct {
 	char devminor[8];		/* minor device number */
 	char prefix[TPFSZ];		/* linked to name */
 } HD_USTAR;
-
-#endif

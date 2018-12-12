@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty_subs.c,v 1.14 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: tty_subs.c,v 1.17 2016/08/26 04:22:13 guenther Exp $	*/
 /*	$NetBSD: tty_subs.c,v 1.5 1995/03/21 09:07:52 cgd Exp $	*/
 
 /*-
@@ -36,22 +36,23 @@
  * SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
-#include <sys/param.h>
-#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <errno.h>
-#include <unistd.h>
+#include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.12 2016/03/06 13:47:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tty_subs.c,v 1.13 2018/12/12 18:08:48 tg Exp $");
 
 /*
  * routines that deal with I/O to and from the user
@@ -71,8 +72,8 @@ static int ttyfd;
 int
 tty_init(void)
 {
-	if ((ttyfd = open(devtty, O_RDWR)) == -1 && iflag) {
-		paxwarn(1, "Fatal error, cannot open %s", devtty);
+	if ((ttyfd = binopen2(BO_CLEXEC, devtty, O_RDWR)) == -1 && iflag) {
+		syswarn(1, errno, "Fatal error, cannot open %s", devtty);
 		return (-1);
 	}
 
@@ -96,12 +97,7 @@ tty_prnt(const char *fmt, ...)
 	if (ttyfd != -1) {
 		len = vasprintf(&cp, fmt, ap);
 		if (len != -1) {
-#ifdef _FORTIFY_SOURCE
-			/* booh */
-			len = write(ttyfd, cp, len);
-#else
-			write(ttyfd, cp, len);
-#endif
+			dwrite(ttyfd, cp, len);
 			free(cp);
 		}
 	}
@@ -110,10 +106,9 @@ tty_prnt(const char *fmt, ...)
 
 /*
  * tty_rd()
- *	read a string from the controlling terminal if it is open into the
- *	supplied buffer
+ *	read a string from the controlling terminal if it is open
  * Return:
- *	pointer caller must free if data was read, NULL otherwise.
+ *	pointer caller must free if data was read, NULL otherwise
  */
 
 char *

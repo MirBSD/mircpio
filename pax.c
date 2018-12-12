@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.c,v 1.51 2017/12/08 17:04:14 deraadt Exp $	*/
+/*	$OpenBSD: pax.c,v 1.52 2018/09/13 12:33:43 millert Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
@@ -36,24 +36,42 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/stat.h>
+#include <sys/types.h>
+#if HAVE_BOTH_TIME_H
 #include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
+#include <sys/stat.h>
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#if HAVE_GRP_H
+#include <grp.h>
+#endif
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
+#include <pwd.h>
 #include <signal.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <err.h>
-#include <fcntl.h>
-#include <paths.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.27 2018/12/12 00:23:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.28 2018/12/12 18:08:46 tg Exp $");
 
 static int gen_init(void);
 
@@ -95,10 +113,13 @@ int	exit_val;		/* exit value */
 int	docrc;			/* check/create file crc */
 char	*dirptr;		/* destination dir in a copy */
 const char *argv0;		/* root of argv[0] */
+enum op_mode op_mode;		/* what program are we acting as? */
 sigset_t s_mask;		/* signal mask for cleanup critical sect */
 FILE	*listf;			/* fp to print file list to (default stderr) */
+int	listfd = STDERR_FILENO;	/* fd matching listf, for sighandler output */
 char	*tempfile;		/* tempfile to use for mkstemp(3) */
 char	*tempbase;		/* basename of tempfile to use for mkstemp(3) */
+time_t	 now;			/* time of program start */
 
 /*
  *	PAX - Portable Archive Interchange
@@ -229,10 +250,12 @@ main(int argc, char **argv)
 	/* may not be a constant, thus initialising early */
 	listf = stderr;
 
+	now = time(NULL);
+
 	/*
 	 * Keep a reference to cwd, so we can always come back home.
 	 */
-	cwdfd = open(".", O_RDONLY);
+	cwdfd = binopen2(BO_CLEXEC, ".", O_RDONLY);
 	if (cwdfd < 0) {
 		syswarn(1, errno, "Can't open current working directory.");
 		return(exit_val);
@@ -256,6 +279,14 @@ main(int argc, char **argv)
 	tempbase = tempfile + tdlen;
 	*tempbase++ = '/';
 
+#if HAVE_SETPGENT
+	/*
+	 * keep passwd and group files open for faster lookups.
+	 */
+	setpassent(1);
+	setgroupent(1);
+#endif
+
 	/*
 	 * parse options, determine operational mode, general init
 	 */
@@ -263,11 +294,33 @@ main(int argc, char **argv)
 	if ((gen_init() < 0) || (tty_init() < 0))
 		return(exit_val);
 
+#if HAVE_PLEDGE
+	/*
+	 * pmode needs to restore setugid bits when extracting or copying,
+	 * so can't pledge at all then.
+	 */
+	if (pmode == 0 || (act != EXTRACT && act != COPY)) {
+		if (pledge("stdio rpath wpath cpath fattr dpath getpw proc exec tape",
+		    NULL) == -1)
+			err(1, "pledge");
+
+		/* Copy mode, or no gzip -- don't need to fork/exec. */
+		if (gzip_program == NULL || act == COPY) {
+			if (pledge("stdio rpath wpath cpath fattr dpath getpw tape",
+			    NULL) == -1)
+				err(1, "pledge");
+		}
+	}
+#endif
+
 	/* make list fd independent and line-buffered */
-	if (!(listf = fdopen(dup(fileno(listf)), "wb"))) {
+	if (!(listf = fdopen((listfd = dup(fileno(listf))), "wb"))) {
 		syswarn(1, errno, "Can't open list file descriptor");
 		return (exit_val);
 	}
+	if (fcntl(listfd, F_SETFD, FD_CLOEXEC) == -1)
+		syswarn(0, errno, "%s on list file descriptor",
+		    "Failed to set the close-on-exec flag");
 	setlinebuf(listf);
 
 	/*
@@ -312,42 +365,45 @@ void
 sig_cleanup(int which_sig)
 {
 	/*
-	 * The definition of this array doubles as compile-time assert
-	 * on the size of long, off_t, and whether LONG_OFF_T is used,
-	 * or not, correctly; target size is 80, error size -1.
-	 */
-	char errbuf[((sizeof(long) >= 4) &&
-	    (sizeof(ot_type) >= 4) &&
-	    (sizeof(ot_type) == sizeof(off_t))) ? 80 : -1];
-
-	/*
-	 * restore modes and times for any dirs we may have created
-	 * or any dirs we may have read. Set vflag and vfpart so the user
-	 * will clearly see the message on a line by itself.
+	 * Restore modes and times for any dirs we may have created
+	 * or any dirs we may have read. Set vflag and vfpart so the
+	 * user will clearly see the message on a line by itself.
 	 */
 	vflag = vfpart = 1;
 
 	/* paxwarn() uses stdio; fake it as well as we can */
 	if (which_sig == SIGXCPU)
-		strlcpy(errbuf, "CPU time limit reached, cleaning up.\n",
-		    sizeof errbuf);
+		dprintf(STDERR_FILENO, "\nCPU time limit reached, cleaning up.\n");
 	else if (!which_sig)
-		strlcpy(errbuf, "Cowardly giving up, trying to clean up.\n",
-		    sizeof errbuf);
+		dprintf(STDERR_FILENO, "\nCowardly giving up, trying to clean up.\n");
 	else
-		strlcpy(errbuf, "Signal caught, cleaning up.\n",
-		    sizeof errbuf);
-	if (!write(STDERR_FILENO, errbuf, strlen(errbuf))) {
-		/* dummy, to keep fortified gcc quiet */
-		errbuf[0] = '\0';
-	}
+		dprintf(STDERR_FILENO, "\nSignal caught, cleaning up.\n");
 
-	ar_close();			/* XXX signal race */
+	ar_close(1);
 	sltab_process(1);
-	proc_dir();			/* XXX signal race */
+	proc_dir(1);
 	if (tflag)
-		atdir_end();		/* XXX signal race */
+		atdir_end();
 	_exit(1);
+}
+
+/*
+ * setup_sig()
+ *	set a signal to be caught, but only if it isn't being ignored already
+ */
+
+static int
+setup_sig(int sig, const struct sigaction *n_hand)
+{
+	struct sigaction o_hand;
+
+	if (sigaction(sig, NULL, &o_hand) < 0)
+		return (-1);
+
+	if (o_hand.sa_handler == SIG_IGN)
+		return (0);
+
+	return (sigaction(sig, n_hand, NULL));
 }
 
 /*
@@ -361,7 +417,6 @@ gen_init(void)
 {
 	struct rlimit reslimit;
 	struct sigaction n_hand;
-	struct sigaction o_hand;
 
 	/*
 	 * Really needed to handle large archives. We can run out of memory for
@@ -412,43 +467,29 @@ gen_init(void)
 		paxwarn(1, "Unable to set up signal mask");
 		return(-1);
 	}
+
+	/* snag the fd to be used from the signal handler */
+	listfd = fileno(listf);
+
 	memset(&n_hand, 0, sizeof n_hand);
 	n_hand.sa_mask = s_mask;
 	n_hand.sa_flags = 0;
 	n_hand.sa_handler = sig_cleanup;
 
-	if ((sigaction(SIGHUP, &n_hand, &o_hand) < 0) || (
-	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGHUP, &o_hand, NULL) < 0)))
-		goto out;
-
-	if ((sigaction(SIGTERM, &n_hand, &o_hand) < 0) || (
-	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGTERM, &o_hand, NULL) < 0)))
-		goto out;
-
-	if ((sigaction(SIGINT, &n_hand, &o_hand) < 0) || (
-	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGINT, &o_hand, NULL) < 0)))
-		goto out;
-
-	if ((sigaction(SIGQUIT, &n_hand, &o_hand) < 0) || (
-	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGQUIT, &o_hand, NULL) < 0)))
-		goto out;
-
-	if ((sigaction(SIGXCPU, &n_hand, &o_hand) < 0) || (
-	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGXCPU, &o_hand, NULL) < 0)))
+	if (setup_sig(SIGHUP,  &n_hand) ||
+	    setup_sig(SIGTERM, &n_hand) ||
+	    setup_sig(SIGINT,  &n_hand) ||
+	    setup_sig(SIGQUIT, &n_hand) ||
+	    setup_sig(SIGXCPU, &n_hand))
 		goto out;
 
 	n_hand.sa_handler = SIG_IGN;
-	if ((sigaction(SIGPIPE, &n_hand, &o_hand) < 0) ||
-	    (sigaction(SIGXFSZ, &n_hand, &o_hand) < 0))
+	if ((sigaction(SIGPIPE, &n_hand, NULL) < 0) ||
+	    (sigaction(SIGXFSZ, &n_hand, NULL) < 0))
 		goto out;
-	return(0);
+	return (0);
 
  out:
 	syswarn(1, errno, "Unable to set up signal handler");
-	return(-1);
+	return (-1);
 }
