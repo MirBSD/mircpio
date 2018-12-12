@@ -39,7 +39,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.7 2018/12/12 06:44:40 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.8 2018/12/12 08:48:15 tg Exp $");
 #endif
 
 /*
@@ -175,7 +175,7 @@ typedef struct {
 				/* in invalid headers (i.e like tar) */
 	int (*id)(char *,	/* checks if a buffer is a valid header */
 	    int);		/* returns 1 if it is, o.w. returns a 0 */
-	int (*st_rd)(void);	/* initialize routine for read. so format */
+	int (*st_rd)(void);	/* initialise routine for read. so format */
 				/* can set up tables etc before it starts */
 				/* reading an archive */
 	int (*rd)(ARCHD *,	/* read header routine. passed a pointer to */
@@ -194,7 +194,7 @@ typedef struct {
 				/* and MUST RETURN THE LENGTH OF THE TRAILER */
 				/* RECORD (so append knows how many bytes */
 				/* to move back to rewrite the trailer) */
-	int (*st_wr)(void);	/* initialize routine for write operations */
+	int (*st_wr)(void);	/* initialise routine for write operations */
 	int (*wr)(ARCHD *);	/* write archive header. Passed an ARCHD */
 				/* filled with the specs on the next file to */
 				/* archived. Returns a 1 if no file data is */

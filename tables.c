@@ -704,7 +704,7 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 
 	if (havechd && *path0 != '/') {
 		if ((path = realpath(path0, NULL)) == NULL) {
-			syswarn(1, errno, "Cannot canonicalize %s", path0);
+			syswarn(1, errno, "Cannot canonicalise %s", path0);
 			unlink(path0);
 			return (-1);
 		}
@@ -794,7 +794,7 @@ sltab_add_link(const char *path, const struct stat *sb)
 		}
 		if (havechd && *path != '/') {
 			if ((p->sp_path = realpath(path, NULL)) == NULL) {
-				syswarn(1, errno, "Cannot canonicalize %s",
+				syswarn(1, errno, "Cannot canonicalise %s",
 				    path);
 				free(p);
 				return (-1);
@@ -1609,7 +1609,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 
 	if (havechd && *name != '/') {
 		if ((rp = realpath(name, realname)) == NULL) {
-			paxwarn(1, "Cannot canonicalize %s", name);
+			paxwarn(1, "Cannot canonicalise %s", name);
 			return;
 		}
 		name = rp;

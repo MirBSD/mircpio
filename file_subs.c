@@ -1053,7 +1053,11 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 	 * so do *not* use O_NOFOLLOW.  The dev+ino check will
 	 * protect us from evil.
 	 */
-	fd = open(ft->ft_name, O_RDONLY | O_DIRECTORY);
+	fd = open(ft->ft_name,
+#ifdef O_DIRECTORY
+	    O_DIRECTORY |
+#endif
+	    O_RDONLY);
 	if (fd == -1) {
 		if (!in_sig)
 			syswarn(1, errno, "Unable to restore mode and times"
@@ -1066,6 +1070,13 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 			syswarn(1, errno, "Unable to stat directory: %s",
 			    ft->ft_name);
 		r = -1;
+#ifndef O_DIRECTORY
+	} else if (!S_ISDIR(sb.st_mode)) {
+		if (!in_sig)
+			syswarn(1, ENOTDIR, "Unable to restore mode and times"
+			    " for directory: %s", ft->ft_name);
+		r = -1;
+#endif
 	} else if (ft->ft_ino != sb.st_ino || ft->ft_dev != sb.st_dev) {
 		if (!in_sig)
 			paxwarn(1, "Directory vanished before restoring"
@@ -1190,13 +1201,16 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 				 */
 				if (fd > -1 &&
 				    lseek(fd, wcnt, SEEK_CUR) < 0) {
-					syswarn(1,errno,"File seek on %s",
-					    name);
-					return(-1);
+					if (errno == ESPIPE)
+						goto isapipe;
+					syswarn(1, errno,
+					    "File seek on %s", name);
+					return (-1);
 				}
 				st = pt;
 				continue;
 			}
+ isapipe:
 			/*
 			 * drat, the buf is not zero filled
 			 */

@@ -89,7 +89,7 @@ static char *getpathname(char *, int);
 
 /*
  * ftree_start()
- *	initialize the options passed to fts_open() during this run of pax
+ *	initialise the options passed to fts_open() during this run of pax
  *	options are based on the selection of pax options by the user
  *	fts_start() also calls fts_arg() to open the first valid file arg. We
  *	also attempt to reset directory access times when -t (tflag) is set.
@@ -414,7 +414,7 @@ next_file(ARCHD *arcn)
 			/*
 			 * fts claims a filesystem cycle
 			 */
-			paxwarn(1,"Filesystem cycle found at %s",ftent->fts_path);
+			paxwarn(1, "Filesystem cycle found at %s", ftent->fts_path);
 			continue;
 		case FTS_DNR:
 			syswarn(1, ftent->fts_errno,
@@ -433,7 +433,7 @@ next_file(ARCHD *arcn)
 
 		/*
 		 * ok got a file tree node to process. copy info into arcn
-		 * structure (initialize as required)
+		 * structure (initialise as required)
 		 */
 		arcn->skip = 0;
 		arcn->pad = 0;
