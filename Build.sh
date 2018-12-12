@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.9 2018/12/12 08:32:29 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.10 2018/12/12 08:42:10 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1505,6 +1505,13 @@ ac_test dprintf <<-'EOF'
 	int main(void) { return (dprintf(1, "hi\n")); }
 EOF
 
+ac_test fchmodat <<-'EOF'
+	#include <fcntl.h>
+	#include <unistd.h>
+	int main(void) { return (fchownat(AT_FDCWD, ".",
+	    0, AT_SYMLINK_NOFOLLOW)); }
+EOF
+
 ac_test fchownat <<-'EOF'
 	#include <fcntl.h>
 	#include <unistd.h>
@@ -1524,6 +1531,12 @@ ac_test futimes '!' futimens 0 <<-'EOF'
 	#include <sys/time.h>
 	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	int main(void) { return (futimens(0, tv)); }
+EOF
+
+ac_test lchmod '!' fchmodat 0 <<-'EOF'
+	#include <sys/types.h>
+	#include <unistd.h>
+	int main(void) { return (lchmod(".", 0)); }
 EOF
 
 ac_test lchown '!' fchownat 0 <<-'EOF'

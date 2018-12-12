@@ -997,10 +997,31 @@ fset_ids(char *fnm, int fd, uid_t uid, gid_t gid)
  */
 
 void
-set_pmode(char *fnm, mode_t mode)
+set_pmode(char *fnm, mode_t mode, int issymlink MKSH_A_UNUSED)
 {
+	int rv;
+
 	mode &= ABITS;
-	if (fchmodat(AT_FDCWD, fnm, mode, AT_SYMLINK_NOFOLLOW) < 0)
+#if HAVE_FCHMODAT
+	rv = fchmodat(AT_FDCWD, fnm, mode, AT_SYMLINK_NOFOLLOW);
+	if (rv < 0 && (errno == ENOSYS || errno == ENOTSUP)) {
+		/* glibc sucks */
+		if (issymlink)
+			return;
+		rv = chmod(fnm, mode);
+	}
+#elif HAVE_LCHMOD
+	rv = (issymlink ? lchmod : chmod)(fnm, mode);
+	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
+		/* similarily glibc */
+		return;
+#else
+	if (issymlink)
+		/* no can do */
+		return (0);
+	rv = chmod(fnm, mode);
+#endif
+	if (rv < 0)
 		syswarn(1, errno, "Could not set permissions on %s", fnm);
 }
 
