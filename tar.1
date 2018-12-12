@@ -131,9 +131,8 @@ Set blocking factor to use for the archive.
 .Nm
 uses 512-byte blocks.
 The default is 20, the maximum is 126.
-Archives with a blocking factor larger than 63 violate the
-.Tn POSIX
-standard and will not be portable to all systems.
+Archives with a blocking factor larger than 63
+violate the POSIX standard and will not be portable to all systems.
 .It Fl C Ar directory
 This is a positional argument which sets the working directory for the
 following files.
@@ -399,7 +398,8 @@ A
 command first appeared in
 .At v7 .
 .Sh AUTHORS
-Keith Muller at the University of California, San Diego.
+.An Keith Muller
+at the University of California, San Diego.
 .Sh CAVEATS
 The
 .Fl j

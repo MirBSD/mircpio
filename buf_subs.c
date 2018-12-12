@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf_subs.c,v 1.23 +1.30 2009/12/22 12:09:36 jasper Exp $	*/
+/*	$OpenBSD: buf_subs.c,v 1.30 2016/12/20 21:29:08 kettenis Exp $	*/
 /*	$NetBSD: buf_subs.c,v 1.5 1995/03/21 09:07:08 cgd Exp $	*/
 
 /*-
@@ -35,9 +35,7 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -237,7 +235,7 @@ appnd_start(off_t skcnt)
 	skcnt += bufend - bufpt;
 	if ((cnt = (skcnt/blksz) * blksz) < skcnt)
 		cnt += blksz;
-	if (ar_rev((off_t)cnt) < 0)
+	if (ar_rev(cnt) < 0)
 		goto out;
 
 	/*
@@ -259,7 +257,7 @@ appnd_start(off_t skcnt)
 				goto out;
 			bufpt += res;
 		}
-		if (ar_rev((off_t)(bufpt - buf)) < 0)
+		if (ar_rev(bufpt - buf) < 0)
 			goto out;
 		bufpt = buf + cnt;
 		bufend = buf + blksz;
@@ -374,7 +372,6 @@ pback(char *pt, int cnt)
 {
 	bufpt -= cnt;
 	memcpy(bufpt, pt, cnt);
-	return;
 }
 
 /*
@@ -400,7 +397,7 @@ rd_skip(off_t skcnt)
 	 */
 	if (skcnt == 0)
 		return(0);
-	res = MIN((bufend - bufpt), skcnt);
+	res = MINIMUM((bufend - bufpt), skcnt);
 	bufpt += res;
 	skcnt -= res;
 
@@ -430,7 +427,7 @@ rd_skip(off_t skcnt)
 	 * what is left we have to read (which may be the whole thing if
 	 * ar_fow() told us the device can only read to skip records);
 	 */
-	while (res > 0L) {
+	while (res > 0) {
 		cnt = bufend - bufpt;
 		/*
 		 * if the read fails, we will have to resync
@@ -439,7 +436,7 @@ rd_skip(off_t skcnt)
 			return(-1);
 		if (cnt == 0)
 			return(1);
-		cnt = MIN(cnt, res);
+		cnt = MINIMUM(cnt, res);
 		bufpt += cnt;
 		res -= cnt;
 	}
@@ -491,7 +488,7 @@ wr_rdbuf(char *out, int outcnt)
 		/*
 		 * only move what we have space for
 		 */
-		cnt = MIN(cnt, outcnt);
+		cnt = MINIMUM(cnt, outcnt);
 		memcpy(bufpt, out, cnt);
 		bufpt += cnt;
 		out += cnt;
@@ -539,7 +536,7 @@ rd_wrbuf(char *in, int cpcnt)
 		 * calculate how much data to copy based on whats left and
 		 * state of buffer
 		 */
-		cnt = MIN(cnt, incnt);
+		cnt = MINIMUM(cnt, incnt);
 		memcpy(in, bufpt, cnt);
 		bufpt += cnt;
 		incnt -= cnt;
@@ -567,11 +564,11 @@ wr_skip(off_t skcnt)
 	/*
 	 * loop while there is more padding to add
 	 */
-	while (skcnt > 0L) {
+	while (skcnt > 0) {
 		cnt = bufend - bufpt;
 		if ((cnt <= 0) && ((cnt = buf_flush(blksz)) < 0))
 			return(-1);
-		cnt = MIN(cnt, skcnt);
+		cnt = MINIMUM(cnt, skcnt);
 		memset(bufpt, 0, cnt);
 		bufpt += cnt;
 		skcnt -= cnt;
@@ -608,13 +605,13 @@ wr_rdfile(ARCHD *arcn, int ifd, off_t *left)
 	/*
 	 * while there are more bytes to write
 	 */
-	while (size > 0L) {
+	while (size > 0) {
 		cnt = bufend - bufpt;
 		if ((cnt <= 0) && ((cnt = buf_flush(blksz)) < 0)) {
 			*left = size;
 			return(-1);
 		}
-		cnt = MIN(cnt, size);
+		cnt = MINIMUM(cnt, size);
 		if ((res = read(ifd, bufpt, cnt)) <= 0)
 			break;
 		size -= res;
@@ -627,11 +624,11 @@ wr_rdfile(ARCHD *arcn, int ifd, off_t *left)
 	 */
 	if (res < 0)
 		syswarn(1, errno, "Read fault on %s", arcn->org_name);
-	else if (size != 0L)
+	else if (size != 0)
 		paxwarn(1, "File changed size during read %s", arcn->org_name);
 	else if (fstat(ifd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
-	else if (arcn->sb.st_mtime != sb.st_mtime)
+	else if (timespeccmp(&arcn->sb.st_mtim, &sb.st_mtim, !=))
 		paxwarn(1, "File %s was modified during copy to archive",
 			arcn->org_name);
 	*left = size;
@@ -683,14 +680,14 @@ rd_wrfile(ARCHD *arcn, int ofd, off_t *left)
 	} else
 		syswarn(0,errno,"Unable to obtain block size for file %s",fnm);
 	rem = sz;
-	*left = 0L;
+	*left = 0;
 
 	/*
 	 * Copy the archive to the file the number of bytes specified. We have
 	 * to assume that we want to recover file holes as none of the archive
 	 * formats can record the location of file holes.
 	 */
-	while (size > 0L) {
+	while (size > 0) {
 		cnt = bufend - bufpt;
 		/*
 		 * if we get a read error, we do not want to skip, as we may
@@ -699,7 +696,7 @@ rd_wrfile(ARCHD *arcn, int ofd, off_t *left)
 		 */
 		if ((cnt <= 0) && ((cnt = buf_fill()) <= 0))
 			break;
-		cnt = MIN(cnt, size);
+		cnt = MINIMUM(cnt, size);
 		if ((res = file_write(ofd,bufpt,cnt,&rem,&isem,sz,fnm)) <= 0) {
 			*left = size;
 			break;
@@ -723,20 +720,20 @@ rd_wrfile(ARCHD *arcn, int ofd, off_t *left)
 	 * written. just closing with the file offset moved forward may not put
 	 * a hole at the end of the file.
 	 */
-	if (isem && (arcn->sb.st_size > 0L))
+	if (isem && (arcn->sb.st_size > 0))
 		file_flush(ofd, fnm, isem);
 
 	/*
 	 * if we failed from archive read, we do not want to skip
 	 */
-	if ((size > 0L) && (*left == 0L))
+	if ((size > 0) && (*left == 0))
 		return(-1);
 
 	/*
 	 * some formats record a crc on file data. If so, then we compare the
 	 * calculated crc to the crc stored in the archive
 	 */
-	if (docrc && (size == 0L) && (arcn->crc != crc))
+	if (docrc && (size == 0) && (arcn->crc != crc))
 		paxwarn(1,"Actual crc does not match expected crc %s",arcn->name);
 	return(0);
 }
@@ -752,7 +749,7 @@ void
 cp_file(ARCHD *arcn, int fd1, int fd2)
 {
 	int cnt;
-	off_t cpcnt = 0L;
+	off_t cpcnt = 0;
 	int res = 0;
 	char *fnm = arcn->name;
 	int no_hole = 0;
@@ -805,7 +802,7 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 			arcn->org_name, arcn->name);
 	else if (fstat(fd1, &sb) < 0)
 		syswarn(1, errno, "Failed stat of %s", arcn->org_name);
-	else if (arcn->sb.st_mtime != sb.st_mtime)
+	else if (timespeccmp(&arcn->sb.st_mtim, &sb.st_mtim, !=))
 		paxwarn(1, "File %s was modified during copy to %s",
 			arcn->org_name, arcn->name);
 
@@ -815,9 +812,8 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 	 * written. just closing with the file offset moved forward may not put
 	 * a hole at the end of the file.
 	 */
-	if (!no_hole && isem && (arcn->sb.st_size > 0L))
+	if (!no_hole && isem && (arcn->sb.st_size > 0))
 		file_flush(fd2, fnm, isem);
-	return;
 }
 
 /*

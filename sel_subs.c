@@ -1,4 +1,4 @@
-/*	$OpenBSD: sel_subs.c,v 1.20 2009/11/12 20:17:03 deraadt Exp $	*/
+/*	$OpenBSD: sel_subs.c,v 1.27 2018/09/13 12:33:43 millert Exp $	*/
 /*	$NetBSD: sel_subs.c,v 1.5 1995/03/21 09:07:42 cgd Exp $	*/
 
 /*-
@@ -35,20 +35,52 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <ctype.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tzfile.h>
-#include <unistd.h>
+#include <time.h>
+
 #include "pax.h"
-#include "sel_subs.h"
 #include "extern.h"
+
+/*
+ * data structure for storing uid/grp selects (-U, -G non standard options)
+ */
+
+#define USR_TB_SZ	317		/* user selection table size */
+#define GRP_TB_SZ	317		/* user selection table size */
+
+typedef struct usrt {
+	uid_t uid;
+	struct usrt *fow;		/* next uid */
+} USRT;
+
+typedef struct grpt {
+	gid_t gid;
+	struct grpt *fow;		/* next gid */
+} GRPT;
+
+/*
+ * data structure for storing user supplied time ranges (-T option)
+ */
+
+#define ATOI2(ar)	((ar)[0] - '0') * 10 + ((ar)[1] - '0'); (ar) += 2;
+
+typedef struct time_rng {
+	time_t		low_time;	/* lower inclusive time limit */
+	time_t		high_time;	/* higher inclusive time limit */
+	int		flgs;		/* option flags */
+#define	HASLOW		0x01		/* has lower time limit */
+#define HASHIGH		0x02		/* has higher time limit */
+#define CMPMTME		0x04		/* compare file modification time */
+#define CMPCTME		0x08		/* compare inode change time */
+#define CMPBOTH	(CMPMTME|CMPCTME)	/* compare inode and mod time */
+	struct time_rng	*fow;		/* next pattern */
+} TIME_RNG;
 
 static int str_sec(const char *, time_t *);
 static int usr_match(ARCHD *);
@@ -101,7 +133,6 @@ usr_add(char *str)
 {
 	u_int indx;
 	USRT *pt;
-	struct passwd *pw;
 	uid_t uid;
 
 	/*
@@ -110,7 +141,7 @@ usr_add(char *str)
 	if ((str == NULL) || (*str == '\0'))
 		return(-1);
 	if ((usrtb == NULL) &&
- 	    ((usrtb = (USRT **)calloc(USR_TB_SZ, sizeof(USRT *))) == NULL)) {
+	    ((usrtb = calloc(USR_TB_SZ, sizeof(USRT *))) == NULL)) {
 		paxwarn(1, "Unable to allocate memory for user selection table");
 		return(-1);
 	}
@@ -124,11 +155,10 @@ usr_add(char *str)
 		 */
 		if ((str[0] == '\\') && (str[1] == '#'))
 			++str;
-		if ((pw = getpwnam(str)) == NULL) {
+		if (uid_from_user(str, &uid) < 0) {
 			paxwarn(1, "Unable to find uid for user: %s", str);
 			return(-1);
 		}
-		uid = (uid_t)pw->pw_uid;
 	} else
 		uid = (uid_t)strtoul(str+1, NULL, 10);
 	endpwent();
@@ -148,7 +178,7 @@ usr_add(char *str)
 	/*
 	 * uid is not yet in the table, add it to the front of the chain
 	 */
-	if ((pt = (USRT *)malloc(sizeof(USRT))) != NULL) {
+	if ((pt = malloc(sizeof(USRT))) != NULL) {
 		pt->uid = uid;
 		pt->fow = usrtb[indx];
 		usrtb[indx] = pt;
@@ -198,7 +228,6 @@ grp_add(char *str)
 {
 	u_int indx;
 	GRPT *pt;
-	struct group *gr;
 	gid_t gid;
 
 	/*
@@ -207,13 +236,13 @@ grp_add(char *str)
 	if ((str == NULL) || (*str == '\0'))
 		return(-1);
 	if ((grptb == NULL) &&
- 	    ((grptb = (GRPT **)calloc(GRP_TB_SZ, sizeof(GRPT *))) == NULL)) {
+	    ((grptb = calloc(GRP_TB_SZ, sizeof(GRPT *))) == NULL)) {
 		paxwarn(1, "Unable to allocate memory fo group selection table");
 		return(-1);
 	}
 
 	/*
-	 * figure out user spec
+	 * figure out group spec
 	 */
 	if (str[0] != '#') {
 		/*
@@ -221,11 +250,10 @@ grp_add(char *str)
 		 */
 		if ((str[0] == '\\') && (str[1] == '#'))
 			++str;
-		if ((gr = getgrnam(str)) == NULL) {
+		if (gid_from_group(str, &gid) < 0) {
 			paxwarn(1,"Cannot determine gid for group name: %s", str);
 			return(-1);
 		}
-		gid = (gid_t)gr->gr_gid;
 	} else
 		gid = (gid_t)strtoul(str+1, NULL, 10);
 	endgrent();
@@ -245,7 +273,7 @@ grp_add(char *str)
 	/*
 	 * gid not in the table, add it to the front of the chain
 	 */
-	if ((pt = (GRPT *)malloc(sizeof(GRPT))) != NULL) {
+	if ((pt = malloc(sizeof(GRPT))) != NULL) {
 		pt->gid = gid;
 		pt->fow = grptb[indx];
 		grptb[indx] = pt;
@@ -359,7 +387,7 @@ trng_add(char *str)
 	/*
 	 * allocate space for the time range and store the limits
 	 */
-	if ((pt = (TIME_RNG *)malloc(sizeof(TIME_RNG))) == NULL) {
+	if ((pt = malloc(sizeof(TIME_RNG))) == NULL) {
 		paxwarn(1, "Unable to allocate memory for time range");
 		return(-1);
 	}
@@ -385,7 +413,7 @@ trng_add(char *str)
 			default:
 				paxwarn(1, "Bad option %c with time range %s",
 				    *flgpt, str);
-				(void)free((char *)pt);
+				free(pt);
 				goto out;
 			}
 			++flgpt;
@@ -402,7 +430,7 @@ trng_add(char *str)
 		 */
 		if (str_sec(str, &(pt->low_time)) < 0) {
 			paxwarn(1, "Illegal lower time range %s", str);
-			(void)free((char *)pt);
+			free(pt);
 			goto out;
 		}
 		pt->flgs |= HASLOW;
@@ -414,7 +442,7 @@ trng_add(char *str)
 		 */
 		if (str_sec(up_pt, &(pt->high_time)) < 0) {
 			paxwarn(1, "Illegal upper time range %s", up_pt);
-			(void)free((char *)pt);
+			free(pt);
 			goto out;
 		}
 		pt->flgs |= HASHIGH;
@@ -426,7 +454,7 @@ trng_add(char *str)
 			if (pt->low_time > pt->high_time) {
 				paxwarn(1, "Upper %s and lower %s time overlap",
 					up_pt, str);
-				(void)free((char *)pt);
+				free(pt);
 				return(-1);
 			}
 		}
@@ -535,7 +563,7 @@ str_sec(const char *p, time_t *tval)
 	len = strlen(p);
 
 	for (t = p, dot = NULL; *t; ++t) {
-		if (isdigit(*t))
+		if (isdigit((unsigned char)*t))
 			continue;
 		if (*t == '.' && dot == NULL) {
 			dot = t;
@@ -559,7 +587,7 @@ str_sec(const char *p, time_t *tval)
 	switch (len) {
 	case 12:				/* cc */
 		bigyear = ATOI2(p);
-		lt->tm_year = (bigyear * 100) - TM_YEAR_BASE;
+		lt->tm_year = (bigyear * 100) - 1900;
 		yearset = 1;
 		/* FALLTHROUGH */
 	case 10:				/* yy */
@@ -568,9 +596,7 @@ str_sec(const char *p, time_t *tval)
 		} else {
 			lt->tm_year = ATOI2(p);
 			if (lt->tm_year < 69)		/* hack for 2000 ;-} */
-				lt->tm_year += (2000 - TM_YEAR_BASE);
-			else
-				lt->tm_year += (1900 - TM_YEAR_BASE);
+				lt->tm_year += (2000 - 1900);
 		}
 		/* FALLTHROUGH */
 	case 8:					/* mm */

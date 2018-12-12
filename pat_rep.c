@@ -35,18 +35,26 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <regex.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "pax.h"
-#include "pat_rep.h"
 #include "extern.h"
+
+/*
+ * data structure for storing user supplied replacement strings (-s)
+ */
+typedef struct replace {
+	char		*nstr;	/* the new string we will substitute with */
+	regex_t		rcmp;	/* compiled regular expression used to match */
+	int		flgs;	/* print conversions? global in operation?  */
+#define	PRNT		0x1
+#define	GLOB		0x2
+	struct replace	*fow;	/* pointer to next pattern */
+} REPLACE;
 
 /*
  * routines to handle pattern matching, name modification (regular expression
@@ -122,7 +130,7 @@ rep_add(char *str)
 	 * allocate space for the node that handles this replacement pattern
 	 * and split out the regular expression and try to compile it
 	 */
-	if ((rep = (REPLACE *)malloc(sizeof(REPLACE))) == NULL) {
+	if ((rep = malloc(sizeof(REPLACE))) == NULL) {
 		paxwarn(1, "Unable to allocate memory for replacement string");
 		return(-1);
 	}
@@ -131,7 +139,7 @@ rep_add(char *str)
 	if ((res = regcomp(&(rep->rcmp), str+1, 0)) != 0) {
 		regerror(res, &(rep->rcmp), rebuf, sizeof(rebuf));
 		paxwarn(1, "%s while compiling regular expression %s", rebuf, str);
-		(void)free((char *)rep);
+		free(rep);
 		return(-1);
 	}
 
@@ -151,7 +159,7 @@ rep_add(char *str)
 	}
 	if (*pt2 == '\0') {
 		regfree(&(rep->rcmp));
-		(void)free((char *)rep);
+		free(rep);
 		paxwarn(1, "Invalid replacement string %s", str);
 		return(-1);
 	}
@@ -176,7 +184,7 @@ rep_add(char *str)
 			break;
 		default:
 			regfree(&(rep->rcmp));
-			(void)free((char *)rep);
+			free(rep);
 			*pt1 = *str;
 			paxwarn(1, "Invalid replacement string option %s", str);
 			return(-1);
@@ -209,7 +217,7 @@ rep_add(char *str)
  */
 
 int
-pat_add(char *str, char *chdname)
+pat_add(char *str, char *chdirname)
 {
 	PATTERN *pt;
 
@@ -226,7 +234,7 @@ pat_add(char *str, char *chdname)
 	 * part of argv so do not bother to copy it, just point at it. Add the
 	 * node to the end of the pattern list
 	 */
-	if ((pt = (PATTERN *)malloc(sizeof(PATTERN))) == NULL) {
+	if ((pt = malloc(sizeof(PATTERN))) == NULL) {
 		paxwarn(1, "Unable to allocate memory for pattern string");
 		return(-1);
 	}
@@ -236,7 +244,7 @@ pat_add(char *str, char *chdname)
 	pt->plen = strlen(str);
 	pt->fow = NULL;
 	pt->flgs = 0;
-	pt->chdname = chdname;
+	pt->chdname = chdirname;
 
 	if (pathead == NULL) {
 		pattail = pathead = pt;
@@ -392,7 +400,7 @@ pat_sel(ARCHD *arcn)
 		return(-1);
 	}
 	*ppt = pt->fow;
-	(void)free((char *)pt);
+	free(pt);
 	arcn->pat = NULL;
 	return(0);
 }
@@ -642,7 +650,7 @@ mod_name(ARCHD *arcn)
 		}
 	}
 	while (rmleadslash && arcn->ln_name[0] == '/' &&
-	    (arcn->type == PAX_HLK || arcn->type == PAX_HRG)) {
+	    PAX_IS_HARDLINK(arcn->type)) {
 		if (arcn->ln_name[1] == '\0') {
 			arcn->ln_name[0] = '.';
 		} else {
@@ -707,10 +715,11 @@ mod_name(ARCHD *arcn)
 		if ((res = rep_name(arcn->name, sizeof(arcn->name), &(arcn->nlen), 1)) != 0)
 			return(res);
 
-		if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
-		    (arcn->type == PAX_HRG)) &&
-		    ((res = rep_name(arcn->ln_name, sizeof(arcn->ln_name), &(arcn->ln_nlen), 0)) != 0))
-			return(res);
+		if (PAX_IS_LINK(arcn->type)) {
+			if ((res = rep_name(arcn->ln_name,
+			    sizeof(arcn->ln_name), &(arcn->ln_nlen), 0)) != 0)
+				return(res);
+		}
 	}
 
 	if (iflag) {
@@ -719,9 +728,9 @@ mod_name(ARCHD *arcn)
 		 */
 		if ((res = tty_rename(arcn)) != 0)
 			return(res);
-		if ((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
-		    (arcn->type == PAX_HRG))
-			sub_name(arcn->ln_name, &(arcn->ln_nlen), sizeof(arcn->ln_name));
+		if (PAX_IS_LINK(arcn->type))
+			sub_name(arcn->ln_name, &(arcn->ln_nlen),
+			    sizeof(arcn->ln_name));
 	}
 	return(res);
 }
@@ -814,7 +823,7 @@ set_dest(ARCHD *arcn, char *dest_dir, int dir_len)
 	 * if the name they point was moved (or will be moved). It is best to
 	 * leave them alone.
 	 */
-	if ((arcn->type != PAX_HLK) && (arcn->type != PAX_HRG))
+	if (!PAX_IS_HARDLINK(arcn->type))
 		return(0);
 
 	if (fix_path(arcn->ln_name, &(arcn->ln_nlen), dest_dir, dir_len) < 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: gen_subs.c,v 1.20 +1.27 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: gen_subs.c,v 1.32 2016/08/26 05:06:14 guenther Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -35,15 +35,17 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdio.h>
-#include <utmp.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <utmp.h>
 #include <vis.h>
+
 #include "pax.h"
 #include "extern.h"
 
@@ -61,6 +63,8 @@
 #define CURFRMT		"%b %e %H:%M"
 #define OLDFRMT		"%b %e  %Y"
 #define NAME_WIDTH	8
+#define	TIMEFMT(t, now) \
+	(((t) + SIXMONTHS <= (now) || (t) > (now)) ? OLDFRMT : CURFRMT)
 
 /*
  * ls_list()
@@ -73,7 +77,6 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	struct stat *sbp;
 	char f_mode[MODELEN];
 	char f_date[DATELEN];
-	const char *timefrmt;
 	int term;
 
 	term = zeroflag ? '\0' : '\n';	/* path termination character */
@@ -97,43 +100,25 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	sbp = &(arcn->sb);
 	strmode(sbp->st_mode, f_mode);
 
-	if (ltmfrmt == NULL) {
-		/*
-		 * no locale specified format. time format based on age
-		 * compared to the time pax was started.
-		 */
-		if ((sbp->st_mtime + SIXMONTHS) <= now)
-			timefrmt = OLDFRMT;
-		else
-			timefrmt = CURFRMT;
-	} else
-		timefrmt = ltmfrmt;
-
 	/*
 	 * print file mode, link count, uid, gid and time
 	 */
-	if (strftime(f_date,DATELEN,timefrmt,localtime(&(sbp->st_mtime))) == 0)
+	if (strftime(f_date, sizeof(f_date), TIMEFMT(sbp->st_mtime, now),
+	    localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
 	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode, sbp->st_nlink,
-		NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
-		NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
+		NAME_WIDTH, UT_NAMESIZE, user_from_uid(sbp->st_uid, 0),
+		NAME_WIDTH, UT_NAMESIZE, group_from_gid(sbp->st_gid, 0));
 
 	/*
 	 * print device id's for devices, or sizes for other nodes
 	 */
 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
-#		ifdef LONG_OFF_T
-		(void)fprintf(fp, "%4u,%4u ", MAJOR(sbp->st_rdev),
-#		else
-		(void)fprintf(fp, "%4lu,%4lu ", (unsigned long)MAJOR(sbp->st_rdev),
-#		endif
+		(void)fprintf(fp, "%4lu, %4lu ",
+		    (unsigned long)MAJOR(sbp->st_rdev),
 		    (unsigned long)MINOR(sbp->st_rdev));
 	else {
-#		ifdef LONG_OFF_T
-		(void)fprintf(fp, "%9lu ", sbp->st_size);
-#		else
-		(void)fprintf(fp, "%9qu ", sbp->st_size);
-#		endif
+		(void)fprintf(fp, "%9llu ", sbp->st_size);
 	}
 
 	/*
@@ -142,7 +127,7 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	(void)fputs(f_date, fp);
 	(void)putc(' ', fp);
 	safe_print(arcn->name, fp);
-	if ((arcn->type == PAX_HLK) || (arcn->type == PAX_HRG)) {
+	if (PAX_IS_HARDLINK(arcn->type)) {
 		fputs(" == ", fp);
 		safe_print(arcn->ln_name, fp);
 	} else if (arcn->type == PAX_SLK) {
@@ -151,7 +136,6 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	}
 	(void)putc(term, fp);
 	(void)fflush(fp);
-	return;
 }
 
 /*
@@ -164,28 +148,16 @@ ls_tty(ARCHD *arcn)
 {
 	char f_date[DATELEN];
 	char f_mode[MODELEN];
-	const char *timefrmt;
-
-	if (ltmfrmt == NULL) {
-		/*
-		 * no locale specified format
-		 */
-		if ((arcn->sb.st_mtime + SIXMONTHS) <= time(NULL))
-			timefrmt = OLDFRMT;
-		else
-			timefrmt = CURFRMT;
-	} else
-		timefrmt = ltmfrmt;
+	time_t now = time(NULL);
 
 	/*
 	 * convert time to string, and print
 	 */
-	if (strftime(f_date, DATELEN, timefrmt,
+	if (strftime(f_date, DATELEN, TIMEFMT(arcn->sb.st_mtime, now),
 	    localtime(&(arcn->sb.st_mtime))) == 0)
 		f_date[0] = '\0';
 	strmode(arcn->sb.st_mode, f_mode);
 	tty_prnt("%s%s %s\n", f_mode, f_date, arcn->name);
-	return;
 }
 
 void
@@ -282,13 +254,15 @@ ul_asc(u_long val, char *str, int len, int base)
 				*pt-- = '0' + (char)digit;
 			else
 				*pt-- = 'a' + (char)(digit - 10);
-			if ((val = (val >> 4)) == (u_long)0)
+			val >>= 4;
+			if (val == 0)
 				break;
 		}
 	} else {
 		while (pt >= str) {
 			*pt-- = '0' + (char)(val & 0x7);
-			if ((val = (val >> 3)) == (u_long)0)
+			val >>= 3;
+			if (val == 0)
 				break;
 		}
 	}
@@ -298,27 +272,26 @@ ul_asc(u_long val, char *str, int len, int base)
 	 */
 	while (pt >= str)
 		*pt-- = '0';
-	if (val != (u_long)0)
+	if (val != 0)
 		return(-1);
 	return(0);
 }
 
-#ifndef LONG_OFF_T
 /*
- * asc_uqd()
- *	convert hex/octal character string into a u_quad_t. We do not have to
- *	check for overflow! (the headers in all supported formats are not large
- *	enough to create an overflow).
+ * asc_ull()
+ *	Convert hex/octal character string into a unsigned long long.
+ *	We do not have to check for overflow!  (The headers in all
+ *	supported formats are not large enough to create an overflow).
  *	NOTE: strings passed to us are NOT TERMINATED.
  * Return:
- *	u_quad_t value
+ *	unsigned long long value
  */
 
-u_quad_t
-asc_uqd(char *str, int len, int base)
+unsigned long long
+asc_ull(char *str, int len, int base)
 {
 	char *stop;
-	u_quad_t tval = 0;
+	unsigned long long tval = 0;
 
 	stop = str + len;
 
@@ -351,17 +324,17 @@ asc_uqd(char *str, int len, int base)
 }
 
 /*
- * uqd_asc()
- *	convert an u_quad_t into a hex/oct ascii string. pads with LEADING
- *	ascii 0's to fill string completely
+ * ull_asc()
+ *	Convert an unsigned long long into a hex/oct ascii string.
+ *	Pads with LEADING ascii 0's to fill string completely
  *	NOTE: the string created is NOT TERMINATED.
  */
 
 int
-uqd_asc(u_quad_t val, char *str, int len, int base)
+ull_asc(unsigned long long val, char *str, int len, int base)
 {
 	char *pt;
-	u_quad_t digit;
+	unsigned long long digit;
 
 	/*
 	 * WARNING str is not '\0' terminated by this routine
@@ -379,13 +352,15 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 				*pt-- = '0' + (char)digit;
 			else
 				*pt-- = 'a' + (char)(digit - 10);
-			if ((val = (val >> 4)) == (u_quad_t)0)
+			val >>= 4;
+			if (val == 0)
 				break;
 		}
 	} else {
 		while (pt >= str) {
 			*pt-- = '0' + (char)(val & 0x7);
-			if ((val = (val >> 3)) == (u_quad_t)0)
+			val >>= 3;
+			if (val == 0)
 				break;
 		}
 	}
@@ -395,11 +370,10 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 	 */
 	while (pt >= str)
 		*pt-- = '0';
-	if (val != (u_quad_t)0)
+	if (val != 0)
 		return(-1);
 	return(0);
 }
-#endif
 
 /*
  * Copy at max min(bufz, fieldsz) chars from field to buf, stopping
