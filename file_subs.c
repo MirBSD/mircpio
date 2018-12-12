@@ -430,7 +430,7 @@ node_creat(ARCHD *arcn)
 	int pass = 0;
 	mode_t file_mode;
 	struct stat sb;
-	char *target = NULL;
+	char *allocd = NULL;
 	char *nm = arcn->name;
 	int len, defer_pmode = 0;
 
@@ -453,9 +453,9 @@ node_creat(ARCHD *arcn)
 			if (op_mode == OP_TAR && Lflag) {
 				while (lstat(nm, &sb) == 0 &&
 				    S_ISLNK(sb.st_mode)) {
-/*XXX TODO: leak */
-					target = malloc(sb.st_size + 1);
+					char *target = malloc(sb.st_size + 1);
 					if (target == NULL) {
+						free(allocd);
 						oerrno = ENOMEM;
 						syswarn(1, oerrno,
 						    "Out of memory");
@@ -472,6 +472,8 @@ node_creat(ARCHD *arcn)
 					}
 					target[len] = '\0';
 					nm = target;
+					free(allocd);
+					allocd = target;
 				}
 			}
 			res = mkdir(nm, file_mode);
@@ -498,7 +500,8 @@ node_creat(ARCHD *arcn)
 			paxwarn(0,
 			    "%s skipped. Sockets cannot be copied or extracted",
 			    nm);
-			return(-1);
+			free(allocd);
+			return (-1);
 		case PAX_SLK:
 			if (arcn->ln_name[0] != '/' &&
 			    !has_dotdot(arcn->ln_name))
@@ -525,8 +528,9 @@ node_creat(ARCHD *arcn)
 			 * we should never get here
 			 */
 			paxwarn(0, "%s has an unknown file type, skipping",
-				nm);
-			return(-1);
+			    nm);
+			free(allocd);
+			return (-1);
 		}
 
 		/*
@@ -541,15 +545,18 @@ node_creat(ARCHD *arcn)
 		 * we failed to make the node
 		 */
 		oerrno = errno;
-		if ((ign = unlnk_exist(nm, arcn->type)) < 0)
-			return(-1);
+		if ((ign = unlnk_exist(nm, arcn->type)) < 0) {
+			free(allocd);
+			return (-1);
+		}
 
 		if (++pass <= 1)
 			continue;
 
 		if (nodirs || chk_path(nm,arcn->sb.st_uid,arcn->sb.st_gid) < 0) {
 			syswarn(1, oerrno, "Could not create: %s", nm);
-			return(-1);
+			free(allocd);
+			return (-1);
 		}
 	}
 
@@ -611,6 +618,7 @@ node_creat(ARCHD *arcn)
 		}
 	} else if (patime || pmtime)
 		set_ftime(nm, &arcn->sb, 0, arcn->type == PAX_SLK);
+	free(allocd);
 	return (0);
 }
 
