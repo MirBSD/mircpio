@@ -181,7 +181,7 @@ ls_tty(ARCHD *arcn)
 void
 safe_print(const char *str, FILE *fp)
 {
-#if HAVE_VIS
+#if HAVE_VIS_H
 	char visbuf[5];
 	const char *cp;
 

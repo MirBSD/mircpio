@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.12 2018/12/12 15:38:31 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.13 2018/12/12 16:24:27 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -291,7 +291,7 @@ extern char *tempbase;
 extern int havechd;
 extern time_t now;
 
-void sig_cleanup(int);
+void sig_cleanup(int) MKSH_A_NORETURN;
 
 /*
  * sel_subs.c

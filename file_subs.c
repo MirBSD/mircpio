@@ -1290,7 +1290,7 @@ file_flush(int fd, char *fname, int isempt)
  */
 
 void
-rdfile_close(ARCHD *arcn, int *fd)
+rdfile_close(ARCHD *arcn MKSH_A_UNUSED, int *fd)
 {
 	/*
 	 * make sure the file is open

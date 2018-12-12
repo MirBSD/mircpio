@@ -757,8 +757,9 @@ vcpio_wr(ARCHD *arcn)
 	HD_VCPIO *hd;
 	unsigned int nsz;
 	char hdblk[sizeof(HD_VCPIO)];
-	u_long t_uid, t_gid, t_mtime, t_major, t_minor;
+	u_long t_uid, t_gid, t_major, t_minor;
 	ino_t t_ino;
+	time_t t_mtime;
 
 	anonarch_init();
 
@@ -789,7 +790,7 @@ vcpio_wr(ARCHD *arcn)
 
 	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
-	t_mtime = (anonarch & ANON_MTIME)  ? 0UL : (u_long)arcn->sb.st_mtime;
+	t_mtime = (anonarch & ANON_MTIME)  ? 0   : arcn->sb.st_mtime;
 	t_ino   = (anonarch & ANON_INODES) ? (ino_t)chk_flnk(arcn) :
 	    arcn->sb.st_ino;
 	t_major = (anonarch & ANON_INODES) ? 0UL : (u_long)MAJOR(arcn->sb.st_dev);
@@ -843,9 +844,10 @@ vcpio_wr(ARCHD *arcn)
 #ifndef SMALL
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing dev %lX:%lx inode %10lX mode %8lo user %ld:%ld"
-		    "\n\tnlink %3ld mtime %08lX name '%s'", t_major, t_minor,
+		    "\n\tnlink %3ld mtime %08llX name '%s'", t_major, t_minor,
 		    (u_long)t_ino, (u_long)arcn->sb.st_mode, t_uid, t_gid,
-		    (u_long)arcn->sb.st_nlink, t_mtime, arcn->name);
+		    (u_long)arcn->sb.st_nlink, (unsigned long long)t_mtime,
+		    arcn->name);
 #endif
 
 	/*
