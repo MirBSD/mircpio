@@ -122,19 +122,10 @@ typedef struct hrdlnk {
  * handle is greatly increased).
  */
 typedef struct ftm {
-	struct ftm	*fow;
 	off_t		seek;		/* location in scratch file */
-	struct {
-#if HAVE_ST_MTIM
-		struct timespec st_mtim;
-#else
-		time_t st_mtime;
-#if HAVE_ST_MTIMENSEC
-		long st_mtimensec;
-#endif
-#endif
-	} sb;				/* files last modification time */
+	struct ftm	*fow;
 	int		namelen;	/* file name length */
+	struct stat	sb;		/* files last modification time */
 } FTM;
 
 /*
@@ -1672,8 +1663,8 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 #endif
 		return;
 	}
-	dblk->ft.sb.st_mtim = psb->st_mtim;
-	dblk->ft.sb.st_atim = psb->st_atim;
+	st_timecpy(m, &dblk->ft.sb, psb);
+	st_timecpy(a, &dblk->ft.sb, psb);
 	dblk->ft.ft_ino = psb->st_ino;
 	dblk->ft.ft_dev = psb->st_dev;
 	dblk->mode = psb->st_mode & ABITS;
