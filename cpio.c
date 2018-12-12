@@ -406,9 +406,9 @@ cpio_wr(ARCHD *arcn)
 	HD_CPIO *hd;
 	int nsz;
 	char hdblk[sizeof(HD_CPIO)];
-/*XXX TODO: u_long ⇒ unsigned long */
-	u_long t_uid, t_gid, t_mtime, t_dev;
+	u_long t_uid, t_gid, t_dev;
 	ino_t t_ino;
+	time_t t_mtime;
 
 	anonarch_init();
 
@@ -426,7 +426,7 @@ cpio_wr(ARCHD *arcn)
 
 	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
-	t_mtime = (anonarch & ANON_MTIME)  ? 0UL : (u_long)arcn->sb.st_mtime;
+	t_mtime = (anonarch & ANON_MTIME)  ? 0   : arcn->sb.st_mtime;
 	t_ino   = (anonarch & ANON_INODES) ? (ino_t)chk_flnk(arcn) :
 	    arcn->sb.st_ino;
 	t_dev   = (anonarch & ANON_INODES) ? 0UL : (u_long)arcn->sb.st_dev;
@@ -474,9 +474,10 @@ cpio_wr(ARCHD *arcn)
 #ifndef SMALL
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing dev %lX inode %10lX mode %8lo user %ld:%ld"
-		    "\n\tnlink %3ld mtime %08lX name '%s'", t_dev,
+		    "\n\tnlink %3ld mtime %08llX name '%s'", t_dev,
 		    (u_long)t_ino, (u_long)arcn->sb.st_mode, t_uid, t_gid,
-		    (u_long)arcn->sb.st_nlink, t_mtime, arcn->name);
+		    (u_long)arcn->sb.st_nlink, (unsigned long long)t_mtime,
+		    arcn->name);
 #endif
 
 	/*

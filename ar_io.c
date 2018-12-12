@@ -411,7 +411,6 @@ ar_close(int in_sig)
 	 * could have written anything yet.
 	 */
 	if (frmt == NULL) {
-/*XXX TODO: OT_FMT überall */
 		(void)dprintf(listfd,
 		    "%s: unknown format, %llu bytes skipped.\n", argv0, rdcnt);
 		flcnt = 0;
