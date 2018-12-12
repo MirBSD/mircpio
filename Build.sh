@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.12 2018/12/12 10:24:13 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.13 2018/12/12 10:42:06 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1804,7 +1804,7 @@ echo "for x in $cpioexe $tarexe; do" >>Rebuild.sh
 echo "  ln \$tcfn \$x || cp \$tcfn \$x || exit 1" >>Rebuild.sh
 echo "done" >>Rebuild.sh
 if test $cm = makefile; then
-	extras='.linked/reallocarray.inc .linked/strlfun.inc .linked/strmode.inc compat.h cpio.h extern.h pax.h tar.h'
+	extras='.linked/reallocarray.inc .linked/strlfun.inc .linked/strmode.inc compat.h cpio.h extern.h ftimes.h pax.h tar.h'
 	cat >Makefrag.inc <<EOF
 # Makefile fragment for building paxmirabilis
 
