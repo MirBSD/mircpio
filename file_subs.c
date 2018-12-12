@@ -148,8 +148,7 @@ file_close(ARCHD *arcn, int fd)
 	if (pmode)
 		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
 	if (patime || pmtime)
-		fset_ftime(arcn->name, fd, &arcn->sb.st_mtim,
-		    &arcn->sb.st_atim, 0);
+		fset_ftime(arcn->name, fd, &arcn->sb, 0);
 	if (close(fd) < 0)
 		syswarn(0, errno, "Unable to close file descriptor on %s",
 		    arcn->name);
@@ -524,7 +523,7 @@ badlink:
 			add_dir(nm, &(arcn->sb), 0);
 		}
 	} else if (patime || pmtime)
-		set_ftime(nm, &arcn->sb.st_mtim, &arcn->sb.st_atim, 0);
+		set_ftime(nm, &arcn->sb, 0);
 	return(0);
 }
 
@@ -689,13 +688,12 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
  */
 
 void
-set_ftime(const char *fnm, const struct timespec *mtimp,
-    const struct timespec *atimp, int frc)
+set_ftime(const char *fnm, const struct stat *sbp, int frc)
 {
 	struct timespec tv[2];
 
-	tv[0] = *atimp;
-	tv[1] = *mtimp;
+	tv[0] = sbp->st_atim;
+	tv[1] = sbp->st_mtim;
 
 	if (!frc) {
 		/*
@@ -717,13 +715,12 @@ set_ftime(const char *fnm, const struct timespec *mtimp,
 }
 
 void
-fset_ftime(const char *fnm, int fd, const struct timespec *mtimp,
-    const struct timespec *atimp, int frc)
+fset_ftime(const char *fnm, int fd, const struct stat *sbp, int frc)
 {
 	struct timespec tv[2];
 
-	tv[0] = *atimp;
-	tv[1] = *mtimp;
+	tv[0] = sbp->st_atim;
+	tv[1] = sbp->st_mtim;
 
 	if (!frc) {
 		/*
@@ -847,12 +844,13 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 		/* Whew, it's a match!  Is there anything to change? */
 		if (do_mode && (mode & ABITS) != (sb.st_mode & ABITS))
 			fset_pmode(ft->ft_name, fd, mode);
-		if (((force_times || patime) &&
-		    st_timecmp(a, &ft->sb, &sb, !=)) ||
-		    ((force_times || pmtime) &&
-		    st_timecmp(m, &ft->sb, &sb, !=)))
-			fset_ftime(ft->ft_name, fd, &ft->sb.st_mtim,
-			    &ft->sb.st_atim, force_times);
+		if (((force_times || patime) && st_timecmp(a, &ft->sb, &sb, !=)) ||
+		    ((force_times || pmtime) && st_timecmp(m, &ft->sb, &sb, !=))) {
+			struct stat ftsb;
+			st_timecpy(m, &ftsb, &ft->sb);
+			st_timecpy(a, &ftsb, &ft->sb);
+			fset_ftime(ft->ft_name, fd, &ftsb, force_times);
+		}
 		r = 0;
 	}
 	close(fd);
@@ -1056,8 +1054,7 @@ rdfile_close(ARCHD *arcn, int *fd)
 	 * user wants last access time reset
 	 */
 	if (tflag)
-		fset_ftime(arcn->org_name, *fd, &arcn->sb.st_mtim,
-		    &arcn->sb.st_atim, 1);
+		fset_ftime(arcn->org_name, *fd, &arcn->sb, 1);
 
 	(void)close(*fd);
 	*fd = -1;

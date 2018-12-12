@@ -879,7 +879,7 @@ sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
 		set_pmode(path, mode);
 
 	if (patime || pmtime)
-		set_ftime(path, &sb.st_mtim, &sb.st_atim, 0);
+		set_ftime(path, &sb, 0);
 
 	/*
 	 * If we tried to link to first but failed, then this new symlink
