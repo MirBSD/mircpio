@@ -2,6 +2,13 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018
+ *	mirabilos <m@mirbsd.org>
+ * Copyright (c) 2018
+ *	Jonathan de Boyne Pollard <J.deBoynePollard-newsgroups@NTLWorld.COM>
+ *	mirabilos <t.glaser@tarent.de>
+ * Copyright (c) 2011
+ *	Svante Signell <svante.signell@telia.com>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -46,6 +53,9 @@
 #include <strings.h>
 #endif
 #include <unistd.h>
+#if HAVE_UTIME_H
+#include <utime.h>
+#endif
 
 #include "pax.h"
 #include "extern.h"
@@ -159,11 +169,12 @@ file_close(ARCHD *arcn, int fd)
  *	Create a hard link to arcn->ln_name from arcn->name. arcn->ln_name
  *	must exist;
  * Return:
- *	0 if ok, -1 otherwise
+ *	fd+2 if data should be extracted,
+ *	0 if ok, 1 if we could not make the link, -1 otherwise
  */
 
 int
-lnk_creat(ARCHD *arcn)
+lnk_creat(ARCHD *arcn, int *fdp)
 {
 	struct stat sb;
 	int res;
@@ -195,6 +206,19 @@ lnk_creat(ARCHD *arcn)
 		}
 	}
 
+	if (fdp != NULL && res == 0 && sb.st_size == 0 && arcn->skip > 0) {
+		/* request to write out file data late (broken archive) */
+		if (pmode)
+			set_pmode(arcn->name, 0600, /*XXX I think */ 0);
+		if ((*fdp = open(arcn->name, O_WRONLY | O_TRUNC)) == -1) {
+			res = errno;
+			syswarn(1, res, "Unable to re-open %s", arcn->name);
+			if (pmode)
+				set_pmode(arcn->name, sb.st_mode, 0);
+		}
+		res = 0;
+	} else if (fdp != NULL)
+		*fdp = -1;
 	return (res);
 }
 
@@ -258,6 +282,23 @@ chk_same(ARCHD *arcn)
 }
 
 /*
+ * helper function to copy a symbolic link
+ */
+
+static int
+mk_link_symlink(const char *to, const char *from)
+{
+	int cnt;
+	char buf[PAXPATHLEN + 1];
+
+	if ((cnt = readlink(to, buf, PAXPATHLEN)) < 0)
+		return (-1);
+	/* cf. comment in ftree.c:next_file() */
+	buf[cnt] = '\0';
+	return (symlink(buf, from));
+}
+
+/*
  * mk_link()
  *	try to make a hard link between two files. if ign set, we do not
  *	complain.
@@ -318,9 +359,47 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 		if (linkat(AT_FDCWD, to, AT_FDCWD, from, 0) == 0)
 			break;
 		oerrno = errno;
+		if (S_ISLNK(to_sb->st_mode)) {
+			/* just copy the symlink */
+			if (mk_link_symlink(to, from) == 0)
+				break;
+		}
 		if (!nodirs && chk_path(from, to_sb->st_uid, to_sb->st_gid) == 0)
 			continue;
+		/*-
+		 * non-standard (via -M lncp) cross-device link handling:
+		 * copy if hard link fails (but what if there are several
+		 * links for the same file mixed between several devices?
+		 * this code copies for all non-original devices, instead
+		 * of tracking them and linking between them on their re-
+		 * spective target device)
+		 */
+		if (oerrno == EXDEV && (anonarch & ANON_LNCP)) {
+			int fdsrc, fddest;
+			ARCHD tarcn;
+
+			if ((fdsrc = open(to, O_RDONLY, 0)) < 0) {
+				if (!ign)
+					syswarn(1, errno,
+					    "Unable to open %s to read", to);
+				goto lncp_failed;
+			}
+			strlcpy(tarcn.name, from, sizeof(tarcn.name));
+			memcpy(&tarcn.sb, to_sb, sizeof(struct stat));
+			tarcn.type = PAX_REG;	/* XXX */
+			tarcn.org_name = to;
+			if ((fddest = file_creat(&tarcn)) < 0) {
+				rdfile_close(&tarcn, &fdsrc);
+				goto lncp_failed;
+			}
+			cp_file(&tarcn, fdsrc, fddest);
+			file_close(&tarcn, fddest);
+			rdfile_close(&tarcn, &fdsrc);
+			/* file copied successfully, continue on */
+			break;
+		}
 		if (!ign) {
+ lncp_failed:
 			syswarn(1, oerrno, "Could not link to %s from %s", to,
 			    from);
 			return(-1);
@@ -351,7 +430,7 @@ node_creat(ARCHD *arcn)
 	int pass = 0;
 	mode_t file_mode;
 	struct stat sb;
-	char target[PATH_MAX];
+	char *target = NULL;
 	char *nm = arcn->name;
 	int len, defer_pmode = 0;
 
@@ -374,8 +453,16 @@ node_creat(ARCHD *arcn)
 			if (op_mode == OP_TAR && Lflag) {
 				while (lstat(nm, &sb) == 0 &&
 				    S_ISLNK(sb.st_mode)) {
+/*XXX TODO: leak */
+					target = malloc(sb.st_size + 1);
+					if (target == NULL) {
+						oerrno = ENOMEM;
+						syswarn(1, oerrno,
+						    "Out of memory");
+						return (-1);
+					}
 					len = readlink(nm, target,
-					    sizeof target - 1);
+					    sb.st_size + 1);
 					if (len == -1) {
 						syswarn(0, errno,
 						   "cannot follow symlink %s in chain for %s",
@@ -389,7 +476,7 @@ node_creat(ARCHD *arcn)
 			}
 			res = mkdir(nm, file_mode);
 
-badlink:
+ badlink:
 			if (ign)
 				res = 0;
 			break;
@@ -482,7 +569,7 @@ badlink:
 	if (!pmode || res)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode && !defer_pmode)
-		set_pmode(nm, arcn->sb.st_mode);
+		set_pmode(nm, arcn->sb.st_mode, arcn->type == PAX_SLK);
 
 	if (arcn->type == PAX_DIR && op_mode != OP_CPIO) {
 		/*
@@ -505,7 +592,7 @@ badlink:
 			 * pmode is not set.
 			 */
 			set_pmode(nm,
-			    ((sb.st_mode & FILEBITS) | S_IRWXU));
+			    ((sb.st_mode & FILEBITS) | S_IRWXU), 0);
 			if (!pmode)
 				arcn->sb.st_mode = sb.st_mode;
 
@@ -523,8 +610,8 @@ badlink:
 			add_dir(nm, &(arcn->sb), 0);
 		}
 	} else if (patime || pmtime)
-		set_ftime(nm, &arcn->sb, 0);
-	return(0);
+		set_ftime(nm, &arcn->sb, 0, arcn->type == PAX_SLK);
+	return (0);
 }
 
 /*
@@ -667,7 +754,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 		 */
 		if ((access(name, R_OK | W_OK | X_OK) < 0) &&
 		    (lstat(name, &sb) == 0)) {
-			set_pmode(name, ((sb.st_mode & FILEBITS) | S_IRWXU));
+			set_pmode(name, ((sb.st_mode & FILEBITS) | S_IRWXU), 0);
 			add_dir(name, &sb, 1);
 		}
 		*spt = '/';

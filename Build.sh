@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.5 2018/12/12 06:06:07 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.6 2018/12/12 07:18:31 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1348,6 +1348,7 @@ ac_header paths.h
 ac_header stdint.h stdarg.h
 # include strings.h only if compatible with string.h
 ac_header strings.h sys/types.h string.h
+ac_header utime.h _time
 ac_header utmp.h _time
 ac_header utmpx.h _time
 ac_header vis.h stdlib.h
