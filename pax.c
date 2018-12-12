@@ -35,18 +35,27 @@
  */
 
 #include <sys/types.h>
+#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
 #include <sys/stat.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#if HAVE_GRP_H
 #include <grp.h>
+#endif
+#if HAVE_PATHS_H
 #include <paths.h>
+#endif
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"
@@ -252,7 +261,7 @@ main(int argc, char **argv)
 	tempbase = tempfile + tdlen;
 	*tempbase++ = '/';
 
-#ifdef HAVE_SETPASSENT
+#if HAVE_SETPGENT
 	/*
 	 * keep passwd and group files open for faster lookups.
 	 */
@@ -267,6 +276,7 @@ main(int argc, char **argv)
 	if ((gen_init() < 0) || (tty_init() < 0))
 		return(exit_val);
 
+#if HAVE_PLEDGE
 	/*
 	 * pmode needs to restore setugid bits when extracting or copying,
 	 * so can't pledge at all then.
@@ -283,6 +293,7 @@ main(int argc, char **argv)
 				err(1, "pledge");
 		}
 	}
+#endif
 
 	/*
 	 * select a primary operation mode

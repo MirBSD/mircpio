@@ -38,12 +38,17 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <errno.h>
+#if HAVE_GRP_H
 #include <grp.h>
+#endif
 #include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"

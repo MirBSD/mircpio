@@ -40,6 +40,10 @@
  * External references from each source file
  */
 
+#ifdef EXTERN
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.2 2018/12/12 03:13:31 tg Exp $");
+#endif
+
 /*
  * ar_io.c
  */
@@ -285,7 +289,7 @@ int dir_start(void);
 void add_dir(char *, struct stat *, int);
 void delete_dir(dev_t, ino_t);
 void proc_dir(int _in_sig);
-u_int st_hash(const char *, int, int);
+unsigned int st_hash(const char *, int, int);
 
 /*
  * tar.c

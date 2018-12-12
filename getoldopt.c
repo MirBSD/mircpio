@@ -14,6 +14,9 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"

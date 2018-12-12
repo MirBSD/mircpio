@@ -40,6 +40,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"
@@ -667,7 +670,7 @@ rd_wrfile(ARCHD *arcn, int ofd, off_t *left)
 	int rem;
 	int sz = MINFBSZ;
 	struct stat sb;
-	u_int32_t crc = 0;
+	uint32_t crc = 0;
 
 	/*
 	 * pass the blocksize of the file being written to the write routine,

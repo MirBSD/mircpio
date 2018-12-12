@@ -38,12 +38,18 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <limits.h>
+#if HAVE_PATHS_H
 #include <paths.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
+#define EXTERN
 #include "pax.h"
 #include "cpio.h"
 #include "tar.h"

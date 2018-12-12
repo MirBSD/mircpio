@@ -36,6 +36,10 @@
  *	@(#)tar.h	8.2 (Berkeley) 4/18/94
  */
 
+#ifdef EXTERN
+__IDSTRING(rcsid_tar_h, "$MirOS: src/bin/pax/tar.h,v 1.1.1.4.2.1 2018/12/12 03:13:35 tg Exp $");
+#endif
+
 /*
  * defines and data structures common to all tar formats
  */

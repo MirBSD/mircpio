@@ -35,13 +35,23 @@
  */
 
 #include <sys/types.h>
+#if HAVE_BOTH_TIME_H
+#include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"

@@ -35,16 +35,34 @@
  */
 
 #include <sys/types.h>
+#if HAVE_BOTH_TIME_H
+#include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
 #include <sys/stat.h>
+#if HAVE_GRP_H
 #include <grp.h>
+#endif
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
+#if HAVE_UTMP_H
 #include <utmp.h>
+#elif HAVE_UTMPX_H
+#include <utmpx.h>
+#endif
+#if HAVE_VIS_H
 #include <vis.h>
+#endif
 
 #include "pax.h"
 #include "extern.h"

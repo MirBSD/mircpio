@@ -42,6 +42,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"
@@ -1076,7 +1079,7 @@ set_crc(ARCHD *arcn, int fd)
 	int res;
 	off_t cpcnt = 0;
 	size_t size;
-	u_int32_t crc = 0;
+	uint32_t crc = 0;
 	char tbuf[FILEBLK];
 	struct stat sb;
 

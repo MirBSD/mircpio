@@ -43,6 +43,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"
@@ -187,8 +190,8 @@ typedef struct atdir {
 
 typedef struct dirdata {
 	struct file_times ft;
-	u_int16_t mode;		/* file mode to restore */
-	u_int16_t frc_mode;	/* do we force mode settings? */
+	uint16_t mode;		/* file mode to restore */
+	uint16_t frc_mode;	/* do we force mode settings? */
 } DIRDATA;
 
 static HRDLNK **ltab = NULL;	/* hard link table for detecting hard links */
@@ -253,7 +256,7 @@ chk_lnk(ARCHD *arcn)
 {
 	HRDLNK *pt;
 	HRDLNK **ppt;
-	u_int indx;
+	unsigned int indx;
 
 	if (ltab == NULL)
 		return(-1);
@@ -342,7 +345,7 @@ purg_lnk(ARCHD *arcn)
 {
 	HRDLNK *pt;
 	HRDLNK **ppt;
-	u_int indx;
+	unsigned int indx;
 
 	if (ltab == NULL)
 		return;
@@ -493,7 +496,7 @@ chk_ftime(ARCHD *arcn)
 {
 	FTM *pt;
 	int namelen;
-	u_int indx;
+	unsigned int indx;
 	char ckname[PAXPATHLEN+1];
 
 	/*
@@ -669,7 +672,7 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 	struct slinode *s;
 	struct slpath *p;
 	char *path, *value;
-	u_int indx;
+	unsigned int indx;
 	int fd;
 
 	/* create the placeholder */
@@ -758,7 +761,7 @@ sltab_add_link(const char *path, const struct stat *sb)
 {
 	struct slinode *s;
 	struct slpath *p;
-	u_int indx;
+	unsigned int indx;
 
 	if (!S_ISREG(sb->st_mode) || sb->st_size != 0)
 		return (1);
@@ -882,7 +885,7 @@ sltab_process(int in_sig)
 	struct slinode *s;
 	struct slpath *p;
 	char *first;
-	u_int indx;
+	unsigned int indx;
 
 	if (slitab == NULL)
 		return;
@@ -967,7 +970,7 @@ int
 add_name(char *oname, int onamelen, char *nname)
 {
 	NAMT *pt;
-	u_int indx;
+	unsigned int indx;
 
 	if (ntab == NULL) {
 		/*
@@ -1035,7 +1038,7 @@ void
 sub_name(char *oname, int *onamelen, int onamesize)
 {
 	NAMT *pt;
-	u_int indx;
+	unsigned int indx;
 
 	if (ntab == NULL)
 		return;
@@ -1164,7 +1167,7 @@ static DEVT *
 chk_dev(dev_t dev, int add)
 {
 	DEVT *pt;
-	u_int indx;
+	unsigned int indx;
 
 	if (dtab == NULL)
 		return(NULL);
@@ -1416,7 +1419,7 @@ add_atdir(char *fname, dev_t dev, ino_t ino, const struct timespec *mtimp,
 {
 	ATDIR *pt;
 	sigset_t allsigs, savedsigs;
-	u_int indx;
+	unsigned int indx;
 
 	if (atab == NULL)
 		return;
@@ -1483,7 +1486,7 @@ do_atdir(const char *name, dev_t dev, ino_t ino)
 	ATDIR *pt;
 	ATDIR **ppt;
 	sigset_t allsigs, savedsigs;
-	u_int indx;
+	unsigned int indx;
 
 	if (atab == NULL)
 		return(-1);
@@ -1716,17 +1719,17 @@ proc_dir(int in_sig)
  *	the hash value of the string MOD (%) the table size.
  */
 
-u_int
+unsigned int
 st_hash(const char *name, int len, int tabsz)
 {
 	const char *pt;
 	char *dest;
 	const char *end;
 	int i;
-	u_int key = 0;
+	unsigned int key = 0;
 	int steps;
 	int res;
-	u_int val;
+	unsigned int val;
 
 	/*
 	 * only look at the tail up to MAXKEYLEN, we do not need to waste
@@ -1740,11 +1743,11 @@ st_hash(const char *name, int len, int tabsz)
 		pt = name;
 
 	/*
-	 * calculate the number of u_int size steps in the string and if
-	 * there is a runt to deal with
+	 * calculate the number of unsigned int size steps in the string
+	 * and if there is a runt to deal with
 	 */
-	steps = len/sizeof(u_int);
-	res = len % sizeof(u_int);
+	steps = len / sizeof(unsigned int);
+	res = len % sizeof(unsigned int);
 
 	/*
 	 * add up the value of the string in unsigned integer sized pieces
@@ -1752,7 +1755,7 @@ st_hash(const char *name, int len, int tabsz)
 	 * could avoid the expensive copy.
 	 */
 	for (i = 0; i < steps; ++i) {
-		end = pt + sizeof(u_int);
+		end = pt + sizeof(unsigned int);
 		dest = (char *)&val;
 		while (pt < end)
 			*dest++ = *pt++;

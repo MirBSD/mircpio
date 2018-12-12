@@ -36,6 +36,10 @@
  *	@(#)cpio.h	8.1 (Berkeley) 5/31/93
  */
 
+#ifdef EXTERN
+__IDSTRING(rcsid_cpio_h, "$MirOS: src/bin/pax/cpio.h,v 1.1.1.1.2.1 2018/12/12 03:13:31 tg Exp $");
+#endif
+
 /*
  * Defines common to all versions of cpio
  */

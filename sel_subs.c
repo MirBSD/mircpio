@@ -35,14 +35,26 @@
  */
 
 #include <sys/types.h>
+#if HAVE_BOTH_TIME_H
+#include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
 #include <sys/stat.h>
 #include <ctype.h>
+#if HAVE_GRP_H
 #include <grp.h>
+#endif
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #include "pax.h"
 #include "extern.h"
@@ -131,7 +143,7 @@ sel_chk(ARCHD *arcn)
 int
 usr_add(char *str)
 {
-	u_int indx;
+	unsigned int indx;
 	USRT *pt;
 	struct passwd *pw;
 	uid_t uid;
@@ -228,7 +240,7 @@ usr_match(ARCHD *arcn)
 int
 grp_add(char *str)
 {
-	u_int indx;
+	unsigned int indx;
 	GRPT *pt;
 	struct group *gr;
 	gid_t gid;

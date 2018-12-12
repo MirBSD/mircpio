@@ -36,7 +36,9 @@
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#if HAVE_SYS_MTIO_H
 #include <sys/mtio.h>
+#endif
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <err.h>
@@ -46,6 +48,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <unistd.h>
 
 #include "pax.h"
@@ -1257,11 +1262,13 @@ ar_start_gzip(int fd, const char *path, int wr)
 		close(fds[0]);
 		close(fds[1]);
 
+#if HAVE_PLEDGE
 		if (pmode == 0 || (act != EXTRACT && act != COPY)) {
 		    if (pledge("stdio rpath wpath cpath fattr dpath getpw proc tape",
 			NULL) == -1)
 				err(1, "pledge");
 		}
+#endif
 	} else {
 		if (wr) {
 			dup2(fds[0], STDIN_FILENO);

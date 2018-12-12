@@ -36,11 +36,16 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#if HAVE_GRP_H
 #include <grp.h>
+#endif
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #include "pax.h"
 #include "extern.h"
