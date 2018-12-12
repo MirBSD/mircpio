@@ -1,6 +1,8 @@
 /*-
  * Copyright © 2018
  *	mirabilos <t.glaser@tarent.de>
+ * The copyright notices and licences of the files in .linked/ inclu‐
+ * ded below shall be considered being part of this copyright notice.
  *
  * Provided that these terms and disclaimer and all copyright notices
  * are retained or reproduced in an accompanying document, permission
@@ -22,7 +24,7 @@
 
 #include "compat.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.2 2018/12/12 04:04:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.3 2018/12/12 09:08:56 tg Exp $");
 
 #if !HAVE_DPRINTF
 /* replacement only as powerful as needed for this */
@@ -31,4 +33,20 @@ dprintf(int fd, const char *fmt, ...)
 {
 	write(fd, "\nERROR: dprintf not yet implemented!\n", 37);
 }
+#endif
+
+#if !HAVE_REALLOCARRAY
+#include ".linked/reallocarray.inc"
+#endif
+
+#if !HAVE_STRMODE
+#include ".linked/strmode.inc"
+#endif
+
+#if !HAVE_STRLCPY
+#undef WIDEC
+#define OUTSIDE_OF_LIBKERN
+#define L_strlcat
+#define L_strlcpy
+#include ".linked/strlfun.inc"
 #endif

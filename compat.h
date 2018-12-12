@@ -102,7 +102,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.5 2018/12/12 08:18:58 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.6 2018/12/12 09:08:56 tg Exp $");
 #endif
 
 /* arithmetic types: C implementation */
@@ -169,6 +169,10 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 void dprintf(int, const char *, ...)
     MKSH_A_NONNULL(2)
     MKSH_A_FORMAT(__printf__, 2, 3);
+#endif
+
+#if !HAVE_REALLOCARRAY
+void *reallocarray(void *, size_t, size_t);
 #endif
 
 #if !HAVE_STRLCPY

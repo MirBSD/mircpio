@@ -2,6 +2,8 @@
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2012, 2015, 2016
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -76,13 +78,12 @@
  */
 #define MODELEN 20
 #define DATELEN 64
-#define SECSPERDAY	(24 * 60 * 60)
-#define SIXMONTHS	(SECSPERDAY * 365 / 2)
+#define SIXMONTHS	(24 * 60 * 60 * 365 / 2)
 #define CURFRMT		"%b %e %H:%M"
 #define OLDFRMT		"%b %e  %Y"
 #define NAME_WIDTH	8
-#define	TIMEFMT(t, now) \
-	(((t) + SIXMONTHS <= (now) || (t) > (now)) ? OLDFRMT : CURFRMT)
+#define	TIMEFMT(t) \
+	(((t) + SIXMONTHS <= now || (t) > now) ? OLDFRMT : CURFRMT)
 
 /*
  * ls_list()
@@ -90,7 +91,7 @@
  */
 
 void
-ls_list(ARCHD *arcn, time_t now, FILE *fp)
+ls_list(ARCHD *arcn, FILE *fp)
 {
 	struct stat *sbp;
 	char f_mode[MODELEN];
@@ -121,12 +122,13 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	/*
 	 * print file mode, link count, uid, gid and time
 	 */
-	if (strftime(f_date, sizeof(f_date), TIMEFMT(sbp->st_mtime, now),
+	if (strftime(f_date, sizeof(f_date), TIMEFMT(sbp->st_mtime),
 	    localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
-	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode, sbp->st_nlink,
-		NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
-		NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
+	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode,
+	    (unsigned int)sbp->st_nlink,
+	    NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
+	    NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
 
 	/*
 	 * print device id's for devices, or sizes for other nodes
@@ -135,9 +137,8 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 		(void)fprintf(fp, "%4lu, %4lu ",
 		    (unsigned long)MAJOR(sbp->st_rdev),
 		    (unsigned long)MINOR(sbp->st_rdev));
-	else {
+	else
 		(void)fprintf(fp, "%9llu ", sbp->st_size);
-	}
 
 	/*
 	 * print name and link info for hard and soft links
@@ -166,12 +167,11 @@ ls_tty(ARCHD *arcn)
 {
 	char f_date[DATELEN];
 	char f_mode[MODELEN];
-	time_t now = time(NULL);
 
 	/*
 	 * convert time to string, and print
 	 */
-	if (strftime(f_date, DATELEN, TIMEFMT(arcn->sb.st_mtime, now),
+	if (strftime(f_date, DATELEN, TIMEFMT(arcn->sb.st_mtime),
 	    localtime(&(arcn->sb.st_mtime))) == 0)
 		f_date[0] = '\0';
 	strmode(arcn->sb.st_mode, f_mode);
@@ -181,6 +181,7 @@ ls_tty(ARCHD *arcn)
 void
 safe_print(const char *str, FILE *fp)
 {
+#if HAVE_VIS
 	char visbuf[5];
 	const char *cp;
 
@@ -192,9 +193,9 @@ safe_print(const char *str, FILE *fp)
 			(void)vis(visbuf, cp[0], VIS_CSTYLE, cp[1]);
 			(void)fputs(visbuf, fp);
 		}
-	} else {
+	} else
+#endif
 		(void)fputs(str, fp);
-	}
 }
 
 /*

@@ -107,6 +107,7 @@ FILE	*listf = stderr;	/* file pointer to print file list to */
 int	listfd = STDERR_FILENO;	/* fd matching listf, for sighandler output */
 char	*tempfile;		/* tempfile to use for mkstemp(3) */
 char	*tempbase;		/* basename of tempfile to use for mkstemp(3) */
+time_t	 now;			/* time of program start */
 
 /*
  *	PAX - Portable Archive Interchange
@@ -233,6 +234,8 @@ main(int argc, char **argv)
 {
 	char *tmpdir;
 	size_t tdlen;
+
+	now = time(NULL);
 
 	/*
 	 * Keep a reference to cwd, so we can always come back home.

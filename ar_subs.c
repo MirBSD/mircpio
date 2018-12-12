@@ -85,7 +85,6 @@ list(void)
 	ARCHD *arcn;
 	int res;
 	ARCHD archd;
-	time_t now;
 
 	arcn = &archd;
 	/*
@@ -101,8 +100,6 @@ list(void)
 
 	if (vflag && ((uidtb_start() < 0) || (gidtb_start() < 0)))
 		return;
-
-	now = time(NULL);
 
 	/*
 	 * step through the archive until the format says it is done
@@ -140,7 +137,7 @@ list(void)
 			if ((res = mod_name(arcn)) < 0)
 				break;
 			if (res == 0)
-				ls_list(arcn, now, stdout);
+				ls_list(arcn, stdout);
 		}
 
 		/*
@@ -195,7 +192,6 @@ extract(void)
 	off_t cnt;
 	ARCHD archd;
 	int fd;
-	time_t now;
 
 	sltab_start();
 
@@ -215,8 +211,6 @@ extract(void)
 	 */
 	if (iflag && (name_start() < 0))
 		return;
-
-	now = time(NULL);
 
 	/*
 	 * step through each entry on the archive until the format read routine
@@ -291,7 +285,7 @@ extract(void)
 
 		if (vflag) {
 			if (vflag > 1)
-				ls_list(arcn, now, listf);
+				ls_list(arcn, listf);
 			else {
 				(void)safe_print(arcn->name, listf);
 				vfpart = 1;
@@ -402,7 +396,6 @@ wr_archive(ARCHD *arcn, int is_app)
 	off_t cnt;
 	int (*wrf)(ARCHD *);
 	int fd = -1;
-	time_t now;
 
 	/*
 	 * if this format supports hard link storage, start up the database
@@ -435,8 +428,6 @@ wr_archive(ARCHD *arcn, int is_app)
 	 */
 	if (iflag && (name_start() < 0))
 		return;
-
-	now = time(NULL);
 
 	/*
 	 * while there are files to archive, process them one at at time
@@ -509,7 +500,7 @@ wr_archive(ARCHD *arcn, int is_app)
 
 		if (vflag) {
 			if (vflag > 1)
-				ls_list(arcn, now, listf);
+				ls_list(arcn, listf);
 			else {
 				(void)safe_print(arcn->name, listf);
 				vfpart = 1;

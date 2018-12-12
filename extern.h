@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.7 2018/12/12 08:32:29 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.8 2018/12/12 09:08:56 tg Exp $");
 #endif
 
 /*
@@ -190,7 +190,7 @@ int next_file(ARCHD *);
 /*
  * gen_subs.c
  */
-void ls_list(ARCHD *, time_t, FILE *);
+void ls_list(ARCHD *, FILE *);
 void ls_tty(ARCHD *);
 void safe_print(const char *, FILE *);
 u_long asc_ul(char *, int, int);
@@ -269,6 +269,7 @@ extern int listfd;
 extern char *tempfile;
 extern char *tempbase;
 extern int havechd;
+extern time_t now;
 
 void sig_cleanup(int);
 

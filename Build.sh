@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.10 2018/12/12 08:42:10 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.11 2018/12/12 09:08:55 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1557,6 +1557,11 @@ ac_test pledge <<-'EOF'
 	int main(void) { return (pledge("", "")); }
 EOF
 
+ac_test reallocarray <<-'EOF'
+	#include <stdlib.h>
+	int main(void) { return (reallocarray(NULL, 3, 3) == NULL); }
+EOF
+
 ac_test setpgent grp_h 0 'for setpassent and setgroupent' <<-'EOF'
 	#include <sys/types.h>
 	#include <grp.h>
@@ -1564,10 +1569,15 @@ ac_test setpgent grp_h 0 'for setpassent and setgroupent' <<-'EOF'
 	int main(void) { return (setpassent(1) + setgroupent(1)); }
 EOF
 
-ac_test strlcpy <<-'EOF'
+ac_test strlcpy '' 'for strlcpy and strlcat' <<-'EOF'
 	#include <string.h>
 	int main(int ac, char *av[]) { return (strlcpy(*av, av[1],
-	    (size_t)ac)); }
+	    strlcat(av[1], av[2], (size_t)ac))); }
+EOF
+
+ac_test strmode <<-'EOF'
+	#include <string.h>
+	int main(int ac) { char buf[12]; strmode(ac, buf); return (*buf); }
 EOF
 
 ac_test utimensat <<-'EOF'
@@ -1786,7 +1796,7 @@ echo "for x in $cpioexe $tarexe; do" >>Rebuild.sh
 echo "  ln \$tcfn \$x || cp \$tcfn \$x || exit 1" >>Rebuild.sh
 echo "done" >>Rebuild.sh
 if test $cm = makefile; then
-	extras='compat.h cpio.h extern.h pax.h tar.h'
+	extras='.linked/reallocarray.inc .linked/strlfun.inc .linked/strmode.inc compat.h cpio.h extern.h pax.h tar.h'
 	cat >Makefrag.inc <<EOF
 # Makefile fragment for building paxmirabilis
 
