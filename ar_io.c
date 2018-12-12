@@ -127,7 +127,7 @@ ar_open(const char *name)
 		if (name == NULL) {
 			arfd = STDIN_FILENO;
 			arcname = STDN;
-		} else if ((arfd = open(name, EXT_MODE, DMOD)) < 0)
+		} else if ((arfd = binopen3(0, name, EXT_MODE, DMOD)) < 0)
 			syswarn(1, errno, "Failed open to read on %s", name);
 		if (arfd != -1 && compress_program != NULL)
 			ar_start_compress(arfd, 0);
@@ -136,7 +136,7 @@ ar_open(const char *name)
 		if (name == NULL) {
 			arfd = STDOUT_FILENO;
 			arcname = STDO;
-		} else if ((arfd = open(name, AR_MODE, DMOD)) < 0)
+		} else if ((arfd = binopen3(0, name, AR_MODE, DMOD)) < 0)
 			syswarn(1, errno, "Failed open to write on %s", name);
 		else
 			can_unlnk = 1;
@@ -147,7 +147,7 @@ ar_open(const char *name)
 		if (name == NULL) {
 			arfd = STDOUT_FILENO;
 			arcname = STDO;
-		} else if ((arfd = open(name, APP_MODE, DMOD)) < 0)
+		} else if ((arfd = binopen3(0, name, APP_MODE, DMOD)) < 0)
 			syswarn(1, errno, "Failed open to read/write on %s",
 				name);
 		break;

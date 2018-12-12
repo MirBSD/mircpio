@@ -1117,7 +1117,7 @@ tar_options(int argc, char **argv)
 
 					if (strcmp(file, "-") == 0)
 						fd = STDIN_FILENO;
-					else if ((fd = open(file, O_RDONLY)) == -1) {
+					else if ((fd = binopen2(0, file, O_RDONLY)) == -1) {
 						syswarn(1, errno,
 						    "Unable to open %s", file);
 						tar_usage();
@@ -1200,7 +1200,7 @@ tar_options(int argc, char **argv)
 
 				if (strcmp(file, "-") == 0)
 					fd = STDIN_FILENO;
-				else if ((fd = open(file, O_RDONLY)) == -1) {
+				else if ((fd = binopen2(0, file, O_RDONLY)) == -1) {
 					syswarn(1, errno, "Unable to open %s",
 					    file);
 					tar_usage();
@@ -1454,7 +1454,7 @@ cpio_options(int argc, char **argv)
 			/*
 			 * file with patterns to extract or list
 			 */
-			if ((fd = open(optarg, O_RDONLY)) == -1) {
+			if ((fd = binopen2(0, optarg, O_RDONLY)) == -1) {
 				syswarn(1, errno, "Unable to open %s",
 				    optarg);
 				cpio_usage();

@@ -245,7 +245,7 @@ main(int argc, char **argv)
 	/*
 	 * Keep a reference to cwd, so we can always come back home.
 	 */
-	cwdfd = open(".", O_RDONLY | O_CLOEXEC);
+	cwdfd = binopen2(BO_CLEXEC, ".", O_RDONLY);
 	if (cwdfd < 0) {
 		syswarn(1, errno, "Can't open current working directory.");
 		return(exit_val);
@@ -308,6 +308,9 @@ main(int argc, char **argv)
 		syswarn(1, errno, "Can't open list file descriptor");
 		return (exit_val);
 	}
+	if (fcntl(listfd, F_SETFD, FD_CLOEXEC) == -1)
+		syswarn(0, errno, "%s on list file descriptor",
+		    "Failed to set the close-on-exec flag");
 	setlinebuf(listf);
 
 	/*

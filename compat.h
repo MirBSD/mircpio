@@ -102,7 +102,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.8 2018/12/12 14:32:27 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.9 2018/12/12 15:00:24 tg Exp $");
 #endif
 
 /* arithmetic types: C implementation */
@@ -163,6 +163,13 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #endif
 
 /* compat.c */
+
+#define BO__TWO		0x01	/* (internal use only) */
+#define BO_CLEXEC	0x02	/* set close-on-exec flag or warn */
+#define BO_MAYBE_DIR	0x04	/* add O_DIRECTORY if defined */
+#define binopen2(feat,path,flags) binopen3((feat) | BO__TWO, (path), (flags), 0)
+int binopen3(int, const char *, int, mode_t)
+    MKSH_A_NONNULL(2);
 
 ssize_t dwrite(int, const void *, size_t)
     MKSH_A_BOUNDED(__buffer__, 2, 3);

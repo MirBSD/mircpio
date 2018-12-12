@@ -715,12 +715,7 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 	int fd;
 
 	/* create the placeholder */
-	fd = open(path0, O_WRONLY | O_CREAT |
-#ifdef O_CLOEXEC
-	    /* not strictly required, fd is closed a dozen lines below */
-	    O_CLOEXEC |
-#endif
-	    O_EXCL, 0600);
+	fd = binopen3(BO_CLEXEC, path0, O_WRONLY | O_CREAT | O_EXCL, 0600);
 	if (fd == -1)
 		return (-1);
 	if (fstat(fd, &sb) == -1) {

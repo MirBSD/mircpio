@@ -109,9 +109,9 @@ file_creat(ARCHD *arcn)
 	 * first with lstat.
 	 */
 	file_mode = arcn->sb.st_mode & FILEBITS;
-	if ((fd = open(arcn->name, O_WRONLY | O_CREAT | O_EXCL,
+	if ((fd = binopen3(0, arcn->name, O_WRONLY | O_CREAT | O_EXCL,
 	    file_mode)) >= 0)
-		return(fd);
+		return (fd);
 
 	/*
 	 * the file seems to exist. First we try to get rid of it (found to be
@@ -127,7 +127,7 @@ file_creat(ARCHD *arcn)
 		 * the path and give it a final try. if chk_path() finds that
 		 * it cannot fix anything, we will skip the last attempt
 		 */
-		if ((fd = open(arcn->name, O_WRONLY | O_CREAT | O_TRUNC,
+		if ((fd = binopen3(0, arcn->name, O_WRONLY | O_CREAT | O_TRUNC,
 		    file_mode)) >= 0)
 			break;
 		oerrno = errno;
@@ -228,7 +228,7 @@ lnk_creat(ARCHD *arcn, int *fdp)
 		/* request to write out file data late (broken archive) */
 		if (pmode)
 			set_pmode(arcn->name, 0600, /*XXX I think */ 0);
-		if ((*fdp = open(arcn->name, O_WRONLY | O_TRUNC)) == -1) {
+		if ((*fdp = binopen2(0, arcn->name, O_WRONLY | O_TRUNC)) == -1) {
 			res = errno;
 			syswarn(1, res, "Unable to re-open %s", arcn->name);
 			if (pmode)
@@ -400,7 +400,7 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 			int fdsrc, fddest;
 			ARCHD tarcn;
 
-			if ((fdsrc = open(to, O_RDONLY, 0)) < 0) {
+			if ((fdsrc = binopen3(0, to, O_RDONLY, 0)) < 0) {
 				if (!ign)
 					syswarn(1, errno,
 					    "Unable to open %s to read", to);
@@ -1062,11 +1062,7 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 	 * so do *not* use O_NOFOLLOW.  The dev+ino check will
 	 * protect us from evil.
 	 */
-	fd = open(ft->ft_name,
-#ifdef O_DIRECTORY
-	    O_DIRECTORY |
-#endif
-	    O_RDONLY);
+	fd = binopen2(BO_MAYBE_DIR, ft->ft_name, O_RDONLY);
 	if (fd == -1) {
 		if (!in_sig)
 			syswarn(1, errno, "Unable to restore mode and times"

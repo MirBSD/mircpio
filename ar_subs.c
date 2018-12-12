@@ -468,9 +468,9 @@ wr_archive(ARCHD *arcn, int is_app)
 			 * we were later unable to read (we also purge it from
 			 * the link table).
 			 */
-			if ((fd = open(arcn->org_name, O_RDONLY, 0)) < 0) {
-				syswarn(1,errno, "Unable to open %s to read",
-					arcn->org_name);
+			if ((fd = binopen3(0, arcn->org_name, O_RDONLY, 0)) < 0) {
+				syswarn(1, errno, "Unable to open %s to read",
+				    arcn->org_name);
 				purg_lnk(arcn);
 				continue;
 			}
@@ -950,7 +950,7 @@ copy(void)
 		 * have to copy a regular file to the destination directory.
 		 * first open source file and then create the destination file
 		 */
-		if ((fdsrc = open(arcn->org_name, O_RDONLY, 0)) < 0) {
+		if ((fdsrc = binopen3(0, arcn->org_name, O_RDONLY, 0)) < 0) {
 			syswarn(1, errno, "Unable to open %s to read",
 			    arcn->org_name);
 			purg_lnk(arcn);

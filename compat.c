@@ -5,6 +5,9 @@
  * ded below shall be considered being part of this copyright notice.
  * Also contains material part of “jupp” (Joe’s Own Editor), © 2018
  *	mirabilos <m@mirbsd.org>
+ * Contains code from “mksh” (The MirBSD Korn Shell) © 2015
+ *	mirabilos <m@mirbsd.org>
+ *	KO Myung-Hun <komh@chollian.net>
  *
  * Provided that these terms and disclaimer and all copyright notices
  * are retained or reproduced in an accompanying document, permission
@@ -22,11 +25,45 @@
  * of said person’s immediate fault when using the work as intended.
  */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "compat.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.4 2018/12/12 14:32:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.5 2018/12/12 15:00:24 tg Exp $");
+
+int
+binopen3(int features, const char *path, int flags, mode_t mode)
+{
+	int rv;
+
+#ifdef O_BINARY
+	flags |= O_BINARY;
+#endif
+#ifdef O_CLOEXEC
+	if (features & BO_CLEXEC) {
+		flags |= O_CLOEXEC;
+		features &= ~BO_CLEXEC;
+	}
+#endif
+#ifdef O_DIRECTORY
+	if (features & BO_MAYBE_DIR)
+		flags |= O_DIRECTORY;
+#endif
+
+	if ((rv = (features & BO__TWO) ? open(path, flags) :
+	    open(path, flags, mode)) != -1) {
+#ifdef __OS2__
+		setmode(fd, O_BINARY);
+#endif
+		if ((features & BO_CLEXEC) &&
+		    fcntl(fd, F_SETFD, FD_CLOEXEC) == -1)
+			syswarn(0, errno,
+			    "Failed to set the close-on-exec flag");
+	}
+	return (rv);
+}
 
 ssize_t
 dwrite(int fd, const void *data, size_t size)

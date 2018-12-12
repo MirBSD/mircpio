@@ -68,7 +68,7 @@ static int ttyfd;
 int
 tty_init(void)
 {
-	if ((ttyfd = open(devtty, O_RDWR | O_CLOEXEC)) == -1 && iflag) {
+	if ((ttyfd = binopen2(BO_CLEXEC, devtty, O_RDWR)) == -1 && iflag) {
 		syswarn(1, errno, "Fatal error, cannot open %s", devtty);
 		return (-1);
 	}
