@@ -1,4 +1,4 @@
-/*	$OpenBSD: extern.h,v 1.34 +1.51 +1.52 +1.54 2010/12/02 04:08:27 tedu Exp $	*/
+/*	$OpenBSD: extern.h,v 1.58 2017/09/12 17:11:11 otto Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -275,7 +275,7 @@ int sltab_add_link(const char *, const struct stat *);
 void sltab_process(int _in_sig);
 int name_start(void);
 int add_name(char *, int, char *);
-void sub_name(char *, int *, size_t);
+void sub_name(char *, int *, int);
 int dev_start(void);
 int add_dev(ARCHD *);
 int map_dev(ARCHD *, u_long, u_long);

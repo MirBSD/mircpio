@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.c,v 1.33 2012/04/19 04:26:46 deraadt Exp $	*/
+/*	$OpenBSD: pax.c,v 1.51 2017/12/08 17:04:14 deraadt Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
@@ -294,8 +294,6 @@ main(int argc, char **argv)
 void
 sig_cleanup(int which_sig)
 {
-	char errbuf[80];
-
 	/*
 	 * restore modes and times for any dirs we may have created
 	 * or any dirs we may have read. Set vflag and vfpart so the user

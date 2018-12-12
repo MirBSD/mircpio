@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpio.c,v 1.19 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: cpio.c,v 1.33 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
@@ -179,7 +179,7 @@ rd_nm(ARCHD *arcn, int nsz)
 	/*
 	 * do not even try bogus values
 	 */
-	if ((nsz == 0) || (nsz > sizeof(arcn->name))) {
+	if ((nsz == 0) || ((size_t)nsz > sizeof(arcn->name))) {
 		paxwarn(1, "Cpio file name length %d is out of range", nsz);
 		return(-1);
 	}
@@ -209,13 +209,13 @@ rd_ln_nm(ARCHD *arcn)
 	/*
 	 * check the length specified for bogus values
 	 */
-	if ((arcn->sb.st_size == 0) ||
-	    (arcn->sb.st_size >= sizeof(arcn->ln_name))) {
+	if ((arcn->sb.st_size <= 0) ||
+	    (arcn->sb.st_size >= (off_t)sizeof(arcn->ln_name))) {
 #		ifdef LONG_OFF_T
-		paxwarn(1, "Cpio link name length is invalid: %lu",
+		paxwarn(1, "Cpio link name length is invalid: %ld",
 		    arcn->sb.st_size);
 #		else
-		paxwarn(1, "Cpio link name length is invalid: %qu",
+		paxwarn(1, "Cpio link name length is invalid: %lld",
 		    arcn->sb.st_size);
 #		endif
 		return(-1);
@@ -257,7 +257,7 @@ rd_ln_nm(ARCHD *arcn)
 int
 cpio_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_CPIO)) ||
+	if ((size < (int)sizeof(HD_CPIO)) ||
 	    (strncmp(blk, AMAGIC, sizeof(AMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -508,7 +508,7 @@ cpio_wr(ARCHD *arcn)
 int
 vcpio_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_VCPIO)) ||
+	if ((size < (int)sizeof(HD_VCPIO)) ||
 	    (strncmp(blk, AVMAGIC, sizeof(AVMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -525,7 +525,7 @@ vcpio_id(char *blk, int size)
 int
 crc_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_VCPIO)) ||
+	if ((size < (int)sizeof(HD_VCPIO)) ||
 	    (strncmp(blk, AVCMAGIC, sizeof(AVCMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -842,7 +842,7 @@ vcpio_wr(ARCHD *arcn)
 int
 bcpio_id(char *blk, int size)
 {
-	if (size < sizeof(HD_BCPIO))
+	if (size < (int)sizeof(HD_BCPIO))
 		return(-1);
 
 	/*

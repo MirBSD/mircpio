@@ -1,4 +1,4 @@
-/*	$OpenBSD: tables.c,v 1.26 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: tables.c,v 1.53 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
@@ -66,7 +66,9 @@
 static HRDLNK **ltab = NULL;	/* hard link table for detecting hard links */
 static FTM **ftab = NULL;	/* file time table for updating arch */
 static NAMT **ntab = NULL;	/* interactive rename storage table */
+#ifndef NOCPIO
 static DEVT **dtab = NULL;	/* device/inode mapping tables */
+#endif
 static ATDIR **atab = NULL;	/* file tree directory time reset table */
 static DIRDATA *dirp = NULL;	/* storage for setting created dir time/mode */
 static size_t dirsize;		/* size of dirp table */
@@ -164,7 +166,7 @@ chk_lnk(ARCHD *arcn)
 			arcn->ln_nlen = strlcpy(arcn->ln_name, pt->name,
 				sizeof(arcn->ln_name));
 			/* XXX truncate? */
-			if (arcn->nlen >= sizeof(arcn->name))
+			if ((size_t)arcn->nlen >= sizeof(arcn->name))
 				arcn->nlen = sizeof(arcn->name) - 1;
 			if (arcn->type == PAX_REG)
 				arcn->type = PAX_HRG;
@@ -909,7 +911,7 @@ add_name(char *oname, int onamelen, char *nname)
  */
 
 void
-sub_name(char *oname, int *onamelen, size_t onamesize)
+sub_name(char *oname, int *onamelen, int onamesize)
 {
 	NAMT *pt;
 	u_int indx;

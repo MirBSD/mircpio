@@ -1,4 +1,4 @@
-/*	$OpenBSD: options.c,v 1.75 +1.88 +1.89 +1.91 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: options.c,v 1.101 2016/12/26 23:43:52 krw Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -69,8 +69,10 @@ static void pax_options(int, char **);
 static void pax_usage(void);
 static void tar_options(int, char **);
 static void tar_usage(void);
+#ifndef NOCPIO
 static void cpio_options(int, char **);
 static void cpio_usage(void);
+#endif
 
 /* errors from get_line */
 #define GETLINE_FILE_CORRUPT 1
