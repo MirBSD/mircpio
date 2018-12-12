@@ -1097,12 +1097,8 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 			fset_pmode(ft->ft_name, fd, mode);
 #ifdef PAX_FSET_FTIME
 		if (((force_times || patime) && st_timecmp(a, &ft->sb, &sb, !=)) ||
-		    ((force_times || pmtime) && st_timecmp(m, &ft->sb, &sb, !=))) {
-			struct stat ftsb;
-			st_timecpy(m, &ftsb, &ft->sb);
-			st_timecpy(a, &ftsb, &ft->sb);
-			fset_ftime(ft->ft_name, fd, &ftsb, force_times);
-		}
+		    ((force_times || pmtime) && st_timecmp(m, &ft->sb, &sb, !=)))
+			fset_ftime(ft->ft_name, fd, &ft->sb, force_times);
 #endif
 		r = 0;
 	}
