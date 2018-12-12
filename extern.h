@@ -2,7 +2,7 @@
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
- * Copyright © 2013, 2015, 2016
+ * Copyright © 2013, 2015, 2016, 2018
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_EXTERN_H
-#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.31 2016/10/25 19:27:12 tg Exp $"
+#define MIRCPIO_EXTERN_H "$MirOS: src/bin/pax/extern.h,v 1.32 2018/12/12 00:09:27 tg Exp $"
 
 /*
  * External references from each source file
@@ -166,11 +166,11 @@ int chk_same(ARCHD *);
 int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
-void set_ftime(char *fnm, time_t mtime, time_t atime, int frc);
+void set_ftime(char *, time_t, time_t, int, int);
 int set_ids(char *, uid_t, gid_t);
 int fset_ids(char *, int, uid_t, gid_t);
 int set_lids(char *, uid_t, gid_t);
-void set_pmode(char *, mode_t);
+void set_pmode(char *, mode_t, int);
 void fset_pmode(char *, int, mode_t);
 int set_attr(const struct file_times *, int _force_times, mode_t, int _do_mode,
     int _in_sig);

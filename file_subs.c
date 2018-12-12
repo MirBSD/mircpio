@@ -2,8 +2,10 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016
+ * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018
  *	mirabilos <m@mirbsd.org>
+ * Copyright (c) 2018
+ *	Jonathan de Boyne Pollard <J.deBoynePollard-newsgroups@NTLWorld.COM>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
  * Copyright (c) 1992 Keith Muller.
@@ -57,18 +59,33 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.25 2017/08/08 16:42:49 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.26 2018/12/12 00:09:27 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0
 #endif
 
-#if !defined(__INTERIX) && (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 3))
-#define PAX_FUTIMES	/* we have futimes() */
+#if defined(__INTERIX)
+#define PAX_UTIME
+#elif defined(__GLIBC__) && !defined(PAX_DONT_USE_AT_FUNCTIONS)
+/*XXX this really needs autoconfiguration */
+/*XXX WRONG for old glibc, or glibc on non-*at() OS */
+#define PAX_UTIMENSAT
+#define PAX_FUTIMENS
+#else
+#define PAX_UTIMES
+#if (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 3))
+/*XXX also wrong, could also use futimens() here */
+#define PAX_FUTIMES
+#endif
+#endif
+
+#if defined(PAX_FUTIMES) || defined(PAX_FUTIMENS)
+#define PAX_FSET_FTIME
 #endif
 
 static int mk_link(char *, struct stat *, char *, int);
-#ifdef PAX_FUTIMES
+#ifdef PAX_FSET_FTIME
 static void fset_ftime(char *, int, time_t, time_t, int);
 #endif
 
@@ -167,7 +184,7 @@ file_close(ARCHD *arcn, int fd)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode)
 		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
-#ifdef PAX_FUTIMES
+#ifdef PAX_FSET_FTIME
 	if (patime || pmtime)
 		fset_ftime(arcn->name, fd, arcn->sb.st_mtime,
 		    arcn->sb.st_atime, 0);
@@ -221,12 +238,12 @@ lnk_creat(ARCHD *arcn, int *fdp)
 	if (fdp != NULL && rv == 0 && sb.st_size == 0 && arcn->skip > 0) {
 		/* request to write out file data late (broken archive) */
 		if (pmode)
-			set_pmode(arcn->name, 0600);
+			set_pmode(arcn->name, 0600, /*XXX I think */ 0);
 		if ((*fdp = open(arcn->name, O_WRONLY | O_TRUNC)) == -1) {
 			rv = errno;
 			syswarn(1, rv, "Unable to re-open %s", arcn->name);
 			if (pmode)
-				set_pmode(arcn->name, sb.st_mode);
+				set_pmode(arcn->name, sb.st_mode, 0);
 		}
 		rv = 0;
 	} else if (fdp != NULL)
@@ -581,12 +598,6 @@ node_creat(ARCHD *arcn)
 		res = 0;
 
 	/*
-	 * symlinks are done now.
-	 */
-	if (arcn->type == PAX_SLK)
-		return (0);
-
-	/*
 	 * IMPORTANT SECURITY NOTE:
 	 * if not preserving mode or we cannot set uid/gid, then PROHIBIT any
 	 * set uid/gid bits
@@ -594,7 +605,7 @@ node_creat(ARCHD *arcn)
 	if (!pmode || res)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode && !defer_pmode)
-		set_pmode(nm, arcn->sb.st_mode);
+		set_pmode(nm, arcn->sb.st_mode, arcn->type == PAX_SLK);
 
 	if (arcn->type == PAX_DIR && strcmp(NM_CPIO, argv0) != 0) {
 		/*
@@ -617,7 +628,7 @@ node_creat(ARCHD *arcn)
 			 * pmode is not set.
 			 */
 			set_pmode(nm,
-			    ((sb.st_mode & FILEBITS) | S_IRWXU));
+			    ((sb.st_mode & FILEBITS) | S_IRWXU), 0);
 			if (!pmode)
 				arcn->sb.st_mode = sb.st_mode;
 
@@ -635,7 +646,8 @@ node_creat(ARCHD *arcn)
 			add_dir(nm, &(arcn->sb), 0);
 		}
 	} else if (patime || pmtime)
-		set_ftime(nm, arcn->sb.st_mtime, arcn->sb.st_atime, 0);
+		set_ftime(nm, arcn->sb.st_mtime, arcn->sb.st_atime, 0,
+		    arcn->type == PAX_SLK);
 	return (0);
 }
 
@@ -779,7 +791,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 		 */
 		if ((access(name, R_OK | W_OK | X_OK) < 0) &&
 		    (lstat(name, &sb) == 0)) {
-			set_pmode(name, ((sb.st_mode & FILEBITS) | S_IRWXU));
+			set_pmode(name, ((sb.st_mode & FILEBITS) | S_IRWXU), 0);
 			add_dir(name, &sb, 1);
 		}
 		*spt = '/';
@@ -802,74 +814,114 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
  */
 
 void
-set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
+set_ftime(char *fnm, time_t mtime, time_t atime, int frc,
+    int issymlink __attribute__((__unused__)))
 {
+#if defined(PAX_UTIMENSAT)
+	static struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
+#elif defined(PAX_UTIMES)
 	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	struct stat sb;
-#ifdef __INTERIX
+#elif defined(PAX_UTIME)
 	struct utimbuf u;
+	struct stat sb;
+#else
+# error define one of PAX_UTIMENSAT, PAX_UTIMES, PAX_UTIME
 #endif
+	int rv;
 
-	tv[0].tv_sec = (long)atime;
-	tv[1].tv_sec = (long)mtime;
 	if (!frc && (!patime || !pmtime)) {
 		/*
-		 * if we are not forcing, only set those times the user wants
-		 * set. We get the current values of the times if we need them.
+		 * If we are not forcing, only set those times the user
+		 * wants set. We get the current values of the times if
+		 * we need them (utimensat does not).
 		 */
+#if defined(PAX_UTIMENSAT)
+		if (!patime)
+			ts[0].tv_nsec = UTIME_OMIT;
+		if (!pmtime)
+			ts[1].tv_nsec = UTIME_OMIT;
+#else
 		if (lstat(fnm, &sb) == 0) {
 			if (!patime)
-				tv[0].tv_sec = (long)sb.st_atime;
+				atime = sb.st_atime;
 			if (!pmtime)
-				tv[1].tv_sec = (long)sb.st_mtime;
+				mtime = sb.st_mtime;
 		} else
-			syswarn(0,errno,"Unable to obtain file stats %s", fnm);
+			syswarn(0, errno, "Unable to stat %s", fnm);
+#endif
 	}
 
-	/*
-	 * set the times
-	 */
-#ifdef __INTERIX
-	u.actime = tv[0].tv_sec;
-	u.modtime = tv[1].tv_sec;
-	if (utime(fnm, &u) < 0)
+	/* set the times */
+#if defined(PAX_UTIMENSAT)
+	ts[0].tv_sec = atime;
+	ts[1].tv_sec = mtime;
+	rv = utimensat(AT_FDCWD, fnm, ts, AT_SYMLINK_NOFOLLOW);
+#elif defined(PAX_UTIMES)
+	tv[0].tv_sec = atime;
+	tv[1].tv_sec = mtime;
+	rv = (issymlink ? lutimes : utimes)(fnm, tv);
 #else
-	if (utimes(fnm, tv) < 0)
+	if (issymlink)
+		/* no can do */
+		return;
+	u.actime = atime;
+	u.modtime = mtime;
+	rv = utime(fnm, &u);
 #endif
+	if (rv < 0)
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
 	return;
 }
 
-#ifdef PAX_FUTIMES
+#ifdef PAX_FSET_FTIME
 static void
 fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
 {
+#if defined(PAX_FUTIMENS)
+	static struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
+#else
 	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	struct stat sb;
+#endif
+	int rv;
 
-	tv[0].tv_sec = (long)atime;
-	tv[1].tv_sec = (long)mtime;
 	if (!frc && (!patime || !pmtime)) {
 		/*
-		 * if we are not forcing, only set those times the user wants
-		 * set. We get the current values of the times if we need them.
+		 * If we are not forcing, only set those times the user
+		 * wants set. We get the current values of the times if
+		 * we need them (futimens does not).
 		 */
+#if defined(PAX_FUTIMENS)
+		if (!patime)
+			ts[0].tv_nsec = UTIME_OMIT;
+		if (!pmtime)
+			ts[1].tv_nsec = UTIME_OMIT;
+#else
 		if (fstat(fd, &sb) == 0) {
 			if (!patime)
-				tv[0].tv_sec = (long)sb.st_atime;
+				atime = sb.st_atime;
 			if (!pmtime)
-				tv[1].tv_sec = (long)sb.st_mtime;
+				mtime = sb.st_mtime;
 		} else
-			syswarn(0,errno,"Unable to obtain file stats %s", fnm);
+			syswarn(0, errno, "Unable to stat %s", fnm);
+#endif
 	}
-	/*
-	 * set the times
-	 */
-	if (futimes(fd, tv) < 0)
+
+	/* set the times */
+#if defined(PAX_FUTIMENS)
+	ts[0].tv_sec = atime;
+	ts[1].tv_sec = mtime;
+	rv = futimens(fd, ts);
+#else
+	tv[0].tv_sec = atime;
+	tv[1].tv_sec = mtime;
+	rv = futimes(fd, tv);
+#endif
+	if (rv < 0)
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
-	return;
 }
 #endif
 
@@ -954,12 +1006,41 @@ set_lids(char *fnm, uid_t uid, gid_t gid)
  */
 
 void
-set_pmode(char *fnm, mode_t mode)
+set_pmode(char *fnm, mode_t mode, int issymlink __attribute__((__unused__)))
 {
+	int rv;
+
 	mode &= ABITS;
-	if (chmod(fnm, mode) < 0)
-		syswarn(1, errno, "Could not set permissions on %s", fnm);
+#if defined(__MirBSD__)
+	rv = (issymlink ? lchmod : chmod)(fnm, mode);
+#elif defined(__OpenBSD__)
+	rv = fchmodat(AT_FDCWD, fnm, mode, AT_SYMLINK_NOFOLLOW);
+#else
+	if (!issymlink) {
+		rv = chmod(fnm, mode);
+		goto out;
+	}
+	/*
+	 * glibc has both fchmodat and lchmod, but they (the former
+	 * with AT_SYMLINK_NOFOLLOW given) always return ENOTSUP or
+	 * ENOSYS; other OSes likely don’t have them at all
+	 */
+#ifdef HAVE_LCHMOD
+	if (!(rv = lchmod(fnm, mode)) || errno != ENOSYS)
+		goto out;
+#endif
+#if defined(HAVE_FCHMODAT) && defined(AT_SYMLINK_NOFOLLOW)
+	if (!(rv = fchmodat(AT_FDCWD, fnm, mode, AT_SYMLINK_NOFOLLOW)) ||
+	    errno != ENOTSUP)
+		goto out;
+#endif
+	/* cannot set the mode of a symbolic link, silently ignore */
 	return;
+
+ out:
+#endif
+	if (rv < 0)
+		syswarn(1, errno, "Could not set permissions on %s", fnm);
 }
 
 void

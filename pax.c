@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.25 2017/10/14 22:03:31 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.26 2018/12/12 00:09:28 tg Exp $");
 
 static int gen_init(void);
 
@@ -419,27 +419,27 @@ gen_init(void)
 
 	if ((sigaction(SIGHUP, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGHUP, &o_hand, &o_hand) < 0)))
+	    (sigaction(SIGHUP, &o_hand, NULL) < 0)))
 		goto out;
 
 	if ((sigaction(SIGTERM, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGTERM, &o_hand, &o_hand) < 0)))
+	    (sigaction(SIGTERM, &o_hand, NULL) < 0)))
 		goto out;
 
 	if ((sigaction(SIGINT, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGINT, &o_hand, &o_hand) < 0)))
+	    (sigaction(SIGINT, &o_hand, NULL) < 0)))
 		goto out;
 
 	if ((sigaction(SIGQUIT, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGQUIT, &o_hand, &o_hand) < 0)))
+	    (sigaction(SIGQUIT, &o_hand, NULL) < 0)))
 		goto out;
 
 	if ((sigaction(SIGXCPU, &n_hand, &o_hand) < 0) || (
 	    (o_hand.sa_handler == SIG_IGN) &&
-	    (sigaction(SIGXCPU, &o_hand, &o_hand) < 0)))
+	    (sigaction(SIGXCPU, &o_hand, NULL) < 0)))
 		goto out;
 
 	n_hand.sa_handler = SIG_IGN;

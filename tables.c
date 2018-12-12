@@ -2,7 +2,7 @@
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2012, 2015, 2016
+ * Copyright (c) 2005, 2012, 2015, 2016, 2018
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.24 2016/03/06 21:06:04 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.25 2018/12/12 00:09:28 tg Exp $");
 __IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
@@ -748,15 +748,15 @@ sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
 	mode = s->sli_mode;
 	if (pids) {
 		/* if can't set the ids, force the set[ug]id bits off */
-		if (set_ids(path, sb.st_uid, sb.st_gid))
+		if (set_lids(path, sb.st_uid, sb.st_gid))
 			mode &= ~(SETBITS);
 	}
 
 	if (pmode)
-		set_pmode(path, mode);
+		set_pmode(path, mode, 1);
 
 	if (patime || pmtime)
-		set_ftime(path, sb.st_mtime, sb.st_atime, 0);
+		set_ftime(path, sb.st_mtime, sb.st_atime, 0, 1);
 
 	/*
 	 * If we tried to link to first but failed, then this new symlink
