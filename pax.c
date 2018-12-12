@@ -85,7 +85,6 @@ int	vflag;			/* produce verbose output */
 int	Dflag;			/* same as uflag except inode change time */
 int	Hflag;			/* follow command line symlinks (write only) */
 int	Lflag;			/* follow symlinks when writing */
-int	Nflag;			/* only use numeric uid and gid */
 int	Xflag;			/* archive files with same device id only */
 int	Yflag;			/* same as Dflag except after name mode */
 int	Zflag;			/* same as uflag except after name mode */

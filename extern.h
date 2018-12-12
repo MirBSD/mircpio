@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.8 2018/12/12 09:08:56 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.9 2018/12/12 10:24:14 tg Exp $");
 #endif
 
 /*
@@ -209,11 +209,14 @@ int getoldopt(int, char **, const char *);
  */
 extern FSUB fsub[];
 extern const int ford[];
+extern int anonarch;
+extern int to_stdout;
 void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
 void guess_compress_program(int);
+void anonarch_init(void);
 extern char *chdname;
 
 /*
@@ -247,7 +250,6 @@ extern int vflag;
 extern int Dflag;
 extern int Hflag;
 extern int Lflag;
-extern int Nflag;
 extern int Xflag;
 extern int Yflag;
 extern int Zflag;

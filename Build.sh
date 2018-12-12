@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.11 2018/12/12 09:08:55 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.12 2018/12/12 10:24:13 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1578,6 +1578,14 @@ EOF
 ac_test strmode <<-'EOF'
 	#include <string.h>
 	int main(int ac) { char buf[12]; strmode(ac, buf); return (*buf); }
+EOF
+
+ac_test strtonum <<-'EOF'
+	#include <limits.h>
+	#include <stdlib.h>
+	int main(int ac, char *av[]) {
+		return (av == (int)strtonum(av[1], 0, 100, NULL));
+	}
 EOF
 
 ac_test utimensat <<-'EOF'
