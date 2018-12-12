@@ -2,6 +2,8 @@
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
+ * Copyright (c) 2012, 2016, 2017
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -66,7 +68,7 @@
 #define APP_MODE	O_RDWR		/* mode for append */
 #define STDO		"<STDOUT>"	/* pseudo name for stdout */
 #define STDN		"<STDIN>"	/* pseudo name for stdin */
-static int arfd = -1;			/* archive file descriptor */
+int arfd = -1;				/* archive file descriptor */
 static int artyp = ISREG;		/* archive type: file/FIFO/tape */
 static int arvol = 1;			/* archive volume number */
 static int lstrval = -1;		/* return value from last i/o */
@@ -78,13 +80,16 @@ static int invld_rec;			/* tape has out of spec record size */
 static int wr_trail = 1;		/* trailer was rewritten in append */
 static int can_unlnk = 0;		/* do we unlink null archives?  */
 const char *arcname;			/* printable name of archive */
-const char *gzip_program;		/* name of gzip program */
+static char *arcname_alloc = NULL;	/* this is so we can free(3) it */
+const char *compress_program;		/* name of compression program */
 static pid_t zpid = -1;			/* pid of child process */
 int force_one_volume;			/* 1 if we ignore volume changes */
 
+#if HAVE_SYS_MTIO_H
 static int get_phys(void);
+#endif
 extern sigset_t s_mask;
-static void ar_start_gzip(int, const char *, int);
+static void ar_start_compress(int, int);
 
 /*
  * ar_open()
@@ -98,7 +103,9 @@ static void ar_start_gzip(int, const char *, int);
 int
 ar_open(const char *name)
 {
+#if HAVE_SYS_MTIO_H
 	struct mtget mb;
+#endif
 
 	if (arfd != -1)
 		(void)close(arfd);
@@ -118,8 +125,8 @@ ar_open(const char *name)
 			arcname = STDN;
 		} else if ((arfd = open(name, EXT_MODE, DMOD)) < 0)
 			syswarn(1, errno, "Failed open to read on %s", name);
-		if (arfd != -1 && gzip_program != NULL)
-			ar_start_gzip(arfd, gzip_program, 0);
+		if (arfd != -1 && compress_program != NULL)
+			ar_start_compress(arfd, 0);
 		break;
 	case ARCHIVE:
 		if (name == NULL) {
@@ -129,8 +136,8 @@ ar_open(const char *name)
 			syswarn(1, errno, "Failed open to write on %s", name);
 		else
 			can_unlnk = 1;
-		if (arfd != -1 && gzip_program != NULL)
-			ar_start_gzip(arfd, gzip_program, 1);
+		if (arfd != -1 && compress_program != NULL)
+			ar_start_compress(arfd, 1);
 		break;
 	case APPND:
 		if (name == NULL) {
@@ -167,7 +174,9 @@ ar_open(const char *name)
 		return(-1);
 	}
 	if (S_ISDIR(arsb.st_mode)) {
-		paxwarn(0, "Cannot write an archive on top of a directory %s",
+		paxwarn(0, act == LIST || act == EXTRACT ?
+		    "Cannot read an archive from a directory %s" :
+		    "Cannot write an archive on top of a directory %s",
 		    arcname);
 		(void)close(arfd);
 		arfd = -1;
@@ -176,7 +185,11 @@ ar_open(const char *name)
 	}
 
 	if (S_ISCHR(arsb.st_mode))
+#if HAVE_SYS_MTIO_H
 		artyp = ioctl(arfd, MTIOCGET, &mb) ? ISCHR : ISTAPE;
+#else
+		artyp = ISCHR;
+#endif
 	else if (S_ISBLK(arsb.st_mode))
 		artyp = ISBLK;
 	else if ((lseek(arfd, 0, SEEK_CUR) == -1) && (errno == ESPIPE))
@@ -304,6 +317,10 @@ ar_close(int in_sig)
 
 	if (arfd < 0) {
 		did_io = io_ok = flcnt = 0;
+		if (vfpart) {
+			(void)write(listfd, "\n", 1);
+			vfpart = 0;
+		}
 		return;
 	}
 	if (!in_sig)
@@ -368,6 +385,13 @@ ar_close(int in_sig)
 	if (frmt != NULL)
 		++arvol;
 
+	/* Vflag can cause this to have been set */
+	if (vfpart) {
+		(void)write(listfd, "\n", 1);
+		vfpart = 0;
+	}
+
+	/* nothing to do any more, unless vflag */
 	if (!vflag) {
 		flcnt = 0;
 		return;
@@ -376,10 +400,6 @@ ar_close(int in_sig)
 	/*
 	 * Print out a summary of I/O for this archive volume.
 	 */
-	if (vfpart) {
-		(void)write(listfd, "\n", 1);
-		vfpart = 0;
-	}
 
 	/*
 	 * If we have not determined the format yet, we just say how many bytes
@@ -387,6 +407,7 @@ ar_close(int in_sig)
 	 * could have written anything yet.
 	 */
 	if (frmt == NULL) {
+/*XXX TODO: OT_FMT überall */
 		(void)dprintf(listfd,
 		    "%s: unknown format, %llu bytes skipped.\n", argv0, rdcnt);
 		flcnt = 0;
@@ -571,8 +592,8 @@ ar_read(char *buf, int cnt)
 	lstrval = res;
 	if (res < 0)
 		syswarn(1, errno, "Failed read on archive volume %d", arvol);
-	else
-		paxwarn(0, "End of archive volume %d reached", arvol);
+	else if (!frmt || !frmt->is_uar)
+		paxwarn(1, "End of archive volume %d reached", arvol);
 	return(res);
 }
 
@@ -711,7 +732,9 @@ ar_rdsync(void)
 	long fsbz;
 	off_t cpos;
 	off_t mpos;
+#if HAVE_SYS_MTIO_H
 	struct mtop mb;
+#endif
 
 	/*
 	 * Fail resync attempts at user request (done) or if this is going to be
@@ -729,6 +752,7 @@ ar_rdsync(void)
 		did_io = 1;
 
 	switch (artyp) {
+#if HAVE_SYS_MTIO_H
 	case ISTAPE:
 		/*
 		 * if the last i/o was a successful data transfer, we assume
@@ -749,6 +773,7 @@ ar_rdsync(void)
 			break;
 		lstrval = 1;
 		break;
+#endif
 	case ISREG:
 	case ISCHR:
 	case ISBLK:
@@ -854,8 +879,10 @@ int
 ar_rev(off_t sksz)
 {
 	off_t cpos;
+#if HAVE_SYS_MTIO_H
 	struct mtop mb;
 	int phyblk;
+#endif
 
 	/*
 	 * make sure we do not have try to reverse on a flawed archive
@@ -918,6 +945,7 @@ ar_rev(off_t sksz)
 			return(-1);
 		}
 		break;
+#if HAVE_SYS_MTIO_H
 	case ISTAPE:
 		/*
 		 * Calculate and move the proper number of PHYSICAL tape
@@ -966,11 +994,13 @@ ar_rev(off_t sksz)
 			return(-1);
 		}
 		break;
+#endif
 	}
 	lstrval = 1;
 	return(0);
 }
 
+#if HAVE_SYS_MTIO_H
 /*
  * get_phys()
  *	Determine the physical block size on a tape drive. We need the physical
@@ -1084,6 +1114,7 @@ get_phys(void)
 	}
 	return(phyblk);
 }
+#endif
 
 /*
  * ar_next()
@@ -1098,8 +1129,7 @@ get_phys(void)
 int
 ar_next(void)
 {
-	char buf[PAXPATHLEN+2];
-	static int freeit = 0;
+	char *buf;
 	sigset_t o_mask;
 
 	/*
@@ -1146,7 +1176,8 @@ ar_next(void)
 			tty_prnt(" cannot change storage media, type \"s\"\n");
 			tty_prnt("Is the device ready and online? > ");
 
-			if ((tty_read(buf,sizeof(buf))<0) || !strcmp(buf,".")){
+			if ((buf = tty_rd()) == NULL || !strcmp(buf, ".")) {
+				free(buf);
 				done = 1;
 				lstrval = -1;
 				tty_prnt("Quitting %s!\n", argv0);
@@ -1154,10 +1185,8 @@ ar_next(void)
 				return(-1);
 			}
 
-			if ((buf[0] == '\0') || (buf[1] != '\0')) {
-				tty_prnt("%s unknown command, try again\n",buf);
-				continue;
-			}
+			if ((buf[0] == '\0') || (buf[1] != '\0'))
+				goto eunknown;
 
 			switch (buf[0]) {
 			case 'y':
@@ -1165,20 +1194,24 @@ ar_next(void)
 				/*
 				 * we are to continue with the same device
 				 */
+				free(buf);
 				if (ar_open(arcname) >= 0)
-					return(0);
+					return (0);
 				tty_prnt("Cannot re-open %s, try again\n",
-					arcname);
+				    arcname);
 				continue;
 			case 's':
 			case 'S':
 				/*
 				 * user wants to open a different device
 				 */
+				free(buf);
 				tty_prnt("Switching to a different archive\n");
 				break;
 			default:
-				tty_prnt("%s unknown command, try again\n",buf);
+ eunknown:
+				tty_prnt("%s unknown command, try again\n", buf);
+				free(buf);
 				continue;
 			}
 			break;
@@ -1193,7 +1226,8 @@ ar_next(void)
 		tty_prnt("Input archive name or \".\" to quit %s.\n", argv0);
 		tty_prnt("Archive name > ");
 
-		if ((tty_read(buf, sizeof(buf)) < 0) || !strcmp(buf, ".")) {
+		if ((buf = tty_rd()) == NULL || !strcmp(buf, ".")) {
+			free(buf);
 			done = 1;
 			lstrval = -1;
 			tty_prnt("Quitting %s!\n", argv0);
@@ -1202,14 +1236,17 @@ ar_next(void)
 		}
 		if (buf[0] == '\0') {
 			tty_prnt("Empty file name, try again\n");
+			free(buf);
 			continue;
 		}
 		if (!strcmp(buf, "..")) {
 			tty_prnt("Illegal file name: .. try again\n");
+			free(buf);
 			continue;
 		}
 		if (strlen(buf) > PAXPATHLEN) {
 			tty_prnt("File name too long, try again\n");
+			free(buf);
 			continue;
 		}
 
@@ -1217,35 +1254,31 @@ ar_next(void)
 		 * try to open new archive
 		 */
 		if (ar_open(buf) >= 0) {
-			if (freeit) {
-				free((char *)arcname);
-				freeit = 0;
-			}
-			if ((arcname = strdup(buf)) == NULL) {
-				done = 1;
-				lstrval = -1;
-				paxwarn(0, "Cannot save archive name.");
-				return(-1);
-			}
-			freeit = 1;
+			free(arcname_alloc);
+			arcname = arcname_alloc = buf;
 			break;
 		}
 		tty_prnt("Cannot open %s, try again\n", buf);
+		free(buf);
 		continue;
 	}
-	return(0);
+	return (0);
 }
 
 /*
- * ar_start_gzip()
- * starts the gzip compression/decompression process as a child, using magic
+ * ar_start_compress()
+ * starts the compression/decompression process as a child, using magic
  * to keep the fd the same in the calling function (parent).
  */
 void
-ar_start_gzip(int fd, const char *path, int wr)
+ar_start_compress(int fd, int wr)
 {
 	int fds[2];
-	const char *gzip_flags;
+	const char *compress_flags;
+
+	guess_compress_program(wr);
+	if (compress_program == NULL)
+		return;
 
 	if (pipe(fds) < 0)
 		err(1, "could not pipe");
@@ -1255,10 +1288,7 @@ ar_start_gzip(int fd, const char *path, int wr)
 
 	/* parent */
 	if (zpid) {
-		if (wr)
-			dup2(fds[1], fd);
-		else
-			dup2(fds[0], fd);
+		dup2(fds[wr ? 1 : 0], fd);
 		close(fds[0]);
 		close(fds[1]);
 
@@ -1273,20 +1303,21 @@ ar_start_gzip(int fd, const char *path, int wr)
 		if (wr) {
 			dup2(fds[0], STDIN_FILENO);
 			dup2(fd, STDOUT_FILENO);
-			gzip_flags = "-c";
+			compress_flags = "-c";
 		} else {
 			dup2(fds[1], STDOUT_FILENO);
 			dup2(fd, STDIN_FILENO);
-			gzip_flags = "-dc";
+			compress_flags = "-dc";
 		}
 		close(fds[0]);
 		close(fds[1]);
 
 		/* System compressors are more likely to use pledge(2) */
-		putenv("PATH=/usr/bin:/usr/local/bin");
+		putenv("PATH=" PAX_SAFE_PATH);
 
-		if (execlp(path, path, gzip_flags, (char *)NULL) < 0)
-			err(1, "could not exec %s", path);
+		if (execlp(compress_program, compress_program,
+		    compress_flags, (char *)NULL) < 0)
+			err(1, "could not exec %s", compress_program);
 		/* NOTREACHED */
 	}
 }
