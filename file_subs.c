@@ -43,16 +43,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include "pax.h"
 #include "extern.h"
-
-static int
-mk_link(char *, struct stat *, char *, int);
 
 /*
  * routines that deal with file operations such as: creating, removing;
  * and setting access modes, uid/gid and times of files
  */
+
+static int mk_link(char *, struct stat *, char *, int);
 
 /*
  * file_creat()

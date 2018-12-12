@@ -35,9 +35,9 @@
  */
 
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <err.h>
 #include <errno.h>

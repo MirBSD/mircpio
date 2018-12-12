@@ -247,9 +247,9 @@ typedef struct oplist {
 #define MINOR(x)	minor(x)
 #define TODEV(x, y)	makedev((x), (y))
 
-#define FILEBITS		(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
-#define SETBITS			(S_ISUID | S_ISGID)
-#define ABITS			(FILEBITS | SETBITS)
+#define FILEBITS	(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
+#define SETBITS		(S_ISUID | S_ISGID)
+#define ABITS		(FILEBITS | SETBITS)
 
 /*
  * General Defines
