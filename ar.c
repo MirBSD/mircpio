@@ -40,7 +40,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.9.2.1 2018/12/12 04:16:13 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.9.2.2 2018/12/12 06:25:14 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -142,8 +142,7 @@ uar_ismagic(char *buf)
  * used during format identification, but we differ
  */
 int
-uar_id(char *buf __attribute__((__unused__)),
-    int len __attribute__((__unused__)))
+uar_id(char *buf MKSH_A_UNUSED, int len MKSH_A_UNUSED)
 {
 	errx(1, "internal error: %s should never have been called",
 	    "uar_id");
@@ -396,10 +395,8 @@ uar_endrd(void)
  * another artefact of paxtar integration
  */
 int
-uar_trail(ARCHD *ignore __attribute__((__unused__)),
-    char *buf __attribute__((__unused__)),
-    int in_resync __attribute__((__unused__)),
-    int *cnt __attribute__((__unused__)))
+uar_trail(ARCHD *ignore MKSH_A_UNUSED, char *buf MKSH_A_UNUSED,
+    int in_resync MKSH_A_UNUSED, int *cnt MKSH_A_UNUSED)
 {
 	errx(1, "internal error: %s should never have been called",
 	    "uar_trail");

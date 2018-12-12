@@ -456,7 +456,7 @@ wr_archive(ARCHD *arcn, int is_app)
 			if ((res = chk_ftime(arcn)) < 0)
 				break;
 			if (res > 0) {
-				ftree_skipped_newer(arcn);
+				ftree_skipped_newer();
 				continue;
 			}
 		}
@@ -878,7 +878,7 @@ copy(void)
 			*dest_pt = '\0';
 
 			if (res == 0) {
-				ftree_skipped_newer(arcn);
+				ftree_skipped_newer();
 				if (cmp_file_times(uflag, Dflag, arcn, &sb))
 					continue;
 			}

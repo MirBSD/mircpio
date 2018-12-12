@@ -102,7 +102,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.1 2018/12/12 04:04:48 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.2 2018/12/12 06:25:15 tg Exp $");
 #endif
 
 /* arithmetic types: C implementation */
@@ -163,7 +163,19 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #if !HAVE_DPRINTF
 /* replacement only as powerful as needed for this */
 void dprintf(int, const char *, ...)
+    MKSH_A_NONNULL(2)
     MKSH_A_FORMAT(__printf__, 2, 3);
+#endif
+
+#if !HAVE_STRLCPY
+size_t strlcat(char *, const char *, size_t)
+    MKSH_A_BOUNDED(__string__, 1, 3);
+size_t strlcpy(char *, const char *, size_t)
+    MKSH_A_BOUNDED(__string__, 1, 3);
+#endif
+
+#if !HAVE_STRMODE
+void strmode(mode_t, char *);
 #endif
 
 #endif

@@ -2,6 +2,8 @@
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
+ * Copyright © 2013, 2015, 2016, 2018
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -41,14 +43,26 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.2 2018/12/12 03:13:31 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.3 2018/12/12 06:25:15 tg Exp $");
 #endif
+
+/*
+ * ar.c
+ */
+int uar_stwr(int);
+int uar_ismagic(char *);
+int uar_id(char *, int) MKSH_A_NORETURN;
+int uar_rd(ARCHD *, char *);
+int uar_wr(ARCHD *);
+int uar_wr_data(ARCHD *, int, off_t *);
+off_t uar_endrd(void);
+int uar_trail(ARCHD *, char *, int, int *) MKSH_A_NORETURN;
 
 /*
  * ar_io.c
  */
 extern const char *arcname;
-extern const char *gzip_program;
+extern const char *compress_program;
 extern int force_one_volume;
 int ar_open(const char *);
 void ar_close(int _in_sig);
@@ -61,6 +75,8 @@ int ar_rdsync(void);
 int ar_fow(off_t, off_t *);
 int ar_rev(off_t );
 int ar_next(void);
+extern int ar_do_keepopen;
+int ar_next_keepopen(void);
 
 /*
  * ar_subs.c
@@ -97,6 +113,7 @@ int wr_rdfile(ARCHD *, int, off_t *);
 int rd_wrfile(ARCHD *, int, off_t *);
 void cp_file(ARCHD *, int, int);
 int buf_fill(void);
+int buf_fill_internal(int);
 int buf_flush(int);
 
 /*
@@ -106,10 +123,10 @@ int uidtb_start(void);
 int gidtb_start(void);
 int usrtb_start(void);
 int grptb_start(void);
-char *name_uid(uid_t, int);
-char *name_gid(gid_t, int);
-int uid_name(char *, uid_t *);
-int gid_name(char *, gid_t *);
+const char *name_uid(uid_t, int);
+const char *name_gid(gid_t, int);
+int uid_name(const char *, uid_t *);
+int gid_name(const char *, gid_t *);
 
 /*
  * cpio.c
@@ -120,14 +137,17 @@ int cpio_endwr(void);
 int cpio_id(char *, int);
 int cpio_rd(ARCHD *, char *);
 off_t cpio_endrd(void);
-int cpio_stwr(void);
+int cpio_stwr(int);
+int dist_stwr(int);
 int cpio_wr(ARCHD *);
 int vcpio_id(char *, int);
 int crc_id(char *, int);
 int crc_strd(void);
 int vcpio_rd(ARCHD *, char *);
 off_t vcpio_endrd(void);
-int crc_stwr(void);
+int crc_stwr(int);
+int v4root_stwr(int);
+int v4norm_stwr(int);
 int vcpio_wr(ARCHD *);
 int bcpio_id(char *, int);
 int bcpio_rd(ARCHD *, char *);
@@ -139,19 +159,21 @@ int bcpio_wr(ARCHD *);
  */
 int file_creat(ARCHD *);
 void file_close(ARCHD *, int);
-int lnk_creat(ARCHD *);
+int lnk_creat(ARCHD *, int *);
 int cross_lnk(ARCHD *);
 int chk_same(ARCHD *);
 int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
+/*XXX TODO: const struct timespec → time expression */
 void set_ftime(const char *, const struct timespec *,
-    const struct timespec *, int);
+    const struct timespec *, int, int);
 void fset_ftime(const char *, int, const struct timespec *,
     const struct timespec *, int);
 int set_ids(char *, uid_t, gid_t);
 int fset_ids(char *, int, uid_t, gid_t);
-void set_pmode(char *, mode_t);
+int set_lids(char *, uid_t, gid_t);
+void set_pmode(char *, mode_t, int);
 void fset_pmode(char *, int, mode_t);
 int set_attr(const struct file_times *, int _force_times, mode_t, int _do_mode,
     int _in_sig);
@@ -166,7 +188,7 @@ int set_crc(ARCHD *, int);
 int ftree_start(void);
 int ftree_add(char *, int);
 void ftree_sel(ARCHD *);
-void ftree_skipped_newer(ARCHD *);
+void ftree_skipped_newer(void);
 void ftree_chk(void);
 int next_file(ARCHD *);
 
@@ -191,11 +213,12 @@ int getoldopt(int, char **, const char *);
  * options.c
  */
 extern FSUB fsub[];
-extern int ford[];
+extern const int ford[];
 void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
 int bad_opt(void);
+void guess_compress_program(int);
 extern char *chdname;
 
 /*
@@ -224,6 +247,7 @@ extern int lflag;
 extern int nflag;
 extern int tflag;
 extern int uflag;
+extern int Vflag;
 extern int vflag;
 extern int Dflag;
 extern int Hflag;
@@ -243,7 +267,7 @@ extern int rmleadslash;
 extern int exit_val;
 extern int docrc;
 extern char *dirptr;
-extern char *argv0;
+extern const char *argv0;
 extern enum op_mode { OP_PAX, OP_TAR, OP_CPIO } op_mode;
 extern FILE *listf;
 extern int listfd;
@@ -282,6 +306,7 @@ int add_dev(ARCHD *);
 int map_dev(ARCHD *, u_long, u_long);
 int atdir_start(void);
 void atdir_end(void);
+/*XXX TODO: time value */
 void add_atdir(char *, dev_t, ino_t, const struct timespec *,
     const struct timespec *);
 int do_atdir(const char *, dev_t, ino_t);
@@ -290,11 +315,15 @@ void add_dir(char *, struct stat *, int);
 void delete_dir(dev_t, ino_t);
 void proc_dir(int _in_sig);
 unsigned int st_hash(const char *, int, int);
+int flnk_start(void);
+int chk_flnk(ARCHD *);
 
 /*
  * tar.c
  */
+#ifndef SMALL
 extern int tar_nodir;
+#endif
 extern char *gnu_name_string, *gnu_link_string;
 int tar_endwr(void);
 off_t tar_endrd(void);
@@ -304,7 +333,7 @@ int tar_opt(void);
 int tar_rd(ARCHD *, char *);
 int tar_wr(ARCHD *);
 int ustar_strd(void);
-int ustar_stwr(void);
+int ustar_stwr(int);
 int ustar_id(char *, int);
 int ustar_rd(ARCHD *, char *);
 int ustar_wr(ARCHD *);
@@ -312,11 +341,16 @@ int ustar_wr(ARCHD *);
 /*
  * tty_subs.c
  */
+extern char fdgetline_err;
+char *fdgetline(int);
 int tty_init(void);
 void tty_prnt(const char *, ...)
-    __attribute__((nonnull(1), format(printf, 1, 2)));
-int tty_read(char *, int);
+    MKSH_A_NONNULL(1)
+    MKSH_A_FORMAT(__printf__, 1, 2);
+char *tty_rd(void);
 void paxwarn(int, const char *, ...)
-    __attribute__((nonnull(2), format(printf, 2, 3)));
+    MKSH_A_NONNULL(2)
+    MKSH_A_FORMAT(__printf__, 2, 3);
 void syswarn(int, int, const char *, ...)
-    __attribute__((nonnull(3), format(printf, 3, 4)));
+    MKSH_A_NONNULL(3)
+    MKSH_A_FORMAT(__printf__, 3, 4);

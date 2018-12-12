@@ -226,7 +226,7 @@ ftree_sel(ARCHD *arcn)
  */
 
 void
-ftree_skipped_newer(ARCHD *arcn)
+ftree_skipped_newer(void)
 {
 	/* skipped due to -u/-D, mark accordingly */
 	if (ftcur != NULL)
