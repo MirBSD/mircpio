@@ -311,6 +311,7 @@ cpio_rd(ARCHD *arcn, char *buf)
 #elif HAVE_ST_MTIMENSEC
 	arcn->sb.st_mtimensec = 0;
 #endif
+	/* inline st_timecpy variant, can’t use as-is */
 #if HAVE_ST_MTIM
 	arcn->sb.st_ctim = arcn->sb.st_atim = arcn->sb.st_mtim;
 #else

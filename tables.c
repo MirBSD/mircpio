@@ -563,14 +563,7 @@ chk_ftime(ARCHD *arcn)
 				/*
 				 * file is newer
 				 */
-#if HAVE_ST_MTIM
-				pt->sb.st_mtim = arcn->sb.st_mtim;
-#else
-				pt->sb.st_mtime = arcn->sb.st_mtime;
-#if HAVE_ST_MTIMENSEC
-				pt->sb.st_mtimensec = arcn->sb.st_mtimensec;
-#endif
-#endif
+				st_timecpy(m, &pt->sb, &arcn->sb);
 				return(0);
 			}
 			/*
