@@ -1,4 +1,4 @@
-/*	$OpenBSD: file_subs.c,v 1.32 +1.46 +1.48 +1.50 2009/12/22 12:08:30 jasper Exp $	*/
+/*	$OpenBSD: file_subs.c,v 1.53 2017/01/21 08:17:06 krw Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
