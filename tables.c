@@ -67,7 +67,7 @@
  * were kept simple, but do have complex rules for when the contents change.
  * As of this writing, the posix library functions were more complex than
  * needed for this application (pax databases have very short lifetimes and
- * do not survive after pax is finished). Pax is required to handle very
+ * do not survive after pax is finished). pax is required to handle very
  * large archives. These database routines carefully combine memory usage and
  * temporary file storage in ways which will not significantly impact runtime
  * performance while allowing the largest possible archives to be handled.
@@ -1556,7 +1556,7 @@ do_atdir(const char *name, dev_t dev, ino_t ino)
  * directory access mode and time storage routines (for directories CREATED
  * by pax).
  *
- * Pax requires that extracted directories, by default, have their access/mod
+ * pax requires that extracted directories, by default, have their access/mod
  * times and permissions set to the values specified in the archive. During the
  * actions of extracting (and creating the destination subtree during -rw copy)
  * directories extracted may be modified after being created. Even worse is

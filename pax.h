@@ -2,7 +2,7 @@
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2006, 2009, 2011, 2016
+ * Copyright (c) 2006, 2009, 2011, 2012, 2016, 2017
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -41,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.10 2018/12/12 12:43:15 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.11 2018/12/12 13:21:35 tg Exp $");
 #endif
 
 /*
@@ -60,14 +60,14 @@ __IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.10 2018/12/12 12:
 				/* longer than the system PATH_MAX */
 
 /*
- * Pax modes of operation
+ * pax modes of operation
  */
+#define ERROR		-1	/* nothing selected */
 #define	LIST		0	/* List the file in an archive */
 #define	EXTRACT		1	/* extract the files in an archive */
 #define ARCHIVE		2	/* write a new archive */
 #define APPND		3	/* append to the end of an archive */
 #define	COPY		4	/* copy files to destination dir */
-#define DEFOP		LIST	/* if no flags default is to LIST */
 
 /*
  * Device type of the current archive volume
@@ -133,6 +133,7 @@ typedef struct {
 #define PAX_CTG		10		/* high performance file */
 #define PAX_GLL		11		/* GNU long symlink */
 #define PAX_GLF		12		/* GNU long file */
+#define PAX_LINKOR	0x80000000	/* hard link detection OR */
 } ARCHD;
 
 #define PAX_IS_REG(type)	((type) == PAX_REG || (type) == PAX_CTG)
@@ -150,7 +151,7 @@ typedef struct {
  * dependent routines pass pointers to ARCHD structure (described below).
  */
 typedef struct {
-	char *name;		/* name of format, this is the name the user */
+	const char *name;	/* name of format, this is the name the user */
 				/* gives to -x option to select it. */
 	int bsz;		/* default block size. used when the user */
 				/* does not specify a blocksize for writing */
@@ -196,7 +197,7 @@ typedef struct {
 				/* and MUST RETURN THE LENGTH OF THE TRAILER */
 				/* RECORD (so append knows how many bytes */
 				/* to move back to rewrite the trailer) */
-	int (*st_wr)(void);	/* initialise routine for write operations */
+	int (*st_wr)(int);	/* initialise routine for write operations */
 	int (*wr)(ARCHD *);	/* write archive header. Passed an ARCHD */
 				/* filled with the specs on the next file to */
 				/* archived. Returns a 1 if no file data is */
@@ -285,7 +286,11 @@ enum fsub_order {
 #define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
-#define TODEV(x, y)	makedev((x), (y))
+#ifdef __INTERIX
+#define TODEV		mkdev
+#else
+#define TODEV		makedev
+#endif
 
 #define FILEBITS	(S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO)
 #define SETBITS		(S_ISUID | S_ISGID)
