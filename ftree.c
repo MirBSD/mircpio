@@ -456,9 +456,7 @@ next_file(ARCHD *arcn)
 			arcn->type = PAX_DIR;
 			if (!tflag)
 				break;
-			add_atdir(ftent->fts_path, arcn->sb.st_dev,
-			    arcn->sb.st_ino, &arcn->sb.st_mtim,
-			    &arcn->sb.st_atim);
+			add_atdir(ftent->fts_path, &arcn->sb);
 			break;
 		case S_IFCHR:
 			arcn->type = PAX_CHR;

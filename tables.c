@@ -1430,8 +1430,7 @@ atdir_end(void)
  */
 
 void
-add_atdir(char *fname, dev_t dev, ino_t ino, const struct timespec *mtimp,
-    const struct timespec *atimp)
+add_atdir(const char *fname, const struct stat *sbp)
 {
 	ATDIR *pt;
 	sigset_t allsigs, savedsigs;
@@ -1447,10 +1446,10 @@ add_atdir(char *fname, dev_t dev, ino_t ino, const struct timespec *mtimp,
 	 * different args to pax and the -n option is aborting fts out of a
 	 * subtree before all the post-order visits have been made.
 	 */
-	indx = ((unsigned)ino) % A_TAB_SZ;
+	indx = ((unsigned)sbp->st_ino) % A_TAB_SZ;
 	if ((pt = atab[indx]) != NULL) {
 		while (pt != NULL) {
-			if ((pt->ft.ft_ino == ino) && (pt->ft.ft_dev == dev))
+			if ((pt->ft.ft_ino == sbp->st_ino) && (pt->ft.ft_dev == sbp->st_dev))
 				break;
 			pt = pt->fow;
 		}
@@ -1469,10 +1468,10 @@ add_atdir(char *fname, dev_t dev, ino_t ino, const struct timespec *mtimp,
 	sigprocmask(SIG_BLOCK, &allsigs, &savedsigs);
 	if ((pt = malloc(sizeof *pt)) != NULL) {
 		if ((pt->ft.ft_name = strdup(fname)) != NULL) {
-			pt->ft.ft_dev = dev;
-			pt->ft.ft_ino = ino;
-			pt->ft.sb.st_mtim = *mtimp;
-			pt->ft.sb.st_atim = *atimp;
+			pt->ft.ft_dev = sbp->st_dev;
+			pt->ft.ft_ino = sbp->st_ino;
+			st_timecpy(m, &pt->ft.sb, sbp);
+			st_timecpy(a, &pt->ft.sb, sbp);
 			pt->fow = atab[indx];
 			atab[indx] = pt;
 			sigprocmask(SIG_SETMASK, &savedsigs, NULL);

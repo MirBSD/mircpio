@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.3 2018/12/12 06:25:15 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.4 2018/12/12 06:57:43 tg Exp $");
 #endif
 
 /*
@@ -306,9 +306,7 @@ int add_dev(ARCHD *);
 int map_dev(ARCHD *, u_long, u_long);
 int atdir_start(void);
 void atdir_end(void);
-/*XXX TODO: time value */
-void add_atdir(char *, dev_t, ino_t, const struct timespec *,
-    const struct timespec *);
+void add_atdir(const char *, const struct stat *);
 int do_atdir(const char *, dev_t, ino_t);
 int dir_start(void);
 void add_dir(char *, struct stat *, int);
