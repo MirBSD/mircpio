@@ -485,7 +485,7 @@ trng_add(char *str)
 	trtail = pt;
 	return(0);
 
-    out:
+ out:
 	paxwarn(1, "Time range format is: [[[[[cc]yy]mm]dd]HH]MM[.SS][/[c][m]]");
 	return(-1);
 }
@@ -603,7 +603,7 @@ str_sec(const char *p, time_t *tval)
 	switch (len) {
 	case 12:				/* cc */
 		bigyear = ATOI2(p);
-		lt->tm_year = (bigyear * 100) - 1900;
+		lt->tm_year = (bigyear * 100LL) - 1900LL;
 		yearset = 1;
 		/* FALLTHROUGH */
 	case 10:				/* yy */
