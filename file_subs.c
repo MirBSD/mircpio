@@ -577,8 +577,8 @@ node_creat(ARCHD *arcn)
 	 * we were able to create the node. set uid/gid, modes and times
 	 */
 	if (pids)
-		res = ((arcn->type == PAX_SLK) ? set_lids : set_ids)(nm,
-		    arcn->sb.st_uid, arcn->sb.st_gid);
+		res = set_ids(nm, arcn->sb.st_uid, arcn->sb.st_gid,
+		    arcn->type == PAX_SLK);
 	else
 		res = 0;
 
@@ -766,7 +766,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 		 */
 		retval = 0;
 		if (pids)
-			(void)set_ids(name, st_uid, st_gid);
+			(void)set_ids(name, st_uid, st_gid, 0);
 
 		/*
 		 * make sure the user doesn't have some strange umask that
@@ -853,6 +853,9 @@ set_ftime(const char *fnm, const struct stat *sbp, int frc,
 	tv[1].tv_sec = ts[1].tv_sec;
 	tv[1].tv_usec = ts[1].tv_nsec / 1000;
 	rv = (issymlink ? lutimes : utimes)(fnm, tv);
+	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
+		/* might be glibc */
+		return;
 #else
 	if (issymlink)
 		/* no can do */
@@ -933,20 +936,39 @@ fset_ftime(const char *fnm, int fd, const struct stat *sbp, int frc)
  */
 
 int
-set_ids(char *fnm, uid_t uid, gid_t gid)
+set_ids(char *fnm, uid_t uid, gid_t gid, int issymlink MKSH_A_UNUSED)
 {
-	if (fchownat(AT_FDCWD, fnm, uid, gid, AT_SYMLINK_NOFOLLOW) < 0) {
+	int rv;
+
+#if HAVE_FCHOWNAT
+	rv = fchownat(AT_FDCWD, fnm, uid, gid, AT_SYMLINK_NOFOLLOW);
+#elif HAVE_LCHOWN
+	rv = (issymlink ? lchown : chown)(fnm, uid, gid);
+	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
+		/* might be glibc */
+		return (0);
+#else
+	if (issymlink)
+		/* no can do */
+		return (0);
+	rv = chown(fnm, uid, gid);
+#endif
+
+	if (rv < 0) {
 		/*
 		 * ignore EPERM unless in verbose mode or being run by root.
 		 * if running as pax, POSIX requires a warning.
 		 */
-		if (op_mode == OP_PAX || errno != EPERM || vflag ||
-		    geteuid() == 0)
+		if (/* portability, imake style though */
+#ifndef __INTERIX
+		    errno != EPERM || vflag || geteuid() == 0 ||
+#endif
+		    op_mode == OP_PAX)
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
-		return(-1);
+		return (-1);
 	}
-	return(0);
+	return (0);
 }
 
 int
@@ -957,13 +979,16 @@ fset_ids(char *fnm, int fd, uid_t uid, gid_t gid)
 		 * ignore EPERM unless in verbose mode or being run by root.
 		 * if running as pax, POSIX requires a warning.
 		 */
-		if (op_mode == OP_PAX || errno != EPERM || vflag ||
-		    geteuid() == 0)
+		if (/* portability, imake style though */
+#ifndef __INTERIX
+		    errno != EPERM || vflag || geteuid() == 0 ||
+#endif
+		    op_mode == OP_PAX)
 			syswarn(1, errno, "Unable to set file uid/gid of %s",
 			    fnm);
-		return(-1);
+		return (-1);
 	}
-	return(0);
+	return (0);
 }
 
 /*
