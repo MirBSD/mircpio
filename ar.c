@@ -40,7 +40,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.9.2.2 2018/12/12 06:25:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.9.2.3 2018/12/12 14:16:23 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -338,10 +338,12 @@ uar_wr(ARCHD *arcn)
 		return (1);
 	}
 
+#ifndef SMALL
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing mode %8lo user %ld:%ld "
 		    "mtime %08lX name '%s'", t_mode[0],
 		    t_uid, t_gid, (u_long)t_mtime, extname);
+#endif
 
 	memset(&h, ' ', sizeof(HD_AR));
 

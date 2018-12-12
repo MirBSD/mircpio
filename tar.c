@@ -2,6 +2,8 @@
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
+ * Copyright (c) 2006, 2012, 2016, 2017
+ *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -65,6 +67,7 @@ static char *name_split(char *, int);
 static int ul_oct(u_long, char *, int, int);
 static int ull_oct(unsigned long long, char *, int, int);
 #ifndef SMALL
+static void tar_dbgfld(const char *, const char *, size_t);
 static int rd_xheader(ARCHD *arcn, int, off_t);
 #endif
 
@@ -77,7 +80,9 @@ static gid_t gid_warn;
  * Routines common to all versions of tar
  */
 
+#ifndef SMALL
 int tar_nodir;				/* do not write dirs under old tar */
+#endif
 char *gnu_name_string;			/* GNU ././@LongLink hackery name */
 char *gnu_link_string;			/* GNU ././@LongLink hackery link */
 
@@ -91,7 +96,7 @@ char *gnu_link_string;			/* GNU ././@LongLink hackery link */
 int
 tar_endwr(void)
 {
-	return wr_skip(NULLCNT * BLKMULT);
+	return (wr_skip(NULLCNT * BLKMULT));
 }
 
 /*
@@ -104,7 +109,7 @@ tar_endwr(void)
 off_t
 tar_endrd(void)
 {
-	return NULLCNT * BLKMULT;
+	return (NULLCNT * BLKMULT);
 }
 
 /*
@@ -119,7 +124,7 @@ tar_endrd(void)
  */
 
 int
-tar_trail(ARCHD *ignore, char *buf, int in_resync, int *cnt)
+tar_trail(ARCHD *ignore MKSH_A_UNUSED, char *buf, int in_resync, int *cnt)
 {
 	int i;
 
@@ -298,6 +303,7 @@ tar_chksm(char *blk, int len)
 	return(chksm);
 }
 
+#ifndef SMALL
 /*
  * Routines for old BSD style tar (also made portable to sysV tar)
  */
@@ -424,7 +430,7 @@ tar_rd(ARCHD *arcn, char *buf)
 	 * have to look at the last character, it may be a '/' and that is used
 	 * to encode this as a directory
 	 */
-	pt = &(arcn->name[arcn->nlen - 1]);
+	pt = arcn->nlen > 0 ? &(arcn->name[arcn->nlen - 1]) : NULL;
 	arcn->pad = 0;
 	arcn->skip = 0;
 	switch (hd->linkflag) {
@@ -477,7 +483,7 @@ tar_rd(ARCHD *arcn, char *buf)
 		 */
 		arcn->ln_name[0] = '\0';
 		arcn->ln_nlen = 0;
-		if (*pt == '/') {
+		if (pt && *pt == '/') {
 			/*
 			 * it is a directory, set the mode for -v printing
 			 */
@@ -501,11 +507,11 @@ tar_rd(ARCHD *arcn, char *buf)
 	/*
 	 * strip off any trailing slash.
 	 */
-	if (*pt == '/') {
+	if (pt && *pt == '/') {
 		*pt = '\0';
 		--arcn->nlen;
 	}
-	return(0);
+	return (0);
 }
 
 /*
@@ -657,7 +663,7 @@ tar_wr(ARCHD *arcn)
 		return(0);
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */
@@ -692,7 +698,7 @@ ustar_strd(void)
  */
 
 int
-ustar_stwr(void)
+ustar_stwr(int is_app MKSH_A_UNUSED)
 {
 	if ((uidtb_start() < 0) || (gidtb_start() < 0))
 		return(-1);
@@ -832,10 +838,12 @@ reset:
 	 * the posix spec wants).
 	 */
 	hd->gname[sizeof(hd->gname) - 1] = '\0';
-	if (Nflag || gid_name(hd->gname, &(arcn->sb.st_gid)) < 0)
+	if ((anonarch & ANON_NUMID) ||
+	    gid_name(hd->gname, &(arcn->sb.st_gid)) < 0)
 		arcn->sb.st_gid = (gid_t)asc_ul(hd->gid, sizeof(hd->gid), OCT);
 	hd->uname[sizeof(hd->uname) - 1] = '\0';
-	if (Nflag || uid_name(hd->uname, &(arcn->sb.st_uid)) < 0)
+	if ((anonarch & ANON_NUMID) ||
+	    uid_name(hd->uname, &(arcn->sb.st_uid)) < 0)
 		arcn->sb.st_uid = (uid_t)asc_ul(hd->uid, sizeof(hd->uid), OCT);
 
 	/*
@@ -942,6 +950,10 @@ ustar_wr(ARCHD *arcn)
 	HD_USTAR *hd;
 	const char *name;
 	char *pt, hdblk[sizeof(HD_USTAR)];
+	u_long t_uid, t_gid;
+	time_t t_mtime;
+
+	anonarch_init();
 
 	/*
 	 * check for those filesystem types ustar cannot store
@@ -964,6 +976,15 @@ ustar_wr(ARCHD *arcn)
 	    ((size_t)arcn->ln_nlen > sizeof(hd->linkname))) {
 		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
 		return(1);
+	}
+
+	/*
+	 * if -M gslash: append a slash if directory
+	 */
+	if ((anonarch & ANON_DIRSLASH) && arcn->type == PAX_DIR &&
+	    (size_t)arcn->nlen < (sizeof(arcn->name) - 1)) {
+		arcn->name[arcn->nlen++] = '/';
+		arcn->name[arcn->nlen] = '\0';
 	}
 
 	/*
@@ -1002,6 +1023,10 @@ ustar_wr(ARCHD *arcn)
 	 */
 	fieldcpy(hd->name, sizeof(hd->name), pt,
 	    sizeof(arcn->name) - (pt - arcn->name));
+
+	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
+	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
+	t_mtime = (anonarch & ANON_MTIME)  ? 0UL : arcn->sb.st_mtime;
 
 	/*
 	 * set the fields in the header that are type dependent
@@ -1068,39 +1093,38 @@ ustar_wr(ARCHD *arcn)
 	 * set the remaining fields. Some versions want all 16 bits of mode
 	 * we better humor them (they really do not meet spec though)....
 	 */
-	if (ul_oct(arcn->sb.st_uid, hd->uid, sizeof(hd->uid), 3)) {
+	if (ul_oct(t_uid, hd->uid, sizeof(hd->uid), 3)) {
 		if (uid_nobody == 0) {
 			if (uid_name("nobody", &uid_nobody) == -1)
 				goto out;
 		}
-		if (uid_warn != arcn->sb.st_uid) {
-			uid_warn = arcn->sb.st_uid;
+		if (uid_warn != t_uid) {
+			uid_warn = t_uid;
 			paxwarn(1,
 			    "ustar header field is too small for uid %lu, "
-			    "using nobody", (u_long)arcn->sb.st_uid);
+			    "using nobody", t_uid);
 		}
 		if (ul_oct(uid_nobody, hd->uid, sizeof(hd->uid), 3))
 			goto out;
 	}
-	if (ul_oct(arcn->sb.st_gid, hd->gid, sizeof(hd->gid), 3)) {
+	if (ul_oct(t_gid, hd->gid, sizeof(hd->gid), 3)) {
 		if (gid_nobody == 0) {
 			if (gid_name("nobody", &gid_nobody) == -1)
 				goto out;
 		}
-		if (gid_warn != arcn->sb.st_gid) {
-			gid_warn = arcn->sb.st_gid;
+		if (gid_warn != t_gid) {
+			gid_warn = t_gid;
 			paxwarn(1,
 			    "ustar header field is too small for gid %lu, "
-			    "using nobody", (u_long)arcn->sb.st_gid);
+			    "using nobody", t_gid);
 		}
 		if (ul_oct(gid_nobody, hd->gid, sizeof(hd->gid), 3))
 			goto out;
 	}
-	if (ull_oct(arcn->sb.st_mtime < 0 ? 0 : arcn->sb.st_mtime, hd->mtime,
-		sizeof(hd->mtime), 3) ||
+	if (ull_oct(t_mtime < 0 ? 0 : t_mtime, hd->mtime, sizeof(hd->mtime), 3) ||
 	    ul_oct(arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3))
 		goto out;
-	if (!Nflag) {
+	if (!(anonarch & ANON_NUMID)) {
 		if ((name = name_uid(arcn->sb.st_uid, 0)) != NULL)
 			strncpy(hd->uname, name, sizeof(hd->uname));
 		if ((name = name_gid(arcn->sb.st_gid, 0)) != NULL)
@@ -1115,6 +1139,30 @@ ustar_wr(ARCHD *arcn)
 	if (ul_oct(tar_chksm(hdblk, sizeof(HD_USTAR)), hd->chksum,
 	   sizeof(hd->chksum), 3))
 		goto out;
+
+#ifndef SMALL
+	if (anonarch & ANON_DEBUG) {
+		tar_dbgfld(NULL, NULL, 0);
+		tar_dbgfld("writing name '", hd->name, TNMSZ);
+		tar_dbgfld("' mode ", hd->mode, 8);
+		tar_dbgfld(" uid ", hd->uid, 8);
+		tar_dbgfld(" (", hd->uname, 32);
+		tar_dbgfld(") gid ", hd->gid, 8);
+		tar_dbgfld(" (", hd->gname, 32);
+		tar_dbgfld(") size ", hd->size, 12);
+		tar_dbgfld(" mtime ", hd->mtime, 12);
+		tar_dbgfld(" type ", &(hd->typeflag), 1);
+		tar_dbgfld(" linked to '", hd->linkname, TNMSZ);
+		tar_dbgfld("' magic '", hd->magic, TMAGLEN);
+		tar_dbgfld("' v", hd->version, TVERSLEN);
+		tar_dbgfld(" device '", hd->devmajor, 8);
+		tar_dbgfld(":", hd->devminor, 8);
+		tar_dbgfld("' prefix '", hd->prefix, TPFSZ);
+		tar_dbgfld("' checksum ", hd->chksum, CHK_LEN);
+		tar_dbgfld(NULL, NULL, 1);
+	}
+#endif
+
 	if (wr_rdbuf(hdblk, sizeof(HD_USTAR)) < 0)
 		return(-1);
 	if (wr_skip(BLKMULT - sizeof(HD_USTAR)) < 0)
@@ -1123,7 +1171,7 @@ ustar_wr(ARCHD *arcn)
 		return(0);
 	return(1);
 
-    out:
+ out:
 	/*
 	 * header field is out of range
 	 */
@@ -1218,6 +1266,41 @@ expandname(char *buf, size_t len, char **gnu_name, const char *name,
 }
 
 #ifndef SMALL
+static void
+tar_dbgfld(const char *pfx, const char *sp, size_t len)
+{
+	static char fbuf[256];
+	char tbuf[256], *s;
+
+	if ((pfx == NULL) || (sp == NULL)) {
+		if ((pfx == NULL) && (sp == NULL)) {
+			if (len == 0) {
+				*fbuf = 0;
+			} else {
+				paxwarn(0, "%s", fbuf);
+			}
+		} else
+			paxwarn(0, "tar_dbgfld: wrong call");
+		return;
+	}
+
+	strlcat(fbuf, pfx, sizeof (fbuf));
+
+	if (len == 0)
+		return;
+
+	if (len > (sizeof (tbuf) - 1))
+		len = sizeof (tbuf) - 1;
+
+	memmove(s = tbuf, sp, len);
+	tbuf[len] = 0;
+	while (*s == ' ')
+		++s;
+	while (s[strlen(s) - 1] == ' ')
+		s[strlen(s) - 1] = 0;
+
+	strlcat(fbuf, tbuf, sizeof (fbuf));
+}
 
 /* shortest possible extended record: "5 a=\n" */
 #define MINXHDRSZ	5

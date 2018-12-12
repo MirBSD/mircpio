@@ -471,11 +471,13 @@ cpio_wr(ARCHD *arcn)
 		break;
 	}
 
+#ifndef SMALL
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing dev %lX inode %10lX mode %8lo user %ld:%ld"
 		    "\n\tnlink %3ld mtime %08lX name '%s'", t_dev,
 		    (u_long)t_ino, (u_long)arcn->sb.st_mode, t_uid, t_gid,
 		    (u_long)arcn->sb.st_nlink, t_mtime, arcn->name);
+#endif
 
 	/*
 	 * copy the values to the header using octal ascii
@@ -837,11 +839,13 @@ vcpio_wr(ARCHD *arcn)
 		break;
 	}
 
+#ifndef SMALL
 	if (anonarch & ANON_DEBUG)
 		paxwarn(0, "writing dev %lX:%lx inode %10lX mode %8lo user %ld:%ld"
 		    "\n\tnlink %3ld mtime %08lX name '%s'", t_major, t_minor,
 		    (u_long)t_ino, (u_long)arcn->sb.st_mode, t_uid, t_gid,
 		    (u_long)arcn->sb.st_nlink, t_mtime, arcn->name);
+#endif
 
 	/*
 	 * set the other fields in the header
