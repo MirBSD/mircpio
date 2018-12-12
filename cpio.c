@@ -301,8 +301,19 @@ cpio_rd(ARCHD *arcn, char *buf)
 		arcn->sb.st_mtime = INT_MAX;			/* XXX 2038 */
 	else
 		arcn->sb.st_mtime = val;
+#if HAVE_ST_MTIM
 	arcn->sb.st_mtim.tv_nsec = 0;
+#elif HAVE_ST_MTIMENSEC
+	arcn->sb.st_mtimensec = 0;
+#endif
+#if HAVE_ST_MTIM
 	arcn->sb.st_ctim = arcn->sb.st_atim = arcn->sb.st_mtim;
+#else
+	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
+#if HAVE_ST_MTIMENSEC
+	arcn->sb.st_ctimensec = arcn->sb.st_atimensec = arcn->sb.st_mtimensec;
+#endif
+#endif
 	arcn->sb.st_size = (off_t)asc_ull(hd->c_filesize,sizeof(hd->c_filesize),
 	    OCT);
 
@@ -568,8 +579,19 @@ vcpio_rd(ARCHD *arcn, char *buf)
 	arcn->sb.st_uid = (uid_t)asc_ul(hd->c_uid, sizeof(hd->c_uid), HEX);
 	arcn->sb.st_gid = (gid_t)asc_ul(hd->c_gid, sizeof(hd->c_gid), HEX);
 	arcn->sb.st_mtime = (time_t)asc_ul(hd->c_mtime,sizeof(hd->c_mtime),HEX);
+#if HAVE_ST_MTIM
 	arcn->sb.st_mtim.tv_nsec = 0;
+#elif HAVE_ST_MTIMENSEC
+	arcn->sb.st_mtimensec = 0;
+#endif
+#if HAVE_ST_MTIM
 	arcn->sb.st_ctim = arcn->sb.st_atim = arcn->sb.st_mtim;
+#else
+	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
+#if HAVE_ST_MTIMENSEC
+	arcn->sb.st_ctimensec = arcn->sb.st_atimensec = arcn->sb.st_mtimensec;
+#endif
+#endif
 	arcn->sb.st_size = (off_t)asc_ull(hd->c_filesize,
 	    sizeof(hd->c_filesize), HEX);
 	arcn->sb.st_nlink = (nlink_t)asc_ul(hd->c_nlink, sizeof(hd->c_nlink),
@@ -876,8 +898,19 @@ bcpio_rd(ARCHD *arcn, char *buf)
 			((off_t)(SHRT_EXT(hd->h_filesize_2)));
 		nsz = (int)(SHRT_EXT(hd->h_namesize));
 	}
+#if HAVE_ST_MTIM
 	arcn->sb.st_mtim.tv_nsec = 0;
+#elif HAVE_ST_MTIMENSEC
+	arcn->sb.st_mtimensec = 0;
+#endif
+#if HAVE_ST_MTIM
 	arcn->sb.st_ctim = arcn->sb.st_atim = arcn->sb.st_mtim;
+#else
+	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
+#if HAVE_ST_MTIMENSEC
+	arcn->sb.st_ctimensec = arcn->sb.st_atimensec = arcn->sb.st_mtimensec;
+#endif
+#endif
 
 	/*
 	 * check the file name size, if bogus give up. otherwise read the file

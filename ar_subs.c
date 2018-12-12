@@ -170,12 +170,12 @@ cmp_file_times(int mtime_flag, int ctime_flag, ARCHD *arcn, struct stat *sbp)
 	}
 
 	if (ctime_flag && mtime_flag)
-		return (timespeccmp(&arcn->sb.st_mtim, &sbp->st_mtim, <=) &&
-		        timespeccmp(&arcn->sb.st_ctim, &sbp->st_ctim, <=));
+		return (st_mtim_cmp(&arcn->sb, sbp, <=) &&
+		    st_ctim_cmp(&arcn->sb, sbp, <=));
 	else if (ctime_flag)
-		return (timespeccmp(&arcn->sb.st_ctim, &sbp->st_ctim, <=));
+		return (st_ctim_cmp(&arcn->sb, sbp, <=));
 	else
-		return (timespeccmp(&arcn->sb.st_mtim, &sbp->st_mtim, <=));
+		return (st_mtim_cmp(&arcn->sb, sbp, <=));
 }
 
 /*

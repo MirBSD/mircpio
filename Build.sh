@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.1 2018/12/12 03:13:28 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.2 2018/12/12 04:01:19 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1528,6 +1528,127 @@ EOF
 #
 # other checks
 #
+ac_test offt_llong '' 'whether off_t is as wide as long long' <<-'EOF'
+	#include <sys/types.h>
+	#include <limits.h>
+	#include <unistd.h>
+	#ifndef CHAR_BIT
+	#define CHAR_BIT 0
+	#endif
+	struct ctasserts {
+	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+		cta(char_is_8_bits, (CHAR_BIT) == 8);
+		cta(off_t_is_llong, sizeof(off_t) == sizeof(long long));
+	};
+	int main(void) { return (sizeof(struct ctasserts)); }
+EOF
+
+ac_testn offt_long '!' offt_llong 0 'whether off_t is as wide as long' <<-'EOF'
+	#include <sys/types.h>
+	#include <limits.h>
+	#include <unistd.h>
+	#ifndef CHAR_BIT
+	#define CHAR_BIT 0
+	#endif
+	struct ctasserts {
+	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+		cta(char_is_8_bits, (CHAR_BIT) == 8);
+		cta(off_t_is_long, sizeof(off_t) == sizeof(long));
+	};
+	int main(void) { return (sizeof(struct ctasserts)); }
+EOF
+
+case $HAVE_OFFT_LLONG$HAVE_OFFT_LONG in
+10|01)	;;
+*)	echo Cannot determine width of off_t
+	exit 1 ;;
+esac
+
+ac_test timet_llong '' 'whether time_t is as wide as long long' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <limits.h>
+	#ifndef CHAR_BIT
+	#define CHAR_BIT 0
+	#endif
+	struct ctasserts {
+	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+		cta(char_is_8_bits, (CHAR_BIT) == 8);
+		cta(time_t_is_llong, sizeof(time_t) == sizeof(long long));
+	};
+	int main(void) { return (sizeof(struct ctasserts)); }
+EOF
+
+ac_testn timet_long '!' timet_llong 0 'whether time_t is as wide as long' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <limits.h>
+	#ifndef CHAR_BIT
+	#define CHAR_BIT 0
+	#endif
+	struct ctasserts {
+	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+		cta(char_is_8_bits, (CHAR_BIT) == 8);
+		cta(time_t_is_long, sizeof(time_t) == sizeof(long));
+	};
+	int main(void) { return (sizeof(struct ctasserts)); }
+EOF
+
+case $HAVE_TIMET_LLONG$HAVE_TIMET_LONG in
+10|01)	;;
+*)	echo Cannot determine width of time_t
+	exit 1 ;;
+esac
+
+ac_test st_mtim '' 'whether struct stat has usable st_mtim' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <sys/stat.h>
+	int main(void) {
+		struct stat sb;
+		struct timespec ts = { 1544585569L, 0L };
+		return (fstat(0, &sb) || timespeccmp(&sb.st_mtim, &ts, >=));
+	}
+EOF
+
+ac_test st_mtimensec '!' st_mtim 0 'whether struct stat has st_mtimensec' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <sys/stat.h>
+	int main(void) {
+		struct stat sb;
+		return (fstat(0, &sb) || sb.st_mtimensec == 0);
+	}
+EOF
+
 
 #
 # End of mirtoconf checks

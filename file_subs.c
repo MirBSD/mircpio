@@ -1114,7 +1114,7 @@ set_crc(ARCHD *arcn, int fd)
 		paxwarn(1, "File changed size %s", arcn->org_name);
 	else if (fstat(fd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
-	else if (timespeccmp(&arcn->sb.st_mtim, &sb.st_mtim, !=))
+	else if (st_mtim_cmp(&arcn->sb, &sb, !=))
 		paxwarn(1, "File %s was modified during read", arcn->org_name);
 	else if (lseek(fd, 0, SEEK_SET) < 0)
 		syswarn(1, errno, "File rewind failed on: %s", arcn->org_name);

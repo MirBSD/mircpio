@@ -632,7 +632,7 @@ wr_rdfile(ARCHD *arcn, int ifd, off_t *left)
 		paxwarn(1, "File changed size during read %s", arcn->org_name);
 	else if (fstat(ifd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
-	else if (timespeccmp(&arcn->sb.st_mtim, &sb.st_mtim, !=))
+	else if (st_mtim_cmp(&arcn->sb, &sb, !=))
 		paxwarn(1, "File %s was modified during copy to archive",
 			arcn->org_name);
 	*left = size;
@@ -806,7 +806,7 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 			arcn->org_name, arcn->name);
 	else if (fstat(fd1, &sb) < 0)
 		syswarn(1, errno, "Failed stat of %s", arcn->org_name);
-	else if (timespeccmp(&arcn->sb.st_mtim, &sb.st_mtim, !=))
+	else if (st_mtim_cmp(&arcn->sb, &sb, !=))
 		paxwarn(1, "File %s was modified during copy to %s",
 			arcn->org_name, arcn->name);
 
