@@ -49,7 +49,7 @@
 #define DEVBLK		8192	/* default read blksize for devices */
 #define FILEBLK		10240	/* default read blksize for files */
 #define PAXPATHLEN	3072	/* maximum path length for pax. MUST be */
-				/* longer than the system MAXPATHLEN */
+				/* longer than the system PATH_MAX */
 
 /*
  * Pax modes of operation
@@ -126,6 +126,10 @@ typedef struct {
 #define PAX_GLL		11		/* GNU long symlink */
 #define PAX_GLF		12		/* GNU long file */
 } ARCHD;
+
+#define PAX_IS_REG(type)	((type) == PAX_REG || (type) == PAX_CTG)
+#define PAX_IS_HARDLINK(type)	((type) == PAX_HLK || (type) == PAX_HRG)
+#define PAX_IS_LINK(type)	((type) == PAX_SLK || PAX_IS_HARDLINK(type))
 
 /*
  * Format Specific Routine Table
@@ -207,10 +211,6 @@ typedef struct {
 				/* CAUTION: parameters to this function are */
 				/* different for trailers inside or outside */
 				/* of headers. See get_head() for details */
-	int (*rd_data)(ARCHD *,	/* read/process file data from the archive */
-	    int, off_t *);
-	int (*wr_data)(ARCHD *,	/* write/process file data to the archive */
-	    int, off_t *);
 	int (*options)(void);	/* process format specific options (-o) */
 } FSUB;
 
@@ -221,11 +221,11 @@ typedef struct {
  * at the given name has the indicated dev+ino.
  */
 struct file_times {
-	ino_t	ft_ino;		/* inode number to verify */
-	time_t	ft_mtime;	/* times to set */
-	time_t	ft_atime;
-	char	*ft_name;	/* name of file to set the times on */
-	dev_t	ft_dev;		/* device number to verify */
+	ino_t	ft_ino;			/* inode number to verify */
+	struct	timespec ft_mtim;	/* times to set */
+	struct	timespec ft_atim;
+	char	*ft_name;		/* name of file to set the times on */
+	dev_t	ft_dev;			/* device number to verify */
 };
 
 /*
@@ -242,9 +242,7 @@ typedef struct oplist {
 /*
  * General Macros
  */
-#ifndef MIN
-#define	MIN(a,b) (((a)<(b))?(a):(b))
-#endif
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
 #define TODEV(x, y)	makedev((x), (y))

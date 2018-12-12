@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty_subs.c,v 1.14 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: tty_subs.c,v 1.17 2016/08/26 04:22:13 guenther Exp $	*/
 /*	$NetBSD: tty_subs.c,v 1.5 1995/03/21 09:07:52 cgd Exp $	*/
 
 /*-
@@ -35,18 +35,15 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "pax.h"
 #include "extern.h"
-#include <stdarg.h>
 
 /*
  * routines that deal with I/O to and from the user
@@ -67,7 +64,7 @@ tty_init(void)
 {
 	int ttyfd;
 
-	if ((ttyfd = open(DEVTTY, O_RDWR)) >= 0) {
+	if ((ttyfd = open(DEVTTY, O_RDWR | O_CLOEXEC)) >= 0) {
 		if ((ttyoutf = fdopen(ttyfd, "w")) != NULL) {
 			if ((ttyinf = fdopen(ttyfd, "r")) != NULL)
 				return(0);

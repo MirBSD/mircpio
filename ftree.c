@@ -35,18 +35,29 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <fts.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "pax.h"
-#include "ftree.h"
 #include "extern.h"
+
+/*
+ * Data structure used to store the file args to be handed to fts().
+ * It keeps track of which args generated a "selected" member.
+ */
+typedef struct ftree {
+	char		*fname;		/* file tree name */
+	int		refcnt;		/* has tree had a selected file? */
+	int		newercnt;	/* skipped due to -u/-D */
+	int		chflg;		/* change directory flag */
+	struct ftree	*fow;		/* pointer to next entry on list */
+} FTREE;
+
 
 /*
  * routines to interface with the fts library function.
@@ -153,7 +164,7 @@ ftree_add(char *str, int chflg)
 	 * processed in the same order they were passed to pax). Get rid of any
 	 * trailing / the user may pass us. (watch out for / by itself).
 	 */
-	if ((ft = (FTREE *)malloc(sizeof(FTREE))) == NULL) {
+	if ((ft = malloc(sizeof(FTREE))) == NULL) {
 		paxwarn(0, "Unable to allocate memory for filename");
 		return(-1);
 	}
@@ -444,8 +455,8 @@ next_file(ARCHD *arcn)
 			if (!tflag)
 				break;
 			add_atdir(ftent->fts_path, arcn->sb.st_dev,
-			    arcn->sb.st_ino, arcn->sb.st_mtime,
-			    arcn->sb.st_atime);
+			    arcn->sb.st_ino, &arcn->sb.st_mtim,
+			    &arcn->sb.st_atim);
 			break;
 		case S_IFCHR:
 			arcn->type = PAX_CHR;
@@ -476,7 +487,7 @@ next_file(ARCHD *arcn)
 			}
 			/*
 			 * set link name length, watch out readlink does not
-			 * always NUL terminate the link path
+			 * NUL terminate the link path
 			 */
 			arcn->ln_name[cnt] = '\0';
 			arcn->ln_nlen = cnt;
@@ -549,7 +560,7 @@ getpathname(char *buf, int buflen)
 		term = '\n';
 	}
 	while ((ch = getchar()) != term && ch != EOF)
-		;
+		continue;
 	paxwarn(1, "Ignoring too-long pathname: %s", buf);
 	return(NULL);
 }

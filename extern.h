@@ -1,4 +1,4 @@
-/*	$OpenBSD: extern.h,v 1.58 2017/09/12 17:11:11 otto Exp $	*/
+/*	$OpenBSD: extern.h,v 1.59 2018/09/13 12:33:43 millert Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -40,8 +40,6 @@
  * External references from each source file
  */
 
-#include <sys/cdefs.h>
-
 /*
  * ar_io.c
  */
@@ -49,7 +47,7 @@ extern const char *arcname;
 extern const char *gzip_program;
 extern int force_one_volume;
 int ar_open(const char *);
-void ar_close(void);
+void ar_close(int _in_sig);
 void ar_drain(void);
 int ar_set_wr(void);
 int ar_app_ok(void);
@@ -98,18 +96,6 @@ int buf_fill(void);
 int buf_flush(int);
 
 /*
- * cache.c
- */
-int uidtb_start(void);
-int gidtb_start(void);
-int usrtb_start(void);
-int grptb_start(void);
-char * name_uid(uid_t, int);
-char * name_gid(gid_t, int);
-int uid_name(char *, uid_t *);
-int gid_name(char *, gid_t *);
-
-/*
  * cpio.c
  */
 int cpio_strd(void);
@@ -135,7 +121,6 @@ int bcpio_wr(ARCHD *);
 /*
  * file_subs.c
  */
-extern char *gnu_name_string, *gnu_link_string;
 int file_creat(ARCHD *);
 void file_close(ARCHD *, int);
 int lnk_creat(ARCHD *);
@@ -144,11 +129,12 @@ int chk_same(ARCHD *);
 int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
-void set_ftime(char *fnm, time_t mtime, time_t atime, int frc);
-void fset_ftime(char *fnm, int, time_t mtime, time_t atime, int frc);
+void set_ftime(const char *, const struct timespec *,
+    const struct timespec *, int);
+void fset_ftime(const char *, int, const struct timespec *,
+    const struct timespec *, int);
 int set_ids(char *, uid_t, gid_t);
 int fset_ids(char *, int, uid_t, gid_t);
-int set_lids(char *, uid_t, gid_t);
 void set_pmode(char *, mode_t);
 void fset_pmode(char *, int, mode_t);
 int set_attr(const struct file_times *, int _force_times, mode_t, int _do_mode,
@@ -176,10 +162,8 @@ void ls_tty(ARCHD *);
 void safe_print(const char *, FILE *);
 u_long asc_ul(char *, int, int);
 int ul_asc(u_long, char *, int, int);
-#ifndef LONG_OFF_T
-u_quad_t asc_uqd(char *, int, int);
-int uqd_asc(u_quad_t, char *, int, int);
-#endif
+unsigned long long asc_ull(char *, int, int);
+int ull_asc(unsigned long long, char *, int, int);
 size_t fieldcpy(char *, size_t, const char *, size_t);
 
 /*
@@ -243,9 +227,10 @@ extern int rmleadslash;
 extern int exit_val;
 extern int docrc;
 extern char *dirptr;
-extern char *ltmfrmt;
 extern char *argv0;
+extern enum op_mode { OP_PAX, OP_TAR, OP_CPIO } op_mode;
 extern FILE *listf;
+extern int listfd;
 extern char *tempfile;
 extern char *tempbase;
 extern int havechd;
@@ -276,24 +261,31 @@ void sltab_process(int _in_sig);
 int name_start(void);
 int add_name(char *, int, char *);
 void sub_name(char *, int *, int);
+#ifndef NOCPIO
 int dev_start(void);
 int add_dev(ARCHD *);
 int map_dev(ARCHD *, u_long, u_long);
+#else
+# define dev_start()	0
+# define add_dev(x)	0
+# define map_dev(x,y,z)	0
+#endif /* NOCPIO */
 int atdir_start(void);
 void atdir_end(void);
-void add_atdir(char *, dev_t, ino_t, time_t, time_t);
+void add_atdir(char *, dev_t, ino_t, const struct timespec *,
+    const struct timespec *);
 int do_atdir(const char *, dev_t, ino_t);
 int dir_start(void);
 void add_dir(char *, struct stat *, int);
 void delete_dir(dev_t, ino_t);
-void proc_dir(void);
-u_int st_hash(char *, int, int);
+void proc_dir(int _in_sig);
+u_int st_hash(const char *, int, int);
 
 /*
  * tar.c
  */
 extern int tar_nodir;
-extern char *gnu_hack_string;
+extern char *gnu_name_string, *gnu_link_string;
 int tar_endwr(void);
 off_t tar_endrd(void);
 int tar_trail(ARCHD *, char *, int, int *);
@@ -301,8 +293,6 @@ int tar_id(char *, int);
 int tar_opt(void);
 int tar_rd(ARCHD *, char *);
 int tar_wr(ARCHD *);
-int ustar_strd(void);
-int ustar_stwr(void);
 int ustar_id(char *, int);
 int ustar_rd(ARCHD *, char *);
 int ustar_wr(ARCHD *);
@@ -311,7 +301,10 @@ int ustar_wr(ARCHD *);
  * tty_subs.c
  */
 int tty_init(void);
-void tty_prnt(const char *, ...);
+void tty_prnt(const char *, ...)
+    __attribute__((nonnull(1), format(printf, 1, 2)));
 int tty_read(char *, int);
-void paxwarn(int, const char *, ...);
-void syswarn(int, int, const char *, ...);
+void paxwarn(int, const char *, ...)
+    __attribute__((nonnull(2), format(printf, 2, 3)));
+void syswarn(int, int, const char *, ...)
+    __attribute__((nonnull(3), format(printf, 3, 4)));
