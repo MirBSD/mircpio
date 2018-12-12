@@ -1,5 +1,8 @@
 .\"	$OpenBSD: tar.1,v 1.61 2018/07/23 19:02:49 kn Exp $
 .\"
+.\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016,
+.\"		  2017, 2018
+.\"	mirabilos <m@mirbsd.org>
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
 .\"
@@ -22,32 +25,192 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"-
+.\" Try to make GNU groff and AT&T nroff more compatible
+.\" * ` generates ‘ in gnroff, so use \`
+.\" * ' generates ’ in gnroff, \' generates ´, so use \*(aq
+.\" * - generates ‐ in gnroff, \- generates −, so .tr it to -
+.\"   thus use - for hyphens and \- for minus signs and option dashes
+.\" * ~ is size-reduced and placed atop in groff, so use \*(TI
+.\" * ^ is size-reduced and placed atop in groff, so use \*(ha
+.\" * \(en does not work in nroff, so use \*(en
+.\" * <>| are problematic, so redefine and use \*(Lt\*(Gt\*(Ba
+.\" Also make sure to use \& *before* a punctuation char that is to not
+.\" be interpreted as punctuation, and especially with two-letter words
+.\" but also (after) a period that does not end a sentence (“e.g.\&”).
+.\" The section after the "doc" macropackage has been loaded contains
+.\" additional code to convene between the UCB mdoc macropackage (and
+.\" its variant as BSD mdoc in groff) and the GNU mdoc macropackage.
+.\"
+.ie \n(.g \{\
+.	if \*[.T]ascii .tr \-\N'45'
+.	if \*[.T]latin1 .tr \-\N'45'
+.	if \*[.T]utf8 .tr \-\N'45'
+.	ds <= \[<=]
+.	ds >= \[>=]
+.	ds Rq \[rq]
+.	ds Lq \[lq]
+.	ds sL \(aq
+.	ds sR \(aq
+.	if \*[.T]utf8 .ds sL `
+.	if \*[.T]ps .ds sL `
+.	if \*[.T]utf8 .ds sR '
+.	if \*[.T]ps .ds sR '
+.	ds aq \(aq
+.	ds TI \(ti
+.	ds ha \(ha
+.	ds en \(en
+.\}
+.el \{\
+.	ds aq '
+.	ds TI ~
+.	ds ha ^
+.	ds en \(em
+.\}
+.\"
+.\" Implement .Dd with the Mdocdate RCS keyword
+.\"
+.rn Dd xD
+.de Dd
+.ie \\$1$Mdocdate: \{\
+.	xD \\$2 \\$3, \\$4
+.\}
+.el .xD \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+..
+.\"
+.\" .Dd must come before definition of .Mx, because when called
+.\" with -mandoc, it might implement .Mx itself, but we want to
+.\" use our own definition. And .Dd must come *first*, always.
 .\"
 .Dd $Mdocdate: December 12 2018 $
-.Dt TAR 1
-.Os
+.\"
+.\" Check which macro package we use, and do other -mdoc setup.
+.\"
+.ie \n(.g \{\
+.	if \*[.T]utf8 .tr \[la]\*(Lt
+.	if \*[.T]utf8 .tr \[ra]\*(Gt
+.	ie d volume-ds-1 .ds tT gnu
+.	el .ds tT bsd
+.\}
+.el .ds tT ucb
+.\"
+.\" Implement .Mx (MirBSD)
+.\"
+.ie "\*(tT"gnu" \{\
+.	eo
+.	de Mx
+.	nr curr-font \n[.f]
+.	nr curr-size \n[.ps]
+.	ds str-Mx \f[\n[curr-font]]\s[\n[curr-size]u]
+.	ds str-Mx1 \*[Tn-font-size]\%MirOS\*[str-Mx]
+.	if !\n[arg-limit] \
+.	if \n[.$] \{\
+.	ds macro-name Mx
+.	parse-args \$@
+.	\}
+.	if (\n[arg-limit] > \n[arg-ptr]) \{\
+.	nr arg-ptr +1
+.	ie (\n[type\n[arg-ptr]] == 2) \
+.	as str-Mx1 \~\*[arg\n[arg-ptr]]
+.	el \
+.	nr arg-ptr -1
+.	\}
+.	ds arg\n[arg-ptr] "\*[str-Mx1]
+.	nr type\n[arg-ptr] 2
+.	ds space\n[arg-ptr] "\*[space]
+.	nr num-args (\n[arg-limit] - \n[arg-ptr])
+.	nr arg-limit \n[arg-ptr]
+.	if \n[num-args] \
+.	parse-space-vector
+.	print-recursive
+..
+.	ec
+.	ds sP \s0
+.	ds tN \*[Tn-font-size]
+.\}
+.el \{\
+.	de Mx
+.	nr cF \\n(.f
+.	nr cZ \\n(.s
+.	ds aa \&\f\\n(cF\s\\n(cZ
+.	if \\n(aC==0 \{\
+.		ie \\n(.$==0 \&MirOS\\*(aa
+.		el .aV \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9
+.	\}
+.	if \\n(aC>\\n(aP \{\
+.		nr aP \\n(aP+1
+.		ie \\n(C\\n(aP==2 \{\
+.			as b1 \&MirOS\ #\&\\*(A\\n(aP\\*(aa
+.			ie \\n(aC>\\n(aP \{\
+.				nr aP \\n(aP+1
+.				nR
+.			\}
+.			el .aZ
+.		\}
+.		el \{\
+.			as b1 \&MirOS\\*(aa
+.			nR
+.		\}
+.	\}
+..
+.\}
+.\"-
+.ie \ng==1 \{\
+.	ds nc mircpio
+.	ds np mirpax
+.	ds nt mirtar
+.	ds nm mirtar
+.	Dt MIRTAR 1
+.\}
+.el .ie \ng==2 \{\
+.	ds nc paxcpio
+.	ds np pax
+.	ds nt paxtar
+.	ds nm paxtar
+.	Dt PAXTAR 1
+.\}
+.el \{\
+.	ds nc cpio
+.	ds np pax
+.	ds nt tar
+.	ds nm tar
+.	Dt TAR 1
+.\}
+.\"-
+.Os MirBSD
 .Sh NAME
+.ie \ng==1 \{\
+.Nm mirtar
+.Nd tape archiver
+.\}
+.el .ie \ng==2 \{\
+.Nm paxtar
+.Nd tape archiver
+.\}
+.el \{\
 .Nm tar
 .Nd tape archiver
+.\}
 .Sh SYNOPSIS
-.Nm tar
+.Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578befHhjLmNOoPpqsvwXZz
+.No { Cm crtux No } Op Cm 014578AabefHhJjLmNOoPRSpqsvwXZz
 .Sm on
 .Bk -words
-.Op Ar blocking-factor | archive | replstr
+.Op Ar blocking-factor \*(Ba archive \*(Ba replstr
 .Op Fl C Ar directory
 .Op Fl I Ar file
 .Op Ar
 .Ek
-.Nm tar
+.Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
-.Op Fl 014578eHhjLmNOoPpqvwXZz
+.Op Fl 014578AaeHhJjLmNOoPpqRSvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
 .Op Fl I Ar file
+.Op Fl M Ar flag
 .Op Fl s Ar replstr
 .Op Ar
 .Ek
@@ -68,7 +231,7 @@ and
 must be contained within the first argument to
 .Nm
 and must not be prefixed by a hyphen
-.Pq Sq - .
+.Pq Sq \-\& .
 Option arguments, if any, are processed as subsequent arguments to
 .Nm
 and are processed in the order in which their corresponding option
@@ -126,13 +289,26 @@ The file mode is subject to modification by the
 In addition to the flags mentioned above, any of the following
 flags may be used:
 .Bl -tag -width Ds
+.It Fl A
+Write Unix Archiver libraries instead of tape archives.
+.It Fl a
+Guess the compression utility based on the archive filename.
+Inability to guess will result in quietly not using any compression.
+This option only exists for semi-compatibility with
+.Tn GNU
+.Nm tar ;
+it is strongly recommended to archive to stdout and pipe into
+an external compression utility with appropriate arguments instead:
+.Pp
+.Dl tar \-cf \- foo \*(Ba xz \-2e \*(Gtfoo.txz
 .It Fl b Ar blocking-factor
 Set blocking factor to use for the archive.
 .Nm
 uses 512-byte blocks.
 The default is 20, the maximum is 126.
-Archives with a blocking factor larger than 63
-violate the POSIX standard and will not be portable to all systems.
+Archives with a blocking factor larger than 63 violate the
+.Tn POSIX
+standard and will not be portable to all systems.
 .It Fl C Ar directory
 This is a positional argument which sets the working directory for the
 following files.
@@ -146,7 +322,7 @@ Filename where the archive is stored.
 Defaults to
 .Pa /dev/rst0 .
 If set to hyphen
-.Pq Sq -
+.Pq Sq \-\&
 standard output is used.
 See also the
 .Ev TAPE
@@ -162,32 +338,94 @@ link ultimately points to.
 .It Fl I Ar file
 This is a positional argument which reads the names of files to
 archive or extract from the given file, one per line.
+.It Fl J
+Use the xz utility to compress the archive.
 .It Fl j
-Compress archive using bzip2.
-The bzip2 utility must be installed separately.
+Use the bzip2 utility to compress the archive.
 .It Fl L
 Synonym for the
 .Fl h
 option.
+.It Fl M Ar flag
+Configure the archive normaliser.
+.Ar flag
+is either a numeric value compatible to
+.Xr strtonum 3
+which is directly stored in the flags word, or
+one of the following values, optionally prefixed with
+.Dq no\-
+to turn them off:
+.Pp
+.Bl -tag -width xxxxxx -compact
+.It Ar inodes
+0x0001: Serialise inodes, zero device info.
+.br
+(cpio, sv4cpio, sv4crc)
+.It Ar links
+0x0002: Store content of hard links only once.
+.br
+(cpio, sv4cpio, sv4crc)
+.It Ar mtime
+0x0004: Zero out the file modification time.
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
+.It Ar uidgid
+0x0008: Set owner to 0:0
+.Pq Li root Ns : Ns Li wheel .
+.br
+(ar, cpio, sv4cpio, sv4crc, ustar)
+.It Ar verb
+0x0010: Debug this option.
+.It Ar debug
+0x0020: Debug file header storage.
+.It Ar lncp
+0x0040: Extract hard links by copy if link fails.
+.It Ar numid
+0x0080: Use only numeric uid and gid values.
+.br
+(ustar)
+.It Ar gslash
+0x0100: Append a slash after directory names.
+.br
+(ustar)
+.It Ar set
+0x0003: Keep ownership and mtime intact.
+.It Ar dist
+0x008B: Clean everything except mtime.
+.It Ar norm
+0x008F: Clean everything.
+.It Ar root
+0x0089: Clean owner and device information.
+.El
+.Pp
+When creating an archive and verbosely listing output, these
+normalisation operations are not reflected in the output,
+because they are made only after the output has been shown.
+.Pp
+This option is only implemented for the ar, cpio, sv4cpio,
+sv4crc, and ustar file format writing routines.
 .It Fl m
 Do not preserve modification time.
 .It Fl N
-Use only the numeric UID and GID values when creating or extracting an
-archive.
+Same as
+.Fl M Ar numid .
 .It Fl O
-Write old-style (non-POSIX) archives.
+If reading, extract files to standard output.
+.br
+If writing, write old-style (non-POSIX) archives.
 .It Fl o
+If writing, write old-style (non-POSIX) archives.
 Don't write directory information that the older (V7) style
-.Nm
+.Nm tar
 is unable to decode.
-This implies the
-.Fl O
-flag.
 .It Fl P
-Do not strip leading slashes
+For security reasons,
+.Nm
+skips pathnames containing dotdot
+.Pq Dq ..\&
+components and strips leading slashes
 .Pq Sq /
-from pathnames.
-The default is to strip leading slashes.
+from pathnames by default; this option disables that behaviour.
 .It Fl p
 Preserve user and group ID as well as file mode regardless of
 the current
@@ -205,6 +443,14 @@ No more than one archive member is matched for each
 .Ar file .
 When members of type directory are matched, the file hierarchy rooted at that
 directory is also matched.
+.It Fl R
+Write SysVR4 CPIO files instead of tar or POSIX ustar files.
+Serialise inode numbers, zero out device information.
+The file content of hard links is stored only once.
+.It Fl S
+Write SysVR4 CPIO files with CRC instead of tar or POSIX ustar files.
+Serialise inode numbers, zero out device information.
+The file content of hard links is stored only once.
 .It Fl s Ar replstr
 Modify the archive member names according to the substitution expression
 .Ar replstr ,
@@ -260,7 +506,7 @@ The optional trailing
 will cause the final result of a successful substitution to be written to
 standard error in the following format:
 .Pp
-.D1 Em original-pathname No >> Em new-pathname
+.D1 Em original-pathname No \*(Gt\*(Gt Em new-pathname
 .Pp
 File or archive member names that substitute to the empty string
 are not selected and will be skipped.
@@ -284,11 +530,13 @@ extracting files in an archive.
 .It Fl X
 Do not cross mount points in the filesystem.
 .It Fl Z
-Compress archive using
-.Xr compress 1 .
+Use the
+.Xr compress 1
+utility to compress the archive.
 .It Fl z
-Compress archive using
-.Xr gzip 1 .
+Use the
+.Xr gzip 1
+utility to compress the archive.
 .El
 .Pp
 The options
@@ -303,7 +551,7 @@ Path in which to store temporary files.
 Default tape device to use instead of
 .Pa /dev/rst0 .
 If set to hyphen
-.Pq Sq -
+.Pq Sq \-\&
 standard output is used.
 .El
 .Sh FILES
@@ -328,7 +576,7 @@ Create an archive on the default tape drive, containing the files named
 and
 .Pa sekve :
 .Pp
-.Dl $ tar c bonvole sekve
+.Dl $ \*(nm c bonvole sekve
 .Pp
 Output a
 .Xr gzip 1
@@ -339,7 +587,7 @@ and
 to a file called
 .Pa foriru.tar.gz :
 .Pp
-.Dl $ tar zcf foriru.tar.gz bonvole sekve
+.Dl $ \*(nm zcf foriru.tar.gz bonvole sekve
 .Pp
 Verbosely create an archive, called
 .Pa backup.tar.gz ,
@@ -348,7 +596,7 @@ of all files matching the shell
 function
 .Pa *.c :
 .Pp
-.Dl $ tar zcvf backup.tar.gz *.c
+.Dl $ \*(nm zcvf backup.tar.gz *.c
 .Pp
 Verbosely list, but do not extract, all files ending in
 .Pa .jpeg
@@ -356,10 +604,10 @@ from a compressed archive named
 .Pa backup.tar.gz .
 Note that the glob pattern has been quoted to avoid expansion by the shell:
 .Pp
-.Dl $ tar tvzf backup.tar.gz '*.jpeg'
+.Dl $ \*(nm tvzf backup.tar.gz \*(aq*.jpeg\*(aq
 .Pp
 For more detailed examples, see
-.Xr pax 1 .
+.Xr \*(np 1 .
 .Sh DIAGNOSTICS
 Whenever
 .Nm
@@ -373,6 +621,9 @@ will continue.
 In the case where
 .Nm
 cannot create a link to a file,
+unless
+.Fl M Ar lncp
+is given,
 .Nm
 will not create a second copy of the file.
 .Pp
@@ -390,21 +641,43 @@ or error,
 may have only partially created the archive, which may violate the
 specific archive format specification.
 .Sh SEE ALSO
+.Xr ar 1 ,
 .Xr cpio 1 ,
+.ie \ng==1 \{\
+.Xr mircpio 1 ,
+.Xr mirpax 1 ,
+.Xr pax 1 ,
+.Xr tar 1 ,
+.Xr deb 5
+.\}
+.el .ie \ng==2 \{\
+.Xr pax 1 ,
+.Xr paxcpio 1 ,
+.Xr tar 1 ,
+.Xr deb 5
+.\}
+.el \{\
 .Xr pax 1
+.\}
 .Sh HISTORY
 A
-.Nm
+.Nm tar
 command first appeared in
 .At v7 .
 .Sh AUTHORS
+.An -nosplit
 .An Keith Muller
 at the University of California, San Diego.
+.Mx
+extensions by
+.An mirabilos Aq m@mirbsd.org .
 .Sh CAVEATS
+The flags
+.Fl AaJjLMNRS
+are not portable to other implementations of
+.Nm tar
+where they may have a different meaning or not exist at all.
+.Sh BUGS
 The
-.Fl j
-and
-.Fl L
-flags are not portable to other versions of
-.Nm
-where they may have a different meaning.
+.Ar pax
+file format is not yet supported.
