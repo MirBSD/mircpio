@@ -3,6 +3,8 @@
  *	mirabilos <t.glaser@tarent.de>
  * The copyright notices and licences of the files in .linked/ inclu‐
  * ded below shall be considered being part of this copyright notice.
+ * Also contains material part of “jupp” (Joe’s Own Editor), © 2018
+ *	mirabilos <m@mirbsd.org>
  *
  * Provided that these terms and disclaimer and all copyright notices
  * are retained or reproduced in an accompanying document, permission
@@ -24,7 +26,26 @@
 
 #include "compat.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.3 2018/12/12 09:08:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.4 2018/12/12 14:32:27 tg Exp $");
+
+ssize_t
+dwrite(int fd, const void *data, size_t size)
+{
+	const unsigned char *buf = data;
+	ssize_t rv = 0, z;
+
+	while (size) {
+		if ((z = write(fd, buf, size)) < 0) {
+			if (errno == EINTR)
+				continue;
+			return (rv ? /* fucked up since we got some */ -2 : -1);
+		}
+		rv += z;
+		buf += z;
+		size -= z;
+	}
+	return (rv);
+}
 
 #if !HAVE_DPRINTF
 /* replacement only as powerful as needed for this */
