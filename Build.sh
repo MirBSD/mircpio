@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.17 2018/12/12 15:43:37 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.18 2018/12/12 15:48:36 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1255,7 +1255,7 @@ ac_test attribute_format '' 'for __attribute__((__format__))' <<-'EOF'
 	#undef fprintf
 	extern int fprintf(FILE *, const char *format, ...)
 	    __attribute__((__format__(__printf__, 2, 3)));
-	int main(int ac, char **av) { return (fprintf(stderr, "%s%d", *av, ac)); }
+	int main(int ac, char *av[]) { return (fprintf(stderr, "%s%d", *av, ac)); }
 	#endif
 EOF
 ac_test attribute_nonnull '' 'for __attribute__((__nonnull__))' <<-'EOF'
@@ -1293,7 +1293,7 @@ ac_test attribute_pure '' 'for __attribute__((__pure__))' <<-'EOF'
 	#include <unistd.h>
 	#undef __attribute__
 	int foo(const char *) __attribute__((__pure__));
-	int main(int ac, char **av) { return (foo(av[ac - 1]) + isatty(0)); }
+	int main(int ac, char *av[]) { return (foo(av[ac - 1]) + isatty(0)); }
 	int foo(const char *s) { return ((int)s[0]); }
 	#endif
 EOF
@@ -1305,7 +1305,7 @@ ac_test attribute_unused '' 'for __attribute__((__unused__))' <<-'EOF'
 	#else
 	#include <unistd.h>
 	#undef __attribute__
-	int main(int ac __attribute__((__unused__)), char **av
+	int main(int ac __attribute__((__unused__)), char *av[]
 	    __attribute__((__unused__))) { return (isatty(0)); }
 	#endif
 EOF
@@ -1383,27 +1383,27 @@ rmf lft*	# end of large file support test
 ac_test can_inttypes '!' stdint_h 1 "for standard 32-bit integer types" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
-	int main(int ac, char **av) { return ((uint32_t)(size_t)*av + (int32_t)ac); }
+	int main(int ac, char *av[]) { return ((uint32_t)(size_t)*av + (int32_t)ac); }
 EOF
 ac_test can_ucbints '!' can_inttypes 1 "for UCB 32-bit integer types" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
-	int main(int ac, char **av) { return ((u_int32_t)(size_t)*av + (int32_t)ac); }
+	int main(int ac, char *av[]) { return ((u_int32_t)(size_t)*av + (int32_t)ac); }
 EOF
 ac_test can_int16type '!' stdint_h 1 "for standard 16-bit integer type" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
-	int main(int ac, char **av) { return ((uint16_t)(size_t)av[ac]); }
+	int main(int ac, char *av[]) { return ((uint16_t)(size_t)av[ac]); }
 EOF
 ac_test can_ucbint16 '!' can_int16type 1 "for UCB 16-bit integer type" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
-	int main(int ac, char **av) { return ((u_int16_t)(size_t)av[ac]); }
+	int main(int ac, char *av[]) { return ((u_int16_t)(size_t)av[ac]); }
 EOF
 ac_test can_ulong '' "for u_long" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
-	int main(int ac, char **av) { return ((u_long)(size_t)av[ac]); }
+	int main(int ac, char *av[]) { return ((u_long)(size_t)av[ac]); }
 EOF
 
 #
@@ -1555,7 +1555,7 @@ EOF
 ac_test linkat <<-'EOF'
 	#include <fcntl.h>
 	#include <unistd.h>
-	int main(int ac, char **av) { return (linkat(AT_FDCWD, av[1],
+	int main(int ac, char *av[]) { return (linkat(AT_FDCWD, av[1],
 	    AT_FDCWD, av[2], ac)); }
 EOF
 
@@ -1584,14 +1584,14 @@ EOF
 
 ac_test strmode <<-'EOF'
 	#include <string.h>
-	int main(int ac) { char buf[12]; strmode(ac, buf); return (*buf); }
+	int main(int ac, char *av[]) { strmode(ac, av[0]); return (*av[0]); }
 EOF
 
 ac_test strtonum <<-'EOF'
 	#include <limits.h>
 	#include <stdlib.h>
 	int main(int ac, char *av[]) {
-		return (av == (int)strtonum(av[1], 0, 100, NULL));
+		return (ac == (int)strtonum(av[1], 0, 100, NULL));
 	}
 EOF
 
