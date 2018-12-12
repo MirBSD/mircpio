@@ -56,6 +56,7 @@
 
 #define EXTERN
 #include "pax.h"
+#include "ar.h"
 #include "cpio.h"
 #include "tar.h"
 #include "extern.h"
@@ -252,6 +253,7 @@ FSUB fsub[] = {
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 0},
 
+#ifndef SMALL
 /* FSUBFAIL_Z: compress, to detect failure to use -Z */
 	{NULL, 0, 4, 0, 0, 0, 0, compress_id, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL,
