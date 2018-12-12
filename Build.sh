@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.6 2018/12/12 07:18:31 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.7 2018/12/12 07:47:48 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1503,6 +1503,27 @@ fi
 ac_test dprintf <<-'EOF'
 	#include <stdio.h>
 	int main(void) { return (dprintf(1, "hi\n")); }
+EOF
+
+ac_test futimens <<-'EOF'
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	#include <fcntl.h>
+	struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
+	int main(void) { return (futimens(0, ts)); }
+EOF
+
+ac_test futimes '!' futimens 0 <<-'EOF'
+	#include <sys/time.h>
+	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
+	int main(void) { return (futimens(0, tv)); }
+EOF
+
+ac_test linkat <<-'EOF'
+	#include <fcntl.h>
+	#include <unistd.h>
+	int main(int ac, char **av) { return (linkat(AT_FDCWD, av[1],
+	    AT_FDCWD, av[2], ac)); }
 EOF
 
 ac_test pledge <<-'EOF'

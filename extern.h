@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.5 2018/12/12 07:03:47 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.6 2018/12/12 07:47:48 tg Exp $");
 #endif
 
 /*
@@ -166,7 +166,6 @@ int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
 void set_ftime(const char *, const struct stat *, int, int);
-void fset_ftime(const char *, int, const struct stat *, int);
 int set_ids(char *, uid_t, gid_t);
 int fset_ids(char *, int, uid_t, gid_t);
 int set_lids(char *, uid_t, gid_t);

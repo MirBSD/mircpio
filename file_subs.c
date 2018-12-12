@@ -65,7 +65,14 @@
  * and setting access modes, uid/gid and times of files
  */
 
+#if HAVE_FUTIMENS || HAVE_FUTIMES
+#define PAX_FSET_FTIME
+#endif
+
 static int mk_link(char *, struct stat *, char *, int);
+#ifdef PAX_FSET_FTIME
+static void fset_ftime(const char *, int, const struct stat *, int);
+#endif
 
 /*
  * file_creat()
@@ -157,8 +164,10 @@ file_close(ARCHD *arcn, int fd)
 		arcn->sb.st_mode &= ~(SETBITS);
 	if (pmode)
 		fset_pmode(arcn->name, fd, arcn->sb.st_mode);
+#ifdef PAX_FSET_FTIME
 	if (patime || pmtime)
 		fset_ftime(arcn->name, fd, &arcn->sb, 0);
+#endif
 	if (close(fd) < 0)
 		syswarn(0, errno, "Unable to close file descriptor on %s",
 		    arcn->name);
@@ -356,7 +365,11 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 	 * try again)
 	 */
 	for (;;) {
+#if HAVE_LINKAT
 		if (linkat(AT_FDCWD, to, AT_FDCWD, from, 0) == 0)
+#else
+		if (link(to, from) == 0)
+#endif
 			break;
 		oerrno = errno;
 		if (S_ISLNK(to_sb->st_mode)) {
@@ -564,7 +577,8 @@ node_creat(ARCHD *arcn)
 	 * we were able to create the node. set uid/gid, modes and times
 	 */
 	if (pids)
-		res = set_ids(nm, arcn->sb.st_uid, arcn->sb.st_gid);
+		res = ((arcn->type == PAX_SLK) ? set_lids : set_ids)(nm,
+		    arcn->sb.st_uid, arcn->sb.st_gid);
 	else
 		res = 0;
 
@@ -779,7 +793,9 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
  *	request access and/or modification time preservation (this is also
  *	used by -t to reset access times).
  *	When ign is zero, only those times the user has asked for are set, the
- *	other ones are left alone.
+ *	other ones are left alone. We do not assume the un-documented feature
+ *	of many utimes() implementations that consider a 0 time value as a do
+ *	not set request.
  */
 
 void
@@ -809,31 +825,72 @@ set_ftime(const char *fnm, const struct stat *sbp, int frc)
 		    fnm);
 }
 
+#ifdef PAX_FSET_FTIME
 void
 fset_ftime(const char *fnm, int fd, const struct stat *sbp, int frc)
 {
-	struct timespec tv[2];
+#if HAVE_FUTIMENS
+	struct timespec ts[2];
+#else
+	struct timeval tv[2];
+	struct stat sb;
+#endif
 
-	tv[0] = sbp->st_atim;
-	tv[1] = sbp->st_mtim;
+	/* pre-initialise values to set */
+#if HAVE_FUTIMENS
+	ts[0] = sbp->st_atim;
+	ts[1] = sbp->st_mtim;
+#else
+	tv[0].tv_sec = sbp->st_atime;
+	tv[1].tv_sec = sbp->st_mtime;
+#if HAVE_ST_MTIMENSEC
+	tv[0].tv_usec = sbp->st_atimensec / 1000L;
+	tv[1].tv_usec = sbp->st_mtimensec / 1000L;
+#else
+	tv[0].tv_usec = 0;
+	tv[1].tv_usec = 0;
+#endif
+#endif
 
-	if (!frc) {
+	if (!frc && (!patime || !pmtime)) {
 		/*
-		 * if we are not forcing, only set those times the user wants
-		 * set.
+		 * If we are not forcing, only set those times the user
+		 * wants set. We get the current values of the times if
+		 * we need them (futimens does not).
 		 */
+#if HAVE_FUTIMENS
 		if (!patime)
-			tv[0].tv_nsec = UTIME_OMIT;
+			ts[0].tv_nsec = UTIME_OMIT;
 		if (!pmtime)
-			tv[1].tv_nsec = UTIME_OMIT;
-	}
-	/*
-	 * set the times
-	 */
-	if (futimens(fd, tv) < 0)
+			ts[1].tv_nsec = UTIME_OMIT;
+#else
+		if (fstat(fd, &sb) == 0) {
+			if (!patime) {
+				tv[0].tv_sec = sb.st_atime;
+#if HAVE_ST_MTIMENSEC
+				tv[0].tv_usec = sb.st_atimensec / 1000L;
+#endif
+			}
+			if (!pmtime) {
+				tv[1].tv_sec = sb.st_mtime;
+#if HAVE_ST_MTIMENSEC
+				tv[1].tv_usec = sb.st_mtimensec / 1000L;
+#endif
+			}
+		} else
+			syswarn(0, errno, "Unable to stat %s", fnm);
+#endif
+
+	/* set the times */
+#if HAVE_FUTIMENS
+	if (futimens(fd, ts) < 0)
+#else
+	if (futimes(fd, tv) < 0)
+#endif
 		syswarn(1, errno, "Access/modification time set failed on: %s",
 		    fnm);
 }
+#endif
 
 /*
  * set_ids()
@@ -939,6 +996,7 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 		/* Whew, it's a match!  Is there anything to change? */
 		if (do_mode && (mode & ABITS) != (sb.st_mode & ABITS))
 			fset_pmode(ft->ft_name, fd, mode);
+#ifdef PAX_FSET_FTIME
 		if (((force_times || patime) && st_timecmp(a, &ft->sb, &sb, !=)) ||
 		    ((force_times || pmtime) && st_timecmp(m, &ft->sb, &sb, !=))) {
 			struct stat ftsb;
@@ -946,6 +1004,7 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 			st_timecpy(a, &ftsb, &ft->sb);
 			fset_ftime(ft->ft_name, fd, &ftsb, force_times);
 		}
+#endif
 		r = 0;
 	}
 	close(fd);
@@ -1148,8 +1207,10 @@ rdfile_close(ARCHD *arcn, int *fd)
 	/*
 	 * user wants last access time reset
 	 */
+#ifdef PAX_FSET_FTIME
 	if (tflag)
 		fset_ftime(arcn->org_name, *fd, &arcn->sb, 1);
+#endif
 
 	(void)close(*fd);
 	*fd = -1;
