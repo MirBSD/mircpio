@@ -194,9 +194,7 @@ typedef struct dirdata {
 static HRDLNK **ltab = NULL;	/* hard link table for detecting hard links */
 static FTM **ftab = NULL;	/* file time table for updating arch */
 static NAMT **ntab = NULL;	/* interactive rename storage table */
-#ifndef NOCPIO
 static DEVT **dtab = NULL;	/* device/inode mapping tables */
-#endif
 static ATDIR **atab = NULL;	/* file tree directory time reset table */
 static DIRDATA *dirp = NULL;	/* storage for setting created dir time/mode */
 static size_t dirsize;		/* size of dirp table */
@@ -1072,7 +1070,6 @@ sub_name(char *oname, int *onamelen, int onamesize)
 	 */
 }
 
-#ifndef NOCPIO
 /*
  * device/inode mapping table routines
  * (used with formats that store device and inodes fields)
@@ -1340,7 +1337,6 @@ map_dev(ARCHD *arcn, u_long dev_mask, u_long ino_mask)
 	paxwarn(0, "Archive may create improper hard links when extracted");
 	return(0);
 }
-#endif /* NOCPIO */
 
 /*
  * directory access/mod time reset table routines (for directories READ by pax)

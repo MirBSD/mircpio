@@ -251,11 +251,13 @@ main(int argc, char **argv)
 	tempbase = tempfile + tdlen;
 	*tempbase++ = '/';
 
+#ifdef HAVE_SETPASSENT
 	/*
 	 * keep passwd and group files open for faster lookups.
 	 */
 	setpassent(1);
 	setgroupent(1);
+#endif
 
 	/*
 	 * parse options, determine operational mode, general init

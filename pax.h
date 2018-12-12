@@ -259,4 +259,4 @@ typedef struct oplist {
 #define _PAX_		1
 #define _TFILE_BASE	"paxXXXXXXXXXX"
 #define MAX_TIME_T	(sizeof(time_t) == sizeof(long long) ? \
-			    LLONG_MAX : INT_MAX)
+			    LLONG_MAX : LONG_MAX)

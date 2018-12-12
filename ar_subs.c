@@ -86,6 +86,9 @@ list(void)
 	    ((*frmt->st_rd)() < 0))
 		return;
 
+	if (vflag && ((uidtb_start() < 0) || (gidtb_start() < 0)))
+		return;
+
 	now = time(NULL);
 
 	/*

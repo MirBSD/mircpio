@@ -96,6 +96,18 @@ int buf_fill(void);
 int buf_flush(int);
 
 /*
+ * cache.c
+ */
+int uidtb_start(void);
+int gidtb_start(void);
+int usrtb_start(void);
+int grptb_start(void);
+char *name_uid(uid_t, int);
+char *name_gid(gid_t, int);
+int uid_name(char *, uid_t *);
+int gid_name(char *, gid_t *);
+
+/*
  * cpio.c
  */
 int cpio_strd(void);
@@ -261,15 +273,9 @@ void sltab_process(int _in_sig);
 int name_start(void);
 int add_name(char *, int, char *);
 void sub_name(char *, int *, int);
-#ifndef NOCPIO
 int dev_start(void);
 int add_dev(ARCHD *);
 int map_dev(ARCHD *, u_long, u_long);
-#else
-# define dev_start()	0
-# define add_dev(x)	0
-# define map_dev(x,y,z)	0
-#endif /* NOCPIO */
 int atdir_start(void);
 void atdir_end(void);
 void add_atdir(char *, dev_t, ino_t, const struct timespec *,
@@ -293,6 +299,8 @@ int tar_id(char *, int);
 int tar_opt(void);
 int tar_rd(ARCHD *, char *);
 int tar_wr(ARCHD *);
+int ustar_strd(void);
+int ustar_stwr(void);
 int ustar_id(char *, int);
 int ustar_rd(ARCHD *, char *);
 int ustar_wr(ARCHD *);

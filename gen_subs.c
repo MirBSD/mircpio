@@ -107,8 +107,8 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	    localtime(&(sbp->st_mtime))) == 0)
 		f_date[0] = '\0';
 	(void)fprintf(fp, "%s%2u %-*.*s %-*.*s ", f_mode, sbp->st_nlink,
-		NAME_WIDTH, UT_NAMESIZE, user_from_uid(sbp->st_uid, 0),
-		NAME_WIDTH, UT_NAMESIZE, group_from_gid(sbp->st_gid, 0));
+		NAME_WIDTH, UT_NAMESIZE, name_uid(sbp->st_uid, 1),
+		NAME_WIDTH, UT_NAMESIZE, name_gid(sbp->st_gid, 1));
 
 	/*
 	 * print device id's for devices, or sizes for other nodes

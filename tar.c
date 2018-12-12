@@ -666,6 +666,36 @@ tar_wr(ARCHD *arcn)
  */
 
 /*
+ * ustar_strd()
+ *	initialization for ustar read
+ * Return:
+ *	0 if ok, -1 otherwise
+ */
+
+int
+ustar_strd(void)
+{
+	if ((usrtb_start() < 0) || (grptb_start() < 0))
+		return(-1);
+	return(0);
+}
+
+/*
+ * ustar_stwr()
+ *	initialization for ustar write
+ * Return:
+ *	0 if ok, -1 otherwise
+ */
+
+int
+ustar_stwr(void)
+{
+	if ((uidtb_start() < 0) || (gidtb_start() < 0))
+		return(-1);
+	return(0);
+}
+
+/*
  * ustar_id()
  *	determine if a block given to us is a valid ustar header. We have to
  *	be on the lookout for those pesky blocks of all zero's
@@ -798,10 +828,10 @@ reset:
 	 * the posix spec wants).
 	 */
 	hd->gname[sizeof(hd->gname) - 1] = '\0';
-	if (Nflag || gid_from_group(hd->gname, &(arcn->sb.st_gid)) < 0)
+	if (Nflag || gid_name(hd->gname, &(arcn->sb.st_gid)) < 0)
 		arcn->sb.st_gid = (gid_t)asc_ul(hd->gid, sizeof(hd->gid), OCT);
 	hd->uname[sizeof(hd->uname) - 1] = '\0';
-	if (Nflag || uid_from_user(hd->uname, &(arcn->sb.st_uid)) < 0)
+	if (Nflag || uid_name(hd->uname, &(arcn->sb.st_uid)) < 0)
 		arcn->sb.st_uid = (uid_t)asc_ul(hd->uid, sizeof(hd->uid), OCT);
 
 	/*
@@ -1036,7 +1066,7 @@ ustar_wr(ARCHD *arcn)
 	 */
 	if (ul_oct(arcn->sb.st_uid, hd->uid, sizeof(hd->uid), 3)) {
 		if (uid_nobody == 0) {
-			if (uid_from_user("nobody", &uid_nobody) == -1)
+			if (uid_name("nobody", &uid_nobody) == -1)
 				goto out;
 		}
 		if (uid_warn != arcn->sb.st_uid) {
@@ -1050,7 +1080,7 @@ ustar_wr(ARCHD *arcn)
 	}
 	if (ul_oct(arcn->sb.st_gid, hd->gid, sizeof(hd->gid), 3)) {
 		if (gid_nobody == 0) {
-			if (gid_from_group("nobody", &gid_nobody) == -1)
+			if (gid_name("nobody", &gid_nobody) == -1)
 				goto out;
 		}
 		if (gid_warn != arcn->sb.st_gid) {
@@ -1067,9 +1097,9 @@ ustar_wr(ARCHD *arcn)
 	    ul_oct(arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3))
 		goto out;
 	if (!Nflag) {
-		if ((name = user_from_uid(arcn->sb.st_uid, 1)) != NULL)
+		if ((name = name_uid(arcn->sb.st_uid, 0)) != NULL)
 			strncpy(hd->uname, name, sizeof(hd->uname));
-		if ((name = group_from_gid(arcn->sb.st_gid, 1)) != NULL)
+		if ((name = name_gid(arcn->sb.st_gid, 0)) != NULL)
 			strncpy(hd->gname, name, sizeof(hd->gname));
 	}
 

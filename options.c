@@ -141,10 +141,8 @@ static void pax_options(int, char **);
 static void pax_usage(void);
 static void tar_options(int, char **);
 static void tar_usage(void);
-#ifndef NOCPIO
 static void cpio_options(int, char **);
 static void cpio_usage(void);
-#endif
 
 static int compress_id(char *_blk, int _size);
 static int gzip_id(char *_blk, int _size);
@@ -165,16 +163,6 @@ static int xz_id(char *_blk, int _size);
  */
 
 FSUB fsub[] = {
-#ifdef NOCPIO
-/* 0: OLD BINARY CPIO */
-	{ },
-/* 1: OLD OCTAL CHARACTER CPIO */
-	{ },
-/* 2: SVR4 HEX CPIO */
-	{ },
-/* 3: SVR4 HEX CPIO WITH CRC */
-	{ },
-#else
 /* 0: OLD BINARY CPIO */
 	{"bcpio", 5120, sizeof(HD_BCPIO), 1, 0, 0, 1, bcpio_id, cpio_strd,
 	bcpio_rd, bcpio_endrd, cpio_stwr, bcpio_wr, cpio_endwr, cpio_trail,
@@ -194,15 +182,14 @@ FSUB fsub[] = {
 	{"sv4crc", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, crc_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	bad_opt},
-#endif
 /* 4: OLD TAR */
 	{"tar", 10240, BLKMULT, 0, 1, BLKMULT, 0, tar_id, no_op,
 	tar_rd, tar_endrd, no_op, tar_wr, tar_endwr, tar_trail,
 	tar_opt},
 
 /* 5: POSIX USTAR */
-	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, no_op,
-	ustar_rd, tar_endrd, no_op, ustar_wr, tar_endwr, tar_trail,
+	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
+	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
 	tar_opt},
 
 #ifdef SMALL
@@ -265,14 +252,11 @@ options(int argc, char **argv)
 		op_mode = OP_TAR;
 		tar_options(argc, argv);
 		return;
-	}
-#ifndef NOCPIO
-	else if (strcmp(NM_CPIO, argv0) == 0) {
+	} else if (strcmp(NM_CPIO, argv0) == 0) {
 		op_mode = OP_CPIO;
 		cpio_options(argc, argv);
 		return;
 	}
-#endif /* !NOCPIO */
 	/*
 	 * assume pax as the default
 	 */
@@ -1140,7 +1124,6 @@ mkpath(path)
 	return (0);
 }
 
-#ifndef NOCPIO
 /*
  * cpio_options()
  *	look at the user specified flags. set globals as required and check if
@@ -1429,7 +1412,6 @@ cpio_options(int argc, char **argv)
 			break;
 	}
 }
-#endif /* !NOCPIO */
 
 /*
  * printflg()
@@ -1702,7 +1684,6 @@ tar_usage(void)
 	exit(1);
 }
 
-#ifndef NOCPIO
 /*
  * cpio_usage()
  *	print the usage summary to the user
@@ -1720,7 +1701,6 @@ cpio_usage(void)
 	    stderr);
 	exit(1);
 }
-#endif /* !NOCPIO */
 
 #ifndef SMALL
 static int

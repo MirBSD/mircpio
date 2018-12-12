@@ -393,11 +393,9 @@ ar_close(int in_sig)
 		(void)dprintf(listfd, "%s: %s vol %d, %lu files,"
 		    " %llu bytes read, %llu bytes written.\n",
 		    argv0, frmt->name, arvol-1, flcnt, rdcnt, wrcnt);
-#ifndef NOCPIO
 	else if (op_mode == OP_CPIO)
 		(void)dprintf(listfd, "%llu blocks\n",
 		    (rdcnt ? rdcnt : wrcnt) / 5120);
-#endif /* !NOCPIO */
 	flcnt = 0;
 }
 
