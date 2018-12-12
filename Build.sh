@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.3 2018/12/12 04:04:47 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.4 2018/12/12 04:16:12 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -424,7 +424,7 @@ fi
 rmf a.exe* a.out* conftest.c conftest.exe* *core core.* ${tfn}* *.bc *.dbg \
     *.ll *.o *.cat1 Rebuild.sh lft no x vv.out
 
-SRCS="ar_io.c ar_subs.c buf_subs.c cache.c compat.c cpio.c"
+SRCS="ar.c ar_io.c ar_subs.c buf_subs.c cache.c compat.c cpio.c"
 SRCS="$SRCS file_subs.c ftree.c gen_subs.c getoldopt.c options.c"
 SRCS="$SRCS pat_rep.c pax.c sel_subs.c tables.c tar.c tty_subs.c"
 
@@ -1722,7 +1722,7 @@ echo "for x in $cpioexe $tarexe; do" >>Rebuild.sh
 echo "  ln \$tcfn \$x || cp \$tcfn \$x || exit 1" >>Rebuild.sh
 echo "done" >>Rebuild.sh
 if test $cm = makefile; then
-	extras='cpio.h extern.h pax.h tar.h'
+	extras='compat.h cpio.h extern.h pax.h tar.h'
 	cat >Makefrag.inc <<EOF
 # Makefile fragment for building paxmirabilis
 
