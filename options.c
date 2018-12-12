@@ -41,7 +41,9 @@
 #include <sys/mtio.h>
 #endif
 #include <sys/stat.h>
+#include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #if HAVE_PATHS_H
 #include <paths.h>

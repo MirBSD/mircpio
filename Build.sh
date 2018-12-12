@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.18 2018/12/12 15:48:36 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.19 2018/12/12 15:52:22 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1542,7 +1542,7 @@ EOF
 
 ac_test lchmod '!' fchmodat 0 <<-'EOF'
 	#include <sys/types.h>
-	#include <unistd.h>
+	#include <sys/stat.h>
 	int main(void) { return (lchmod(".", 0)); }
 EOF
 
