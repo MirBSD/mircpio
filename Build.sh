@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.20 2018/12/12 16:24:26 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.21 2018/12/12 17:04:04 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -354,6 +354,7 @@ pm=0
 cm=normal
 optflags=-std-compile-opts
 last=
+mans=0
 
 for i
 do
@@ -396,6 +397,12 @@ do
 	:-r)
 		r=1
 		;;
+	:-tmir)
+		mans=1
+		;;
+	:-tpax)
+		mans=2
+		;;
 	:-v)
 		echo "Build.sh $srcversion"
 		echo "for paxmirabilis"
@@ -416,7 +423,24 @@ if test -n "$last"; then
 	exit 1
 fi
 
-tfn=mirpax
+tfn=paxpax
+case $mans in
+0)
+	paxname=pax
+	cpioname=cpio
+	tarname=tar
+	;;
+1)
+	paxname=mirpax
+	cpioname=mircpio
+	tarname=mirtar
+	;;
+2)
+	paxname=pax
+	cpioname=paxcpio
+	tarname=paxtar
+	;;
+esac
 if test -d $tfn || test -d $tfn.exe; then
 	echo "$me: Error: ./$tfn is a directory!" >&2
 	exit 1
@@ -1776,15 +1800,17 @@ objs=
 sp=
 case $tcfn in
 a.exe|conftest.exe)
-	paxexe=$tfn.exe
-	cpioexe=mircpio.exe
-	tarexe=mirtar.exe
+	buildoutput=$tfn.exe
+	paxexe=$paxname.exe
+	cpioexe=$cpioname.exe
+	tarexe=$tarname.exe
 	add_cppflags -DMKSH_EXE_EXT
 	;;
 *)
-	paxexe=$tfn
-	cpioexe=mircpio
-	tarexe=mirtar
+	buildoutput=$tfn
+	paxexe=$paxname
+	cpioexe=$cpioname
+	tarexe=$tarname
 	;;
 esac
 case $cm in
@@ -1824,11 +1850,11 @@ dragonegg|llvm)
 	lobjs=$objs
 	;;
 esac
-echo tcfn=$paxexe >>Rebuild.sh
+echo tcfn=$buildoutput >>Rebuild.sh
 echo "$CC $CFLAGS $LDFLAGS -o \$tcfn $lobjs $LIBS $ccpr" >>Rebuild.sh
 echo "test -f \$tcfn || exit 1; $SIZE \$tcfn" >>Rebuild.sh
-echo "rm -f $cpioexe $tarexe" >>Rebuild.sh
-echo "for x in $cpioexe $tarexe; do" >>Rebuild.sh
+echo "rm -f $paxexe $cpioexe $tarexe" >>Rebuild.sh
+echo "for x in $paxexe $cpioexe $tarexe; do" >>Rebuild.sh
 echo "  ln \$tcfn \$x || cp \$tcfn \$x || exit 1" >>Rebuild.sh
 echo "done" >>Rebuild.sh
 if test $cm = makefile; then
@@ -1836,7 +1862,8 @@ if test $cm = makefile; then
 	cat >Makefrag.inc <<EOF
 # Makefile fragment for building paxmirabilis
 
-PROG=		$paxexe
+PROG=		$buildoutput
+# install as $paxexe and $cpioexe and $tarexe though
 MAN=		cpio.1 pax.1 tar.1
 SRCS=		$SRCS
 SRCS_FP=	$files
@@ -1868,7 +1895,7 @@ EOF
 	exit 0
 fi
 if test $cm = combine; then
-	objs="-o $paxexe"
+	objs="-o $buildoutput"
 	for file in $SRCS; do
 		test -f $file || file=$srcdir/$file
 		objs="$objs $file"
@@ -1899,38 +1926,41 @@ dragonegg|llvm)
 	v "llvm-link -o - $objs | opt $optflags | llc -o $tfn.s"
 	;;
 esac
-tcfn=$paxexe
+tcfn=$buildoutput
 test $cm = combine || v "$CC $CFLAGS $LDFLAGS -o $tcfn $lobjs $LIBS $ccpr"
 test -f $tcfn || exit 1
-rm -f $cpioexe $tarexe
-for x in $cpioexe $tarexe; do
+rm -f $paxexe $cpioexe $tarexe
+for x in $paxexe $cpioexe $tarexe; do
 	ln $tcfn $x || cp $tcfn $x || exit 1
 done
-test 1 = $r || v "$NROFF -mdoc <'$srcdir/cpio.1' >cpio.cat1" || rmf cpio.cat1
-test 1 = $r || v "$NROFF -mdoc <'$srcdir/pax.1' >pax.cat1" || rmf pax.cat1
-test 1 = $r || v "$NROFF -mdoc <'$srcdir/tar.1' >tar.cat1" || rmf tar.cat1
+echo .nr g $mans | cat - "$srcdir/cpio.1" >$cpioname.1
+echo .nr g $mans | cat - "$srcdir/pax.1" >$paxname.1
+echo .nr g $mans | cat - "$srcdir/tar.1" >$tarname.1
+test 1 = $r || v "$NROFF -mdoc <$cpioname.1 >$cpioname.cat1" || rmf $cpioname.cat1
+test 1 = $r || v "$NROFF -mdoc <$paxname.1 >$paxname.cat1" || rmf $paxname.cat1
+test 1 = $r || v "$NROFF -mdoc <$tarname.1 >$tarname.cat1" || rmf $tarname.cat1
 test 0 = $eq && v $SIZE $tcfn
 i=install
 test -f /usr/ucb/$i && i=/usr/ucb/$i
 test 1 = $eq && e=:
 $e
 $e Installing the executable:
-$e "# $i -c -s -o root -g bin -m 555 $tfn /bin/$tfn"
+$e "# $i -c -s -o root -g bin -m 555 $tfn /bin/$paxexe"
 for x in $cpioexe $tarexe; do
-	$e "# ln /bin/$tfn /bin/$x || cp /bin/$tfn /bin/$x"
+	$e "# ln /bin/$paxexe /bin/$x || cp /bin/$paxexe /bin/$x"
 done
 $e
 $e Installing the manual:
-if test -f mksh.cat1; then
-	$e "# $i -c -o root -g bin -m 444 cpio.cat1" \
-	    "/usr/share/man/cat1/cpio.0"
-	$e "# $i -c -o root -g bin -m 444 pax.cat1" \
-	    "/usr/share/man/cat1/pax.0"
-	$e "# $i -c -o root -g bin -m 444 tar.cat1" \
-	    "/usr/share/man/cat1/tar.0"
+if test -f $paxname.cat1; then
+	$e "# $i -c -o root -g bin -m 444 $cpioname.cat1" \
+	    "/usr/share/man/cat1/$cpioname.0"
+	$e "# $i -c -o root -g bin -m 444 $paxname.cat1" \
+	    "/usr/share/man/cat1/$paxname.0"
+	$e "# $i -c -o root -g bin -m 444 $tarname.cat1" \
+	    "/usr/share/man/cat1/$tarname.0"
 	$e or
 fi
-$e "# $i -c -o root -g bin -m 444 cpio.1 pax.1 tar.1 /usr/share/man/man1/"
+$e "# $i -c -o root -g bin -m 444 $cpioname.1 $paxname.1 $tarname.1 /usr/share/man/man1/"
 $e
 $e Please also read the fine manual.
 exit 0
@@ -1973,5 +2003,7 @@ $ sh Build.sh -r 2>&1 | tee log
 Install as /bin/pax and hardlink to /bin/cpio and /bin/tar or install as
 $prefix/bin/mirpax and hardlink to $prefix/bin/mir{cpio,tar}; install the
 manpages, if omitting the -r flag a catmanpages are made using $NROFF.
+
+Add -tmir to install as mir{pax,cpio,tar} or -tpax for pax{,cpio,tar}.
 
 EOD
