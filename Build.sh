@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.21 2018/12/12 17:04:04 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.22 2018/12/12 17:08:35 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -446,7 +446,8 @@ if test -d $tfn || test -d $tfn.exe; then
 	exit 1
 fi
 rmf a.exe* a.out* conftest.c conftest.exe* *core core.* ${tfn}* *.bc *.dbg \
-    *.ll *.o *.cat1 Rebuild.sh lft no x vv.out
+    *.ll *.o Rebuild.sh lft no x vv.out
+rm -rf mans
 
 SRCS="ar.c ar_io.c ar_subs.c buf_subs.c compat.c cpio.c"
 SRCS="$SRCS file_subs.c ftree.c gen_subs.c getoldopt.c options.c"
@@ -1933,12 +1934,14 @@ rm -f $paxexe $cpioexe $tarexe
 for x in $paxexe $cpioexe $tarexe; do
 	ln $tcfn $x || cp $tcfn $x || exit 1
 done
-echo .nr g $mans | cat - "$srcdir/cpio.1" >$cpioname.1
-echo .nr g $mans | cat - "$srcdir/pax.1" >$paxname.1
-echo .nr g $mans | cat - "$srcdir/tar.1" >$tarname.1
-test 1 = $r || v "$NROFF -mdoc <$cpioname.1 >$cpioname.cat1" || rmf $cpioname.cat1
-test 1 = $r || v "$NROFF -mdoc <$paxname.1 >$paxname.cat1" || rmf $paxname.cat1
-test 1 = $r || v "$NROFF -mdoc <$tarname.1 >$tarname.cat1" || rmf $tarname.cat1
+rm -rf mans
+mkdir mans
+echo .nr g $mans | cat - "$srcdir/cpio.1" >mans/$cpioname.1
+echo .nr g $mans | cat - "$srcdir/pax.1" >mans/$paxname.1
+echo .nr g $mans | cat - "$srcdir/tar.1" >mans/$tarname.1
+test 1 = $r || v "$NROFF -mdoc <mans/$cpioname.1 >mans/$cpioname.cat1" || rmf mans/$cpioname.cat1
+test 1 = $r || v "$NROFF -mdoc <mans/$paxname.1 >mans/$paxname.cat1" || rmf mans/$paxname.cat1
+test 1 = $r || v "$NROFF -mdoc <mans/$tarname.1 >mans/$tarname.cat1" || rmf mans/$tarname.cat1
 test 0 = $eq && v $SIZE $tcfn
 i=install
 test -f /usr/ucb/$i && i=/usr/ucb/$i
@@ -1951,16 +1954,16 @@ for x in $cpioexe $tarexe; do
 done
 $e
 $e Installing the manual:
-if test -f $paxname.cat1; then
-	$e "# $i -c -o root -g bin -m 444 $cpioname.cat1" \
+if test -f mans/$paxname.cat1; then
+	$e "# $i -c -o root -g bin -m 444 mans/$cpioname.cat1" \
 	    "/usr/share/man/cat1/$cpioname.0"
-	$e "# $i -c -o root -g bin -m 444 $paxname.cat1" \
+	$e "# $i -c -o root -g bin -m 444 mans/$paxname.cat1" \
 	    "/usr/share/man/cat1/$paxname.0"
-	$e "# $i -c -o root -g bin -m 444 $tarname.cat1" \
+	$e "# $i -c -o root -g bin -m 444 mans/$tarname.cat1" \
 	    "/usr/share/man/cat1/$tarname.0"
 	$e or
 fi
-$e "# $i -c -o root -g bin -m 444 $cpioname.1 $paxname.1 $tarname.1 /usr/share/man/man1/"
+$e "# $i -c -o root -g bin -m 444 mans/$cpioname.1 mans/$paxname.1 mans/$tarname.1 /usr/share/man/man1/"
 $e
 $e Please also read the fine manual.
 exit 0
