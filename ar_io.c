@@ -58,6 +58,10 @@
 #include "pax.h"
 #include "extern.h"
 
+#ifndef PAX_SAFE_PATH
+#define PAX_SAFE_PATH "/bin:/usr/bin"
+#endif
+
 /*
  * Routines which deal directly with the archive I/O device/file.
  */

@@ -140,21 +140,6 @@
 #define	BDLIST	(AF|BF|IF|KF|LF|OF|PF|RF|TF|UF|WF|XF|CBF|CDF|CHF|CLF|CPF|CXF|CYF|CZF)
 
 /*
- * Archive manipulation code
- */
-
-#define	ANON_INODES	0x0001
-#define	ANON_HARDLINKS	0x0002
-#define	ANON_MTIME	0x0004
-#define	ANON_UIDGID	0x0008
-#define	ANON_VERBOSE	0x0010
-#define	ANON_DEBUG	0x0020
-#define	ANON_LNCP	0x0040
-#define	ANON_NUMID	0x0080
-#define	ANON_DIRSLASH	0x0100
-#define	ANON_MAXVAL	0x01FF
-
-/*
  * Routines which handle command line options
  */
 
@@ -202,35 +187,9 @@ static const char LZOP_CMD[] = "lzop";
 /* used as flag value */
 #define COMPRESS_GUESS_CMD ((const void *)&compress_program)
 
-/* format table, see FSUB fsub[] below */
-
-enum fsub_order {
-#ifndef SMALL
-	FSUB_AR,
-	FSUB_BCPIO,
-#endif
-	FSUB_CPIO,
-	FSUB_DIST,
-	FSUB_SV4CPIO,
-	FSUB_SV4CRC,
-#ifndef SMALL
-	FSUB_TAR,
-#endif
-	FSUB_USTAR,
-	FSUB_V4NORM,
-	FSUB_V4ROOT,
-#ifndef SMALL
-	FSUBFAIL_Z,
-	FSUBFAIL_XZ
-	FSUBFAIL_BZ2
-	FSUBFAIL_GZ
-#endif
-	FSUB_MAX
-};
-
 /*
  *	Format specific routine table, MUST be in sorted order
- *	and MUST match enum fsub_order above
+ *	and MUST match enum fsub_order in pax.h
  *	(see pax.h for description of each function)
  *
  *	name, blksz, hdsz, udev, hlk, blkagn, inhead, id, st_read,

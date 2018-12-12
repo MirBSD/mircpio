@@ -42,6 +42,14 @@
  */
 
 #include <sys/stat.h>
+#if HAVE_BOTH_TIME_H
+#include <sys/time.h>
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif HAVE_TIME_H
+#include <time.h>
+#endif
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -58,6 +66,7 @@
 #endif
 
 #include "pax.h"
+#include "ftimes.h"
 #include "extern.h"
 
 /*

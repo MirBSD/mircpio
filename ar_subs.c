@@ -57,6 +57,7 @@
 #include <unistd.h>
 
 #include "pax.h"
+#include "ftimes.h"
 #include "extern.h"
 
 static void wr_archive(ARCHD *, int is_app);

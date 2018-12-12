@@ -102,7 +102,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.6 2018/12/12 09:08:56 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.7 2018/12/12 10:41:25 tg Exp $");
 #endif
 
 /* arithmetic types: C implementation */
@@ -155,10 +155,10 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 	((sbpa)->st_ ## x ## time op (sbpb)->st_ ## x ## time)
 #define st_timecpy(x,sbpd,sbps) do {					\
 	(sbpd)->st_ ## x ## time = (sbps)->st_ ## x ## time;		\
+} while (/* CONSTCOND */ 0)
 #define st_timexp(x,ts,sbp) do {					\
 	(ts)->tv_sec = (sbp)->st_ ## x ## time;				\
 	(ts)->tv_nsec = 0;						\
-} while (/* CONSTCOND */ 0)
 } while (/* CONSTCOND */ 0)
 #endif
 

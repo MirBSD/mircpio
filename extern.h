@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.9 2018/12/12 10:24:14 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.1.1.10.2.10 2018/12/12 10:41:25 tg Exp $");
 #endif
 
 /*
@@ -170,8 +170,9 @@ int set_ids(char *, uid_t, gid_t, int);
 int fset_ids(char *, int, uid_t, gid_t);
 void set_pmode(char *, mode_t, int);
 void fset_pmode(char *, int, mode_t);
-int set_attr(const struct file_times *, int _force_times, mode_t, int _do_mode,
-    int _in_sig);
+struct file_times; /* avoid pulling time.h globally */
+int set_attr(const struct file_times *, int _force_times, mode_t,
+    int _do_mode, int _in_sig);
 int file_write(int, char *, int, int *, int *, int, char *);
 void file_flush(int, char *, int);
 void rdfile_close(ARCHD *, int *);

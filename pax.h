@@ -39,7 +39,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.8 2018/12/12 08:48:15 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.1.1.8.2.9 2018/12/12 10:41:27 tg Exp $");
 #endif
 
 /*
@@ -217,33 +217,13 @@ typedef struct {
 				/* CAUTION: parameters to this function are */
 				/* different for trailers inside or outside */
 				/* of headers. See get_head() for details */
+	int (*rd_data)(ARCHD *,	/* read/process file data from the archive */
+	    int, off_t *);
+	int (*wr_data)(ARCHD *,	/* write/process file data to the archive */
+	    int, off_t *);
 	int (*options)(void);	/* process format specific options (-o) */
+	char is_uar;		/* is Unix Archiver (sequential, no trailer) */
 } FSUB;
-
-/*
- * Time data for a given file.  This is usually embedded in a structure
- * indexed by dev+ino, by name, by order in the archive, etc.  set_attr()
- * takes one of these and will only change the times or mode if the file
- * at the given name has the indicated dev+ino.
- */
-struct file_times {
-	struct {
-#if HAVE_ST_MTIM
-		struct timespec st_atim;
-		struct timespec st_mtim;
-#else
-		time_t st_atime;
-		time_t st_mtime;
-#if HAVE_ST_MTIMENSEC
-		long st_atimensec;
-		long st_mtimensec;
-#endif
-#endif
-	} sb;				/* times to set */
-	char	*ft_name;		/* name of file to set the times on */
-	ino_t	ft_ino;			/* inode number to verify */
-	dev_t	ft_dev;			/* device number to verify */
-};
 
 /*
  * Format Specific Options List
@@ -255,6 +235,47 @@ typedef struct oplist {
 	char		*value;		/* value for option variable */
 	struct oplist	*fow;		/* next option */
 } OPLIST;
+
+/*
+ * Archive manipulation code
+ */
+
+#define	ANON_INODES	0x0001
+#define	ANON_HARDLINKS	0x0002
+#define	ANON_MTIME	0x0004
+#define	ANON_UIDGID	0x0008
+#define	ANON_VERBOSE	0x0010
+#define	ANON_DEBUG	0x0020
+#define	ANON_LNCP	0x0040
+#define	ANON_NUMID	0x0080
+#define	ANON_DIRSLASH	0x0100
+#define	ANON_MAXVAL	0x01FF
+
+/* format table, see FSUB fsub[] in options.c */
+
+enum fsub_order {
+#ifndef SMALL
+	FSUB_AR,
+	FSUB_BCPIO,
+#endif
+	FSUB_CPIO,
+	FSUB_DIST,
+	FSUB_SV4CPIO,
+	FSUB_SV4CRC,
+#ifndef SMALL
+	FSUB_TAR,
+#endif
+	FSUB_USTAR,
+	FSUB_V4NORM,
+	FSUB_V4ROOT,
+#ifndef SMALL
+	FSUBFAIL_Z,
+	FSUBFAIL_XZ,
+	FSUBFAIL_BZ2,
+	FSUBFAIL_GZ,
+#endif
+	FSUB_MAX
+};
 
 /*
  * General Macros
