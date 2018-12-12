@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.2 2018/12/12 04:01:19 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.1.2.3 2018/12/12 04:04:47 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -1461,8 +1461,8 @@ else
 		#define EXTERN
 		#include "pax.h"
 		#include "cpio.h"
-		#include "extern.h"
 		#include "tar.h"
+		#include "extern.h"
 		__RCSID("$srcversion");
 		int main(void) { printf("Hello, World!\\n"); return (isatty(0)); }
 EOF

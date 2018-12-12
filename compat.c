@@ -20,9 +20,9 @@
 
 #include <unistd.h>
 
-#include "pax.h"
+#include "compat.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.1 2018/12/12 03:13:30 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.1.2.2 2018/12/12 04:04:48 tg Exp $");
 
 #if !HAVE_DPRINTF
 /* replacement only as powerful as needed for this */
