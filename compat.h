@@ -102,7 +102,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.2 2018/12/12 06:25:15 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.1.2.3 2018/12/12 06:47:37 tg Exp $");
 #endif
 
 /* arithmetic types: C implementation */
@@ -127,35 +127,17 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #endif
 
 #if HAVE_ST_MTIM
-#define st_atim_cmp(sbpa,sbpb,op) \
-		timespeccmp(&(sbpa)->st_atim, &(sbpb)->st_atim, op)
-#define st_ctim_cmp(sbpa,sbpb,op) \
-		timespeccmp(&(sbpa)->st_ctim, &(sbpb)->st_ctim, op)
-#define st_mtim_cmp(sbpa,sbpb,op) \
-		timespeccmp(&(sbpa)->st_mtim, &(sbpb)->st_mtim, op)
+#define st_timecmp(x,sbpa,sbpb,op) \
+	timespeccmp(&(sbpa)->st_ ## x ## tim, &(sbpb)->st_ ## x ## tim, op)
 #elif HAVE_ST_MTIMENSEC
-#define st_atim_cmp(sbpa,sbpb,op) ( \
-		((sbpa)->st_atime == (sbpb)->st_atime) ? \
-		    ((sbpa)->st_atimensec op (sbpb)->st_atimensec) : \
-		    ((sbpa)->st_atime op (sbpb)->st_atime) \
-		)
-#define st_ctim_cmp(sbpa,sbpb,op) ( \
-		((sbpa)->st_ctime == (sbpb)->st_ctime) ? \
-		    ((sbpa)->st_ctimensec op (sbpb)->st_ctimensec) : \
-		    ((sbpa)->st_ctime op (sbpb)->st_ctime) \
-		)
-#define st_mtim_cmp(sbpa,sbpb,op) ( \
-		((sbpa)->st_mtime == (sbpb)->st_mtime) ? \
-		    ((sbpa)->st_mtimensec op (sbpb)->st_mtimensec) : \
-		    ((sbpa)->st_mtime op (sbpb)->st_mtime) \
-		)
+#define st_timecmp(x,sbpa,sbpb,op) ( \
+	((sbpa)->st_ ## x ## time == (sbpb)->st_ ## x ## time) ? \
+	    ((sbpa)->st_ ## x ## timensec op (sbpb)->st_ ## x ## timensec) : \
+	    ((sbpa)->st_ ## x ## time op (sbpb)->st_ ## x ## time) \
+	)
 #else
-#define st_atim_cmp(sbpa,sbpb,op) \
-		((sbpa)->st_atime op (sbpb)->st_atime)
-#define st_ctim_cmp(sbpa,sbpb,op) \
-		((sbpa)->st_ctime op (sbpb)->st_ctime)
-#define st_mtim_cmp(sbpa,sbpb,op) \
-		((sbpa)->st_mtime op (sbpb)->st_mtime)
+#define st_timecmp(x,sbpa,sbpb,op) \
+	((sbpa)->st_ ## x ## time op (sbpb)->st_ ## x ## time)
 #endif
 
 /* compat.c */

@@ -559,7 +559,7 @@ chk_ftime(ARCHD *arcn)
 			/*
 			 * found the file, compare the times, save the newer
 			 */
-			if (st_mtim_cmp(&arcn->sb, &pt->sb, >)) {
+			if (st_timecmp(m, &arcn->sb, &pt->sb, >)) {
 				/*
 				 * file is newer
 				 */

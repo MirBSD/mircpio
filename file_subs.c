@@ -848,9 +848,9 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 		if (do_mode && (mode & ABITS) != (sb.st_mode & ABITS))
 			fset_pmode(ft->ft_name, fd, mode);
 		if (((force_times || patime) &&
-		    st_atim_cmp(&ft->sb, &sb, !=)) ||
+		    st_timecmp(a, &ft->sb, &sb, !=)) ||
 		    ((force_times || pmtime) &&
-		    st_mtim_cmp(&ft->sb, &sb, !=)))
+		    st_timecmp(m, &ft->sb, &sb, !=)))
 			fset_ftime(ft->ft_name, fd, &ft->sb.st_mtim,
 			    &ft->sb.st_atim, force_times);
 		r = 0;
@@ -1114,7 +1114,7 @@ set_crc(ARCHD *arcn, int fd)
 		paxwarn(1, "File changed size %s", arcn->org_name);
 	else if (fstat(fd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
-	else if (st_mtim_cmp(&arcn->sb, &sb, !=))
+	else if (st_timecmp(m, &arcn->sb, &sb, !=))
 		paxwarn(1, "File %s was modified during read", arcn->org_name);
 	else if (lseek(fd, 0, SEEK_SET) < 0)
 		syswarn(1, errno, "File rewind failed on: %s", arcn->org_name);
