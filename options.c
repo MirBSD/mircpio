@@ -124,7 +124,6 @@
 #define	BDCOPY	(AF|BF|FF|OF|XF|CBF|CEF)
 #define	BDLIST (AF|BF|IF|KF|LF|OF|PF|RF|TF|UF|WF|XF|CBF|CDF|CHF|CLF|CPF|CXF|CYF|CZF)
 
-
 /*
  * Routines which handle command line options
  */
@@ -685,7 +684,6 @@ pax_options(int argc, char **argv)
 		break;
 	}
 }
-
 
 /*
  * tar_options()

@@ -81,7 +81,6 @@ typedef struct gidc {
 	gid_t gid;		/* cached gid */
 } GIDC;
 
-
 /*
  * routines that control user, group, uid and gid caches (for the archive
  * member print routine).

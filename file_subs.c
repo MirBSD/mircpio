@@ -719,7 +719,6 @@ fset_ftime(const char *fnm, int fd, const struct timespec *mtimp,
 {
 	struct timespec tv[2];
 
-
 	tv[0] = *atimp;
 	tv[1] = *mtimp;
 
@@ -857,7 +856,6 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 
 	return (r);
 }
-
 
 /*
  * file_write()

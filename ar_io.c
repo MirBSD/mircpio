@@ -344,7 +344,6 @@ ar_close(int in_sig)
 			exit_val = 1;
 	}
 
-
 	if (vflag && (artyp == ISTAPE)) {
 		(void)write(listfd, "done.\n", sizeof("done.\n")-1);
 		vfpart = 0;

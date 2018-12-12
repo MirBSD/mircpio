@@ -58,7 +58,6 @@ typedef struct ftree {
 	struct ftree	*fow;		/* pointer to next entry on list */
 } FTREE;
 
-
 /*
  * routines to interface with the fts library function.
  *

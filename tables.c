@@ -796,7 +796,6 @@ sltab_add_link(const char *path, const struct stat *sb)
 	return (1);
 }
 
-
 static int
 sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
     int in_sig)
@@ -923,7 +922,6 @@ sltab_process(int in_sig)
 		free(slitab);
 	slitab = NULL;
 }
-
 
 /*
  * Interactive rename table routines
@@ -1373,7 +1371,6 @@ atdir_start(void)
 	}
 	return(0);
 }
-
 
 /*
  * atdir_end()

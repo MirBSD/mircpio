@@ -369,7 +369,6 @@ tar_opt(void)
 	return(0);
 }
 
-
 /*
  * tar_rd()
  *	extract the values out of block already determined to be a tar header.
