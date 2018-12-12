@@ -1,4 +1,4 @@
-/*	$OpenBSD: tables.c,v 1.26 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: tables.c,v 1.53 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
@@ -53,7 +53,7 @@
 #include "tables.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.25 2018/12/12 00:09:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.26 2018/12/12 00:23:07 tg Exp $");
 __IDSTRING(rcsid_tables_h, MIRCPIO_TABLES_H);
 
 /*
@@ -929,7 +929,7 @@ add_name(char *oname, int onamelen, char *nname)
  */
 
 void
-sub_name(char *oname, int *onamelen, size_t onamesize)
+sub_name(char *oname, int *onamelen, int onamesize)
 {
 	NAMT *pt;
 	u_int indx;
@@ -953,7 +953,7 @@ sub_name(char *oname, int *onamelen, size_t onamesize)
 			 * and return (we know that oname has enough space)
 			 */
 			*onamelen = strlcpy(oname, pt->nname, onamesize);
-			if ((size_t)*onamelen >= onamesize)
+			if (*onamelen >= onamesize)
 				*onamelen = onamesize - 1; /* XXX truncate? */
 			return;
 		}

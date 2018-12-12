@@ -1,4 +1,4 @@
-/*	$OpenBSD: options.c,v 1.75 +1.88 +1.89 +1.91 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: options.c,v 1.101 2016/12/26 23:43:52 krw Exp $	*/
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
@@ -60,7 +60,7 @@
 #include <sys/mtio.h>
 #endif
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.63 2017/10/14 21:26:53 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.64 2018/12/12 00:23:06 tg Exp $");
 __IDSTRING(rcsid_ar_h, MIRCPIO_AR_H);
 __IDSTRING(rcsid_cpio_h, MIRCPIO_CPIO_H);
 __IDSTRING(rcsid_extern_h, MIRCPIO_EXTERN_H);

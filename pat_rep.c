@@ -1,4 +1,4 @@
-/*	$OpenBSD: pat_rep.c,v 1.31 +1.40 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: pat_rep.c,v 1.43 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: pat_rep.c,v 1.4 1995/03/21 09:07:33 cgd Exp $	*/
 
 /*-
@@ -48,7 +48,7 @@
 #include "pat_rep.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.14 2018/05/09 14:19:56 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.15 2018/12/12 00:23:06 tg Exp $");
 __IDSTRING(rcsid_pat_rep_h, MIRCPIO_PAT_REP_H);
 
 /*
@@ -548,7 +548,9 @@ fn_match(char *pattern, char *string, char **pend)
 				return (-1);
 			break;
 		case '\\':
-			c = *pattern++;
+			if ((c = *pattern++) == '\0')
+				return (-1);
+			/* FALLTHROUGH */
 		default:
 			if (c != *string++)
 				return (-1);

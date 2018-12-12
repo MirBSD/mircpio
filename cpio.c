@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpio.c,v 1.19 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: cpio.c,v 1.33 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
@@ -49,7 +49,7 @@
 #include "extern.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.22 2016/03/12 13:20:47 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.23 2018/12/12 00:23:05 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -218,11 +218,11 @@ rd_ln_nm(ARCHD *arcn)
 	/*
 	 * check the length specified for bogus values
 	 */
-	if ((arcn->sb.st_size == 0) ||
-	    ((size_t)arcn->sb.st_size >= sizeof(arcn->ln_name))) {
+	if ((arcn->sb.st_size <= 0) ||
+	    (arcn->sb.st_size >= (off_t)sizeof(arcn->ln_name))) {
 		paxwarn(1, "cpio link name length is invalid: %" OT_FMT,
 		    (ot_type)arcn->sb.st_size);
-		return (-1);
+		return(-1);
 	}
 
 	/*
@@ -261,7 +261,7 @@ rd_ln_nm(ARCHD *arcn)
 int
 cpio_id(char *blk, int size)
 {
-	if (((size_t)size < sizeof(HD_CPIO)) ||
+	if ((size < (int)sizeof(HD_CPIO)) ||
 	    (strncmp(blk, AMAGIC, sizeof(AMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -542,7 +542,7 @@ cpio_wr(ARCHD *arcn)
 int
 vcpio_id(char *blk, int size)
 {
-	if (((size_t)size < sizeof(HD_VCPIO)) ||
+	if ((size < (int)sizeof(HD_VCPIO)) ||
 	    (strncmp(blk, AVMAGIC, sizeof(AVMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -559,7 +559,7 @@ vcpio_id(char *blk, int size)
 int
 crc_id(char *blk, int size)
 {
-	if (((size_t)size < sizeof(HD_VCPIO)) ||
+	if ((size < (int)sizeof(HD_VCPIO)) ||
 	    (strncmp(blk, AVCMAGIC, sizeof(AVCMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -920,7 +920,7 @@ vcpio_wr(ARCHD *arcn)
 int
 bcpio_id(char *blk, int size)
 {
-	if ((size_t)size < sizeof(HD_BCPIO))
+	if (size < (int)sizeof(HD_BCPIO))
 		return(-1);
 
 	/*

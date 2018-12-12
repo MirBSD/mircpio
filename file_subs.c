@@ -1,4 +1,4 @@
-/*	$OpenBSD: file_subs.c,v 1.32 +1.46 +1.48 +1.50 2009/12/22 12:08:30 jasper Exp $	*/
+/*	$OpenBSD: file_subs.c,v 1.53 2017/01/21 08:17:06 krw Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -59,7 +59,7 @@
 #include "options.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.26 2018/12/12 00:09:27 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.27 2018/12/12 00:23:05 tg Exp $");
 
 #ifndef __GLIBC_PREREQ
 #define __GLIBC_PREREQ(maj,min)	0

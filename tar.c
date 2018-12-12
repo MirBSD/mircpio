@@ -1,4 +1,4 @@
-/*	$OpenBSD: tar.c,v 1.43 +1.57 +1.59 2010/12/02 04:08:27 tedu Exp $	*/
+/*	$OpenBSD: tar.c,v 1.66 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
@@ -49,7 +49,7 @@
 #include "tar.h"
 #include "options.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.19 2017/10/21 19:05:43 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.20 2018/12/12 00:23:08 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar

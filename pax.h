@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.h,v 1.17 +1.28 2005/11/09 19:59:06 otto Exp $	*/
+/*	$OpenBSD: pax.h,v 1.29 2017/09/12 17:11:11 otto Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
@@ -39,7 +39,7 @@
  */
 
 #ifndef MIRCPIO_PAX_H
-#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.19 2017/10/14 22:03:32 tg Exp $"
+#define MIRCPIO_PAX_H "$MirOS: src/bin/pax/pax.h,v 1.20 2018/12/12 00:23:07 tg Exp $"
 
 /*
  * BSD PAX global data structures and constants.
@@ -313,6 +313,8 @@ typedef struct oplist {
 #define OCT		8
 #define _PAX_		1
 #define _TFILE_BASE	"paxXXXXXXXXXX"
+#define MAX_TIME_T	(sizeof(time_t) == sizeof(long long) ? \
+			    LLONG_MAX : INT_MAX)
 
 #ifndef LONG_OFF_T
 #define OT_FMT		"llu"

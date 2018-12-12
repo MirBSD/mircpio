@@ -1,4 +1,4 @@
-/*	$OpenBSD: ftree.c,v 1.29 2009/10/27 23:59:22 deraadt Exp $	*/
+/*	$OpenBSD: ftree.c,v 1.41 2017/09/16 07:42:34 otto Exp $	*/
 /*	$NetBSD: ftree.c,v 1.4 1995/03/21 09:07:21 cgd Exp $	*/
 
 /*-
@@ -48,7 +48,7 @@
 #include "ftree.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.9 2017/08/07 20:10:14 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.10 2018/12/12 00:23:06 tg Exp $");
 __IDSTRING(rcsid_ftree_h, MIRCPIO_FTREE_H);
 
 /*

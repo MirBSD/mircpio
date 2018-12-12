@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.c,v 1.33 2012/04/19 04:26:46 deraadt Exp $	*/
+/*	$OpenBSD: pax.c,v 1.51 2017/12/08 17:04:14 deraadt Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
@@ -53,7 +53,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.26 2018/12/12 00:09:28 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.27 2018/12/12 00:23:07 tg Exp $");
 
 static int gen_init(void);
 

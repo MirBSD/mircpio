@@ -1,5 +1,5 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.35 2017/08/07 20:10:19 tg Exp $
-.\"	$OpenBSD: tar.1,v 1.55 +1.58 +1.59 2010/12/02 04:08:27 tedu Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.36 2018/12/12 00:23:07 tg Exp $
+.\"	$OpenBSD: tar.1,v 1.61 2018/07/23 19:02:49 kn Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016, 2017
 .\"	mirabilos <m@mirbsd.org>
@@ -82,7 +82,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: August 7 2017 $
+.Dd $Mdocdate: December 12 2018 $
 .\"
 .\" Check which macro package we use, and do other -mdoc setup.
 .\"
@@ -257,7 +257,7 @@ command line, only those files will be listed.
 The
 .Ar file
 arguments may be specified as glob patterns (see
-.Xr glob 3
+.Xr glob 7
 for more information), in which case
 .Nm
 will list all archive members that match each pattern.
@@ -272,7 +272,7 @@ archive.
 The
 .Ar file
 arguments may be specified as glob patterns (see
-.Xr glob 3
+.Xr glob 7
 for more information), in which case
 .Nm
 will extract all archive members that match each pattern.
@@ -511,6 +511,15 @@ File or archive member names that substitute to the empty string
 are not selected and will be skipped.
 .It Fl v
 Verbose operation mode.
+If
+.Fl v
+is specified multiple times or if the
+.Fl t
+option is also specified,
+.Nm
+will use a long format for listing files, similar to
+.Xr ls 1
+.Fl l .
 .It Fl w
 Interactively rename files.
 This option causes
@@ -582,7 +591,7 @@ to a file called
 Verbosely create an archive, called
 .Pa backup.tar.gz ,
 of all files matching the shell
-.Xr glob 3
+.Xr glob 7
 function
 .Pa *.c :
 .Pp
