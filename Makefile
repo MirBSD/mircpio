@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.23 2018/12/13 07:09:08 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.24 2018/12/13 17:46:54 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -34,6 +34,8 @@ SRCS=		ar.c ar_io.c ar_subs.c buf_subs.c compat.c cpio.c \
 		pat_rep.c pax.c sel_subs.c tables.c tar.c tty_subs.c
 SRCS+=		cache.c
 MAN=		cpio.1 pax.1 tar.1
+LINKS+=		${BINDIR}/pax ${BINDIR}/cpio
+LINKS+=		${BINDIR}/pax ${BINDIR}/tar
 .if !make(test-build)
 CPPFLAGS+=	-D_ALL_SOURCE \
 		-DHAVE_ATTRIBUTE_BOUNDED=1 -DHAVE_ATTRIBUTE_FORMAT=1 \
