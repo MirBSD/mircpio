@@ -48,7 +48,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.13 2018/12/13 07:12:00 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.14 2018/12/13 07:14:16 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -374,7 +374,7 @@ rd_sync(void)
  */
 
 void
-pback(char *pt, int cnt)
+pback(const char *pt, int cnt)
 {
 	bufpt -= cnt;
 	memcpy(bufpt, pt, cnt);

@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.36 2018/12/13 07:12:01 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.37 2018/12/13 07:14:16 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -104,7 +104,7 @@ int rd_start(void);
 void cp_start(void);
 int appnd_start(off_t);
 int rd_sync(void);
-void pback(char *, int);
+void pback(const char *, int);
 int rd_skip(off_t);
 void wr_fin(void);
 int wr_rdbuf(const char *, int);
