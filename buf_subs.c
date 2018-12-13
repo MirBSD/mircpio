@@ -48,7 +48,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.12 2018/12/13 07:09:09 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.13 2018/12/13 07:12:00 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -499,7 +499,7 @@ wr_fin(void)
  */
 
 int
-wr_rdbuf(char *out, int outcnt)
+wr_rdbuf(const char *out, int outcnt)
 {
 	int cnt;
 

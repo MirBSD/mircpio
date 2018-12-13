@@ -41,13 +41,13 @@
 #include "ar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.10 2018/12/12 18:08:40 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.11 2018/12/13 07:12:00 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
  */
 
-static /*const*/ char magic[8] = {
+static const char magic[8] = {
 	0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A
 };
 
