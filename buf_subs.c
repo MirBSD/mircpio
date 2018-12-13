@@ -48,7 +48,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.11 2018/12/12 18:08:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/buf_subs.c,v 1.12 2018/12/13 07:09:09 tg Exp $");
 
 /*
  * routines which implement archive and file buffering
@@ -95,17 +95,17 @@ wr_start(void)
 	if (!wrblksz)
 		wrblksz = frmt->bsz;
 	if (wrblksz > MAXBLK) {
-		paxwarn(1, "Write block size of %d too large, maximium is: %d",
-			wrblksz, MAXBLK);
+		paxwarn(1, "Write block size %d too large, maximum is: %d",
+		    wrblksz, MAXBLK);
 		return(-1);
 	}
 	if (wrblksz % BLKMULT) {
-		paxwarn(1, "Write block size of %d is not a %d byte multiple",
+		paxwarn(1, "Write block size %d is not a %d byte multiple",
 		    wrblksz, BLKMULT);
 		return(-1);
 	}
 	if (wrblksz > MAXBLK_POSIX) {
-		paxwarn(0, "Write block size of %d larger than POSIX max %d, archive may not be portable",
+		paxwarn(0, "Write block size %d larger than POSIX max %d, archive may not be portable",
 			wrblksz, MAXBLK_POSIX);
 		return(-1);
 	}
@@ -140,9 +140,9 @@ rd_start(void)
 	buf = &(bufmem[BLKMULT]);
 	if ((act == APPND) && wrblksz) {
 		if (wrblksz > MAXBLK) {
-			paxwarn(1,"Write block size %d too large, maximium is: %d",
-				wrblksz, MAXBLK);
-			return(-1);
+			paxwarn(1, "Write block size %d too large, maximum is: %d",
+			    wrblksz, MAXBLK);
+			return (-1);
 		}
 		if (wrblksz % BLKMULT) {
 			paxwarn(1, "Write block size %d is not a %d byte multiple",
@@ -655,8 +655,8 @@ wr_rdfile(ARCHD *arcn, int ifd, off_t *left)
 	else if (fstat(ifd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
 	else if (st_timecmp(m, &arcn->sb, &sb, !=))
-		paxwarn(1, "File %s was modified during copy to archive",
-			arcn->org_name);
+		paxwarn(1, "File %s was modified during copy to %s",
+			arcn->org_name, "archive");
 	*left = size;
 	return(0);
 }
@@ -827,7 +827,7 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 		paxwarn(1, "File %s changed size during copy to %s",
 			arcn->org_name, arcn->name);
 	else if (fstat(fd1, &sb) < 0)
-		syswarn(1, errno, "Failed stat of %s", arcn->org_name);
+		syswarn(1, errno, "Failed stat on %s", arcn->org_name);
 	else if (st_timecmp(m, &arcn->sb, &sb, !=))
 		paxwarn(1, "File %s was modified during copy to %s",
 			arcn->org_name, arcn->name);

@@ -32,7 +32,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
-__RCSID("$MirOS: src/bin/pax/.linked/strmode.inc,v 1.3 2012/06/05 18:08:34 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strmode.inc,v 1.4 2018/12/13 07:09:13 tg Exp $");
 
 void
 strmode(mode_t mode, char *p)
@@ -58,7 +58,7 @@ strmode(mode_t mode, char *p)
 		*p++ = 's';
 		break;
 #ifdef S_IFIFO
-	case S_IFIFO:			/* fifo */
+	case S_IFIFO:			/* FIFO */
 		*p++ = 'p';
 		break;
 #endif

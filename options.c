@@ -63,7 +63,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.65 2018/12/12 18:08:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.66 2018/12/13 07:09:10 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -170,10 +170,12 @@ static void cpio_set_action(int);
 static void cpio_options(int, char **);
 static void cpio_usage(void) MKSH_A_NORETURN;
 
+#ifndef SMALL
 static int compress_id(char *_blk, int _size);
 static int gzip_id(char *_blk, int _size);
 static int bzip2_id(char *_blk, int _size);
 static int xz_id(char *_blk, int _size);
+#endif
 
 /* command to run as gzip */
 static const char GZIP_CMD[] = "gzip";
@@ -197,83 +199,83 @@ static const char LZOP_CMD[] = "lzop";
  *	and MUST match enum fsub_order in pax.h
  *	(see pax.h for description of each function)
  *
- *	name, blksz, hdsz, udev, hlk, blkagn, inhead, id, st_read,
+ *	name, blksz, hdsz, udev, hlk, blkagn, id, st_read,
  *	read, end_read, st_write, write, end_write, trail,
- *	rd_data, wr_data, options, is_uar
+ *	rd_data, wr_data, options, inhead, is_uar
  */
 
-FSUB fsub[] = {
+const FSUB fsub[] = {
 #ifndef SMALL
 /* FSUB_AR: UNIX ARCHIVER */
-	{"ar", 512, sizeof(HD_AR), 0, 0, 0, 0, uar_id, no_op,
+	{"ar", 512, sizeof(HD_AR), 0, 0, 0, uar_id, no_op,
 	uar_rd, uar_endrd, uar_stwr, uar_wr, no_op, uar_trail,
-	rd_wrfile, uar_wr_data, bad_opt, 1},
+	rd_wrfile, uar_wr_data, bad_opt, 0, 1},
 
 /* FSUB_BCPIO: OLD BINARY CPIO */
-	{"bcpio", 5120, sizeof(HD_BCPIO), 1, 0, 0, 1, bcpio_id, cpio_strd,
+	{"bcpio", 5120, sizeof(HD_BCPIO), 1, 0, 0, bcpio_id, cpio_strd,
 	bcpio_rd, bcpio_endrd, cpio_stwr, bcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 #endif
 
 /* FSUB_CPIO: OLD OCTAL CHARACTER CPIO */
-	{"cpio", 5120, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
+	{"cpio", 5120, sizeof(HD_CPIO), 1, 0, 0, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, cpio_stwr, cpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
 /* FSUB_DIST: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
-	{"dist", 512, sizeof(HD_CPIO), 1, 0, 0, 1, cpio_id, cpio_strd,
+	{"dist", 512, sizeof(HD_CPIO), 1, 0, 0, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, dist_stwr, cpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
 /* FSUB_SV4CPIO: SVR4 HEX CPIO */
-	{"sv4cpio", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, vcpio_id, cpio_strd,
+	{"sv4cpio", 5120, sizeof(HD_VCPIO), 1, 0, 0, vcpio_id, cpio_strd,
 	vcpio_rd, vcpio_endrd, cpio_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
 /* FSUB_SV4CRC: SVR4 HEX CPIO WITH CRC */
-	{"sv4crc", 5120, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
+	{"sv4crc", 5120, sizeof(HD_VCPIO), 1, 0, 0, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, crc_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
 #ifndef SMALL
 /* FSUB_TAR: OLD TAR */
-	{"tar", 10240, BLKMULT, 0, 1, BLKMULT, 0, tar_id, no_op,
+	{"tar", 10240, BLKMULT, 0, 1, BLKMULT, tar_id, no_op,
 	tar_rd, tar_endrd, no_op_i, tar_wr, tar_endwr, tar_trail,
-	rd_wrfile, wr_rdfile, tar_opt, 0},
+	rd_wrfile, wr_rdfile, tar_opt, 0, 0},
 #endif
 
 /* FSUB_USTAR: POSIX USTAR */
-	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
+	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
-	rd_wrfile, wr_rdfile, tar_opt, 0},
+	rd_wrfile, wr_rdfile, tar_opt, 0, 0},
 
 /* FSUB_V4NORM: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
-	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
+	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4norm_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
 /* FSUB_V4ROOT: SVR4 HEX CPIO WITH CRC, UID/GID CLEARED (ANONYMISED) */
-	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, 1, crc_id, crc_strd,
+	{"v4root", 512, sizeof(HD_VCPIO), 1, 0, 0, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
-	rd_wrfile, wr_rdfile, bad_opt, 0},
+	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
 #ifndef SMALL
 /* FSUBFAIL_Z: compress, to detect failure to use -Z */
-	{NULL, 0, 4, 0, 0, 0, 0, compress_id, NULL,
+	{NULL, 0, 4, 0, 0, 0, compress_id, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, 0},
+	NULL, NULL, NULL, 0, 0},
 /* FSUBFAIL_XZ: xz, to detect failure to decompress it */
-	{NULL, 0, 6, 0, 0, 0, 0, xz_id, NULL,
+	{NULL, 0, 6, 0, 0, 0, xz_id, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, 0},
+	NULL, NULL, NULL, 0, 0},
 /* FSUBFAIL_BZ2: bzip2, to detect failure to use -j */
-	{NULL, 0, 4, 0, 0, 0, 0, bzip2_id, NULL,
+	{NULL, 0, 4, 0, 0, 0, bzip2_id, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, 0},
+	NULL, NULL, NULL, 0, 0},
 /* FSUBFAIL_GZ: gzip, to detect failure to use -z */
-	{NULL, 0, 4, 0, 0, 0, 0, gzip_id, NULL,
+	{NULL, 0, 4, 0, 0, 0, gzip_id, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, 0},
+	NULL, NULL, NULL, 0, 0},
 #endif
 };
 
@@ -282,7 +284,7 @@ FSUB fsub[] = {
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-const int ford[] = {
+const unsigned char ford[] = {
 	FSUB_USTAR,
 #ifndef SMALL
 	FSUB_TAR,
@@ -304,12 +306,12 @@ const int ford[] = {
 int anonarch = 0;
 
 /* extract to standard output */
-int to_stdout = 0;
+char to_stdout = 0;
 
 /*
  * Do we have -C anywhere and what is it?
  */
-int havechd = 0;
+char havechd = 0;
 char *chdname = NULL;
 
 /*
@@ -344,6 +346,23 @@ options(int argc, char **argv)
 	}
 }
 
+static int
+gather_format(FSUB *fp, const char *name, int flag)
+{
+	size_t i;
+
+	if ((frmt = (FSUB *)bsearch((void *)fp, (void *)fsub,
+	    sizeof(fsub) / sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
+		return (0);
+	paxwarn(1, "Unknown -%c format: %s", flag, optarg);
+	fprintf(stderr, "%s: Known -%c formats are:", name, flag);
+	for (i = 0; i < (sizeof(fsub)/sizeof(FSUB)); ++i)
+		if (fsub[i].name != NULL)
+			fprintf(stderr, " %s", fsub[i].name);
+	fputs("\n\n", stderr);
+	return (1);
+}
+
 /*
  * pax_options()
  *	look at the user specified flags. set globals as required and check if
@@ -354,7 +373,6 @@ static void
 pax_options(int argc, char **argv)
 {
 	int c;
-	unsigned i;
 	unsigned int flg = 0;
 	unsigned int bflg = 0;
 	const char *errstr;
@@ -668,19 +686,9 @@ pax_options(int argc, char **argv)
 			 * specify an archive format on write
 			 */
 			tmp.name = optarg;
-			if ((frmt = (FSUB *)bsearch((void *)&tmp, (void *)fsub,
-			    sizeof(fsub)/sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL) {
-				flg |= XF;
-				break;
-			}
-			paxwarn(1, "Unknown -x format: %s", optarg);
-			(void)fputs("pax: Known -x formats are:", stderr);
-			for (i = 0; i < (sizeof(fsub)/sizeof(FSUB)); ++i)
-				if (fsub[i].name != NULL)
-					(void)fprintf(stderr, " %s",
-					    fsub[i].name);
-			(void)fputs("\n\n", stderr);
-			pax_usage();
+			if (gather_format(&tmp, "pax", 'x'))
+				pax_usage();
+			flg |= XF;
 			break;
 		case 'Y':
 			/*
@@ -1300,7 +1308,6 @@ cpio_options(int argc, char **argv)
 {
 	const char *errstr;
 	int c, list_only = 0;
-	unsigned i;
 	char *str;
 	int fd;
 	const char *optstr;
@@ -1433,17 +1440,8 @@ cpio_options(int argc, char **argv)
 			} else {
 				tmp.name = optarg;
 			}
-			if ((frmt = (FSUB *)bsearch((void *)&tmp, (void *)fsub,
-			    sizeof(fsub)/sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
-				break;
-			paxwarn(1, "Unknown -H format: %s", optarg);
-			(void)fputs("cpio: Known -H formats are:", stderr);
-			for (i = 0; i < (sizeof(fsub)/sizeof(FSUB)); ++i)
-				if (fsub[i].name != NULL)
-					(void)fprintf(stderr, " %s",
-					    fsub[i].name);
-			(void)fputs("\n\n", stderr);
-			cpio_usage();
+			if (gather_format(&tmp, "cpio", 'H'))
+				cpio_usage();
 			break;
 		/* I: see F */
 		case 'i':
@@ -2113,7 +2111,8 @@ static int
 xz_id(char *blk, int size)
 {
 	if (size >= 6 && memcmp(blk, "\xFD\x37\x7A\x58\x5A", 6) == 0) {
-		paxwarn(0, "input compressed with xz");
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "xz", 'J');
 		exit(1);
 	}
 	return (-1);

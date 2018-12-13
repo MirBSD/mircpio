@@ -71,7 +71,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pax.c,v 1.28 2018/12/12 18:08:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pax.c,v 1.29 2018/12/13 07:09:11 tg Exp $");
 
 static int gen_init(void);
 
@@ -82,35 +82,35 @@ static int gen_init(void);
 /*
  * Variables that can be accessed by any routine within pax
  */
-int	act = ERROR;		/* read/write/append/copy */
-FSUB	*frmt = NULL;		/* archive format type */
-int	cflag;			/* match all EXCEPT pattern/file */
-int	cwdfd;			/* starting cwd */
-int	dflag;			/* directory member match only  */
-int	iflag;			/* interactive file/archive rename */
-int	kflag;			/* do not overwrite existing files */
-int	lflag;			/* use hard links when possible */
-int	nflag;			/* select first archive member match */
-int	tflag;			/* restore access time after read */
-int	uflag;			/* ignore older modification time files */
-int	Vflag = 0;		/* print a dot for each file processed */
-int	vflag;			/* produce verbose output */
-int	Dflag;			/* same as uflag except inode change time */
-int	Hflag;			/* follow command line symlinks (write only) */
-int	Lflag;			/* follow symlinks when writing */
-int	Xflag;			/* archive files with same device id only */
-int	Yflag;			/* same as Dflag except after name mode */
-int	Zflag;			/* same as uflag except after name mode */
-int	zeroflag;		/* use \0 as pathname terminator */
-int	vfpart = 0;		/* is partial verbose output in progress */
-int	patime = 1;		/* preserve file access time */
-int	pmtime = 1;		/* preserve file modification times */
-int	nodirs;			/* do not create directories as needed */
-int	pmode;			/* preserve file mode bits */
-int	pids;			/* preserve file uid/gid */
-int	rmleadslash = 0;	/* remove leading '/' from pathnames */
-int	exit_val;		/* exit value */
-int	docrc;			/* check/create file crc */
+signed char act = ERROR;	/* read/write/append/copy */
+const FSUB *frmt = NULL;	/* archive format type */
+signed char cflag;		/* match all EXCEPT pattern/file */
+signed char cwdfd;		/* starting cwd */
+signed char dflag;		/* directory member match only  */
+signed char iflag;		/* interactive file/archive rename */
+signed char kflag;		/* do not overwrite existing files */
+signed char lflag;		/* use hard links when possible */
+signed char nflag;		/* select first archive member match */
+signed char tflag;		/* restore access time after read */
+signed char uflag;		/* ignore older modification time files */
+signed char Vflag = 0;		/* print a dot for each file processed */
+signed char vflag;		/* produce verbose output */
+signed char Dflag;		/* same as uflag except inode change time */
+signed char Hflag;		/* follow command line symlinks (write only) */
+signed char Lflag;		/* follow symlinks when writing */
+signed char Xflag;		/* archive files with same device id only */
+signed char Yflag;		/* same as Dflag except after name mode */
+signed char Zflag;		/* same as uflag except after name mode */
+signed char zeroflag;		/* use \0 as pathname terminator */
+signed char vfpart = 0;		/* is partial verbose output in progress */
+signed char patime = 1;		/* preserve file access time */
+signed char pmtime = 1;		/* preserve file modification times */
+signed char nodirs;		/* do not create directories as needed */
+signed char pmode;		/* preserve file mode bits */
+signed char pids;		/* preserve file uid/gid */
+signed char rmleadslash = 0;	/* remove leading '/' from pathnames */
+signed char exit_val;		/* exit value */
+signed char docrc;		/* check/create file crc */
 char	*dirptr;		/* destination dir in a copy */
 const char *argv0;		/* root of argv[0] */
 enum op_mode op_mode;		/* what program are we acting as? */
@@ -257,7 +257,7 @@ main(int argc, char **argv)
 	 */
 	cwdfd = binopen2(BO_CLEXEC, ".", O_RDONLY);
 	if (cwdfd < 0) {
-		syswarn(1, errno, "Can't open current working directory.");
+		syswarn(1, errno, "Cannot open current working directory.");
 		return(exit_val);
 	}
 
@@ -271,8 +271,9 @@ main(int argc, char **argv)
 		tdlen--;
 	tempfile = malloc(tdlen + 1 + sizeof(_TFILE_BASE));
 	if (tempfile == NULL) {
-		paxwarn(1, "Cannot allocate memory for temp file name.");
-		return(exit_val);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "temp file name");
+		return (exit_val);
 	}
 	if (tdlen)
 		memcpy(tempfile, tmpdir, tdlen);
@@ -305,7 +306,7 @@ main(int argc, char **argv)
 			err(1, "pledge");
 
 		/* Copy mode, or no gzip -- don't need to fork/exec. */
-		if (gzip_program == NULL || act == COPY) {
+		if (compress_program == NULL || act == COPY) {
 			if (pledge("stdio rpath wpath cpath fattr dpath getpw tape",
 			    NULL) == -1)
 				err(1, "pledge");
@@ -314,8 +315,9 @@ main(int argc, char **argv)
 #endif
 
 	/* make list fd independent and line-buffered */
-	if (!(listf = fdopen((listfd = dup(fileno(listf))), "wb"))) {
-		syswarn(1, errno, "Can't open list file descriptor");
+	if ((listfd = dup(fileno(listf))) < 0 ||
+	    !(listf = fdopen(listfd, "wb"))) {
+		syswarn(1, errno, "Cannot open list file descriptor");
 		return (exit_val);
 	}
 	if (fcntl(listfd, F_SETFD, FD_CLOEXEC) == -1)

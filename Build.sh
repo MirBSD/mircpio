@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.2 2018/12/12 18:08:40 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.3 2018/12/13 07:09:08 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -553,8 +553,6 @@ GNU)
 	*tendracc*) ;;
 	*) add_cppflags -D_GNU_SOURCE ;;
 	esac
-	# define MKSH__NO_PATH_MAX to use Hurd-only functions
-	add_cppflags -DMKSH__NO_PATH_MAX
 	;;
 GNU/kFreeBSD)
 	oswarn="; it is untested"
@@ -1992,6 +1990,8 @@ HAVE_CAN_FSTACKPROTECTORALL	ac_flags
 
 ==== cpp definitions ====
 DEBUG				dont use in production, wants gcc
+MKSH_DONT_EMIT_IDSTRING		omit RCS IDs from binary
+MKSH_TYPEDEF_SSIZE_T		define to e.g. 'long' if your OS has no ssize_t
 PAX_SAFE_PATH			subprocess PATH, default "/bin:/usr/bin"
 SMALL				for the MirBSD installer/rescue system
 

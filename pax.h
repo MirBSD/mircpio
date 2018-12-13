@@ -41,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.21 2018/12/12 18:08:46 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.22 2018/12/13 07:09:11 tg Exp $");
 #endif
 
 /*
@@ -127,7 +127,7 @@ typedef struct {
 #define PAX_REG		4		/* regular file */
 #define PAX_SLK		5		/* symbolic link */
 #define PAX_SCK		6		/* socket */
-#define PAX_FIF		7		/* fifo */
+#define PAX_FIF		7		/* FIFO */
 #define PAX_HLK		8		/* hard link */
 #define PAX_HRG		9		/* hard link to a regular file */
 #define PAX_CTG		10		/* high performance file */
@@ -157,25 +157,22 @@ typedef struct {
 				/* does not specify a blocksize for writing */
 				/* Appends continue to with the blocksize */
 				/* the archive is currently using. */
-	int hsz;		/* Header size in bytes. this is the size of */
+	unsigned short hsz;	/* Header size in bytes. this is the size of */
 				/* the smallest header this format supports. */
 				/* Headers are assumed to fit in a BLKMULT. */
 				/* If they are bigger, get_head() and */
 				/* get_arc() must be adjusted */
-	int udev;		/* does append require unique dev/ino? some */
+	char udev;		/* does append require unique dev/ino? some */
 				/* formats use the device and inode fields */
 				/* to specify hard links. when members in */
 				/* the archive have the same inode/dev they */
 				/* are assumed to be hard links. During */
 				/* append we may have to generate unique ids */
 				/* to avoid creating incorrect hard links */
-	int hlk;		/* does archive store hard links info? if */
+	char hlk;		/* does archive store hard links info? if */
 				/* not, we do not bother to look for them */
 				/* during archive write operations */
 	int blkalgn;		/* writes must be aligned to blkalgn boundary */
-	int inhead;		/* is the trailer encoded in a valid header? */
-				/* if not, trailers are assumed to be found */
-				/* in invalid headers (i.e like tar) */
 	int (*id)(char *,	/* checks if a buffer is a valid header */
 	    int);		/* returns 1 if it is, o.w. returns a 0 */
 	int (*st_rd)(void);	/* initialise routine for read. so format */
@@ -225,6 +222,9 @@ typedef struct {
 	int (*wr_data)(ARCHD *,	/* write/process file data to the archive */
 	    int, off_t *);
 	int (*options)(void);	/* process format specific options (-o) */
+	char inhead;		/* is the trailer encoded in a valid header? */
+				/* if not, trailers are assumed to be found */
+				/* in invalid headers (i.e like tar) */
 	char is_uar;		/* is Unix Archiver (sequential, no trailer) */
 } FSUB;
 

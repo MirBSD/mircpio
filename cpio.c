@@ -51,7 +51,7 @@
 #include "cpio.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.24 2018/12/12 18:08:42 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.25 2018/12/13 07:09:09 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -451,9 +451,9 @@ cpio_wr(ARCHD *arcn)
 		 */
 		if (ull_asc(arcn->sb.st_size, hd->c_filesize,
 		    sizeof(hd->c_filesize), OCT)) {
-			paxwarn(1,"File is too large for cpio format %s",
-			    arcn->org_name);
-			return(1);
+			paxwarn(1, "File is too large for %s format %s",
+			    "cpio", arcn->org_name);
+			return (1);
 		}
 		break;
 	case PAX_SLK:
@@ -502,8 +502,9 @@ cpio_wr(ARCHD *arcn)
 	 */
 	if ((wr_rdbuf(hdblk, (int)sizeof(HD_CPIO)) < 0) ||
 	    (wr_rdbuf(arcn->name, nsz) < 0)) {
-		paxwarn(1, "Unable to write cpio header for %s", arcn->org_name);
-		return(-1);
+		paxwarn(1, "Unable to write %s %s for %s",
+		    "cpio", "header", arcn->org_name);
+		return (-1);
 	}
 
 	/*
@@ -524,8 +525,9 @@ cpio_wr(ARCHD *arcn)
 	 * next file as we are done.
 	 */
 	if (wr_rdbuf(arcn->ln_name, arcn->ln_nlen) < 0) {
-		paxwarn(1,"Unable to write cpio link name for %s",arcn->org_name);
-		return(-1);
+		paxwarn(1, "Unable to write %s %s for %s",
+		    "cpio", "link name", arcn->org_name);
+		return (-1);
 	}
 	return(1);
 
@@ -533,9 +535,9 @@ cpio_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "cpio header field is too small to store file %s",
-	    arcn->org_name);
-	return(1);
+	paxwarn(1, "%s header field is too small for file %s",
+	    "cpio", arcn->org_name);
+	return (1);
 }
 
 /*
@@ -818,9 +820,9 @@ vcpio_wr(ARCHD *arcn)
 		arcn->pad = VCPIO_PAD(arcn->sb.st_size);
 		if (ull_asc(arcn->sb.st_size, hd->c_filesize,
 		    sizeof(hd->c_filesize), HEX)) {
-			paxwarn(1,"File is too large for sv4cpio format %s",
-			    arcn->org_name);
-			return(1);
+			paxwarn(1, "File is too large for %s format %s",
+			    "sv4cpio", arcn->org_name);
+			return (1);
 		}
 		break;
 	case PAX_SLK:
@@ -877,8 +879,9 @@ vcpio_wr(ARCHD *arcn)
 	if ((wr_rdbuf(hdblk, (int)sizeof(HD_VCPIO)) < 0) ||
 	    (wr_rdbuf(arcn->name, (int)nsz) < 0)  ||
 	    (wr_skip(VCPIO_PAD(sizeof(HD_VCPIO) + nsz)) < 0)) {
-		paxwarn(1,"Could not write sv4cpio header for %s",arcn->org_name);
-		return(-1);
+		paxwarn(1, "Unable to write %s %s for %s",
+		    "sv4cpio", "header", arcn->org_name);
+		return (-1);
 	}
 
 	/*
@@ -906,9 +909,9 @@ vcpio_wr(ARCHD *arcn)
 	 */
 	if ((wr_rdbuf(arcn->ln_name, arcn->ln_nlen) < 0) ||
 	    (wr_skip(VCPIO_PAD(arcn->ln_nlen)) < 0)) {
-		paxwarn(1,"Could not write sv4cpio link name for %s",
-		    arcn->org_name);
-		return(-1);
+		paxwarn(1, "Unable to write %s %s for %s",
+		    "sv4cpio", "link name", arcn->org_name);
+		return (-1);
 	}
 	return(1);
 
@@ -916,8 +919,9 @@ vcpio_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "sv4cpio header field is too small for file %s", arcn->org_name);
-	return(1);
+	paxwarn(1, "%s header field is too small for file %s",
+	    "sv4cpio", arcn->org_name);
+	return (1);
 }
 
 #ifndef SMALL
@@ -1125,9 +1129,9 @@ bcpio_wr(ARCHD *arcn)
 		t_offt = (off_t)(SHRT_EXT(hd->h_filesize_1));
 		t_offt = (t_offt<<16) | ((off_t)(SHRT_EXT(hd->h_filesize_2)));
 		if (arcn->sb.st_size != t_offt) {
-			paxwarn(1,"File is too large for bcpio format %s",
-			    arcn->org_name);
-			return(1);
+			paxwarn(1, "File is too large for %s format %s",
+			    "bcpio", arcn->org_name);
+			return (1);
 		}
 		break;
 	case PAX_SLK:
@@ -1215,8 +1219,9 @@ bcpio_wr(ARCHD *arcn)
 	if ((wr_rdbuf(hdblk, (int)sizeof(HD_BCPIO)) < 0) ||
 	    (wr_rdbuf(arcn->name, nsz) < 0) ||
 	    (wr_skip(BCPIO_PAD(sizeof(HD_BCPIO) + nsz)) < 0)) {
-		paxwarn(1, "Could not write bcpio header for %s", arcn->org_name);
-		return(-1);
+		paxwarn(1, "Unable to write %s %s for %s",
+		    "bcpio", "header", arcn->org_name);
+		return (-1);
 	}
 
 	/*
@@ -1236,8 +1241,9 @@ bcpio_wr(ARCHD *arcn)
 	 */
 	if ((wr_rdbuf(arcn->ln_name, arcn->ln_nlen) < 0) ||
 	    (wr_skip(BCPIO_PAD(arcn->ln_nlen)) < 0)) {
-		paxwarn(1,"Could not write bcpio link name for %s",arcn->org_name);
-		return(-1);
+		paxwarn(1, "Unable to write %s %s for %s",
+		    "bcpio", "link name", arcn->org_name);
+		return (-1);
 	}
 	return(1);
 
@@ -1245,7 +1251,8 @@ bcpio_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "bcpio header field is too small for file %s", arcn->org_name);
-	return(1);
+	paxwarn(1, "%s header field is too small for file %s",
+	    "bcpio", arcn->org_name);
+	return (1);
 }
 #endif

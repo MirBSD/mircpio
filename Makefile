@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.22 2018/12/12 18:08:40 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.23 2018/12/13 07:09:08 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -55,8 +55,9 @@ CPPFLAGS+=	-D_ALL_SOURCE \
 		-DHAVE_UTIMENSAT=0 -DHAVE_UTIMES=1 -DHAVE_OFFT_LLONG=1 \
 		-DHAVE_TIMET_LLONG=1 -DHAVE_ST_MTIM=0 -DHAVE_ST_MTIMENSEC=1
 CPPFLAGS+=	-I.
-COPTS+=		-std=c89 -U__STRICT_ANSI__ -Wall
+COPTS+=		-Wall
 .endif
+COPTS+=		-std=c89 -U__STRICT_ANSI__
 
 SAFE_PATH=	/bin:/usr/bin:/usr/mpkg/bin:/usr/local/bin
 CPPFLAGS+=	-DPAX_SAFE_PATH=\"${SAFE_PATH:Q}\"

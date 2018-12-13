@@ -57,7 +57,7 @@
 #include "extern.h"
 #include "tar.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.21 2018/12/12 18:08:48 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.22 2018/12/13 07:09:12 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -83,7 +83,7 @@ static gid_t gid_warn;
  */
 
 #ifndef SMALL
-int tar_nodir;				/* do not write dirs under old tar */
+char tar_nodir;				/* do not write dirs under old tar */
 #endif
 char *gnu_name_string;			/* GNU ././@LongLink hackery name */
 char *gnu_link_string;			/* GNU ././@LongLink hackery link */
@@ -540,32 +540,37 @@ tar_wr(ARCHD *arcn)
 	 */
 	switch (arcn->type) {
 	case PAX_DIR:
+#ifndef SMALL
 		/*
 		 * user asked that dirs not be written to the archive
 		 */
 		if (tar_nodir)
 			return(1);
+#endif
 		break;
 	case PAX_CHR:
-		paxwarn(1, "tar cannot archive a character device %s",
-		    arcn->org_name);
-		return(1);
+		paxwarn(1, "%s cannot archive a %s %s",
+		    "tar", "character device", arcn->org_name);
+		return (1);
 	case PAX_BLK:
-		paxwarn(1, "tar cannot archive a block device %s", arcn->org_name);
-		return(1);
+		paxwarn(1, "%s cannot archive a %s %s",
+		    "tar", "block device", arcn->org_name);
+		return (1);
 	case PAX_SCK:
-		paxwarn(1, "tar cannot archive a socket %s", arcn->org_name);
-		return(1);
+		paxwarn(1, "%s cannot archive a %s %s",
+		    "tar", "socket", arcn->org_name);
+		return (1);
 	case PAX_FIF:
-		paxwarn(1, "tar cannot archive a fifo %s", arcn->org_name);
-		return(1);
+		paxwarn(1, "%s cannot archive a %s %s",
+		    "tar", "FIFO", arcn->org_name);
+		return (1);
 	case PAX_SLK:
 	case PAX_HLK:
 	case PAX_HRG:
 		if ((size_t)arcn->ln_nlen > sizeof(hd->linkname)) {
-			paxwarn(1, "Link name too long for tar %s",
-			    arcn->ln_name);
-			return(1);
+			paxwarn(1, "%s name too long for %s %s",
+			    "Link", "tar", arcn->ln_name);
+			return (1);
 		}
 		break;
 	case PAX_REG:
@@ -581,8 +586,9 @@ tar_wr(ARCHD *arcn)
 	if (arcn->type == PAX_DIR)
 		++len;
 	if ((size_t)len > sizeof(hd->name)) {
-		paxwarn(1, "File name too long for tar %s", arcn->name);
-		return(1);
+		paxwarn(1, "%s name too long for %s %s",
+		    "File", "tar", arcn->name);
+		return (1);
 	}
 
 	/*
@@ -632,9 +638,9 @@ tar_wr(ARCHD *arcn)
 		 */
 		hd->linkflag = AREGTYPE;
 		if (ull_oct(arcn->sb.st_size, hd->size, sizeof(hd->size), 1)) {
-			paxwarn(1, "File is too large for tar %s",
-			    arcn->org_name);
-			return(1);
+			paxwarn(1, "File is too large for %s format %s",
+			    "tar", arcn->org_name);
+			return (1);
 		}
 		arcn->pad = TAR_PAD(arcn->sb.st_size);
 	}
@@ -669,8 +675,9 @@ tar_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "tar header field is too small for %s", arcn->org_name);
-	return(1);
+	paxwarn(1, "%s header field is too small for file %s",
+	    "tar", arcn->org_name);
+	return (1);
 }
 #endif
 
@@ -966,23 +973,27 @@ ustar_wr(ARCHD *arcn)
 	 * check for those filesystem types ustar cannot store
 	 */
 	if (arcn->type == PAX_SCK) {
-		paxwarn(1, "ustar cannot archive a socket %s", arcn->org_name);
-		return(1);
+		paxwarn(1, "%s cannot archive a %s %s",
+		    "ustar", "socket", arcn->org_name);
+		return (1);
 	}
 
+#ifndef SMALL
 	/*
 	 * user asked that dirs not be written to the archive
 	 */
 	if (arcn->type == PAX_DIR && tar_nodir)
 		return (1);
+#endif
 
 	/*
 	 * check the length of the linkname
 	 */
 	if (PAX_IS_LINK(arcn->type) &&
 	    ((size_t)arcn->ln_nlen > sizeof(hd->linkname))) {
-		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
-		return(1);
+		paxwarn(1, "%s name too long for %s %s",
+		    "Link", "ustar", arcn->ln_name);
+		return (1);
 	}
 
 	/*
@@ -999,8 +1010,9 @@ ustar_wr(ARCHD *arcn)
 	 * pt != arcn->name, the name has to be split
 	 */
 	if ((pt = name_split(arcn->name, arcn->nlen)) == NULL) {
-		paxwarn(1, "File name too long for ustar %s", arcn->name);
-		return(1);
+		paxwarn(1, "%s name too long for %s %s",
+		    "File", "ustar", arcn->name);
+		return (1);
 	}
 
 	/*
@@ -1086,9 +1098,9 @@ ustar_wr(ARCHD *arcn)
 			hd->typeflag = REGTYPE;
 		arcn->pad = TAR_PAD(arcn->sb.st_size);
 		if (ull_oct(arcn->sb.st_size, hd->size, sizeof(hd->size), 3)) {
-			paxwarn(1, "File is too long for ustar %s",
-			    arcn->org_name);
-			return(1);
+			paxwarn(1, "File is too large for %s format %s",
+			    "ustar", arcn->org_name);
+			return (1);
 		}
 		break;
 	}
@@ -1108,8 +1120,8 @@ ustar_wr(ARCHD *arcn)
 		if (uid_warn != t_uid) {
 			uid_warn = t_uid;
 			paxwarn(1,
-			    "ustar header field is too small for uid %lu, "
-			    "using nobody", t_uid);
+			    "ustar header field is too small for %cid %lu, "
+			    "using nobody", 'u', t_uid);
 		}
 		if (ul_oct(uid_nobody, hd->uid, sizeof(hd->uid), 3))
 			goto out;
@@ -1122,8 +1134,8 @@ ustar_wr(ARCHD *arcn)
 		if (gid_warn != t_gid) {
 			gid_warn = t_gid;
 			paxwarn(1,
-			    "ustar header field is too small for gid %lu, "
-			    "using nobody", t_gid);
+			    "ustar header field is too small for %cid %lu, "
+			    "using nobody", 'g', t_gid);
 		}
 		if (ul_oct(gid_nobody, hd->gid, sizeof(hd->gid), 3))
 			goto out;
@@ -1182,8 +1194,9 @@ ustar_wr(ARCHD *arcn)
 	/*
 	 * header field is out of range
 	 */
-	paxwarn(1, "ustar header field is too small for %s", arcn->org_name);
-	return(1);
+	paxwarn(1, "%s header field is too small for file %s",
+	    "ustar", arcn->org_name);
+	return (1);
 }
 
 /*
@@ -1360,7 +1373,8 @@ rd_xheader(ARCHD *arcn, int global, off_t size)
 		len = strtol(p, &delim, 10);
 		if (*delim != ' ' || (errno == ERANGE && len == LONG_MAX) ||
 		    len < MINXHDRSZ) {
-			paxwarn(1, "Invalid extended header record length");
+			paxwarn(1, "%s length",
+			    "Invalid extended header record");
 			ret = -1;
 			break;
 		}

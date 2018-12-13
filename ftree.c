@@ -49,7 +49,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.11 2018/12/12 18:08:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ftree.c,v 1.12 2018/12/13 07:09:10 tg Exp $");
 
 /*
  * Data structure used to store the file args to be handed to fts().
@@ -130,8 +130,9 @@ ftree_start(void)
 		ftsopts |= FTS_XDEV;
 
 	if ((fthead == NULL) && ((farray[0] = malloc(PAXPATHLEN+2)) == NULL)) {
-		paxwarn(1, "Unable to allocate memory for file name buffer");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "file name buffer");
+		return (-1);
 	}
 
 	if (ftree_arg() < 0)
@@ -169,8 +170,9 @@ ftree_add(char *str, int chflg)
 	 * trailing / the user may pass us. (watch out for / by itself).
 	 */
 	if ((ft = malloc(sizeof(FTREE))) == NULL) {
-		paxwarn(0, "Unable to allocate memory for filename");
-		return(-1);
+		paxwarn(0, "%s for %s", "Out of memory",
+		    "filename");
+		return (-1);
 	}
 
 	if (((len = strlen(str) - 1) > 0) && (str[len] == '/'))
@@ -314,13 +316,13 @@ ftree_arg(void)
 				/* First fchdir() back... */
 				if (fchdir(cwdfd) < 0) {
 					syswarn(1, errno,
-					  "Can't fchdir to starting directory");
-					return(-1);
+					  "Cannot fchdir to starting directory");
+					return (-1);
 				}
 				if (chdir(ftcur->fname) < 0) {
-					syswarn(1, errno, "Can't chdir to %s",
+					syswarn(1, errno, "Cannot chdir to %s",
 					    ftcur->fname);
-					return(-1);
+					return (-1);
 				}
 				continue;
 			} else

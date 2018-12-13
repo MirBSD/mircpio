@@ -65,7 +65,7 @@
 #include "ftimes.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.27 2018/12/12 18:08:47 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.28 2018/12/13 07:09:12 tg Exp $");
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -263,7 +263,8 @@ lnk_start(void)
 	if (ltab != NULL)
 		return (0);
 	if ((ltab = calloc(L_TAB_SZ, sizeof(HRDLNK *))) == NULL) {
-		paxwarn(1, "Cannot allocate memory for %s", "hard link table");
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "hard link table");
 		return (-1);
 	}
 	return (0);
@@ -359,7 +360,7 @@ chk_lnk(ARCHD *arcn)
 		free(pt);
 	}
 
-	paxwarn(1, "Out of memory for %s", "hard link table");
+	paxwarn(1, "%s for %s", "Out of memory", "hard link table");
 	return (-1);
 }
 
@@ -490,7 +491,8 @@ ftime_start(void)
 	if (ftab != NULL)
 		return (0);
 	if ((ftab = calloc(F_TAB_SZ, sizeof(FTM *))) == NULL) {
-		paxwarn(1, "Cannot allocate memory for %s", "file time table");
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "file time table");
 		return (-1);
 	}
 
@@ -500,9 +502,9 @@ ftime_start(void)
 	 */
 	memcpy(tempbase, _TFILE_BASE, sizeof(_TFILE_BASE));
 	if ((ffd = mkstemp(tempfile)) < 0) {
-		syswarn(1, errno, "Unable to create temporary file: %s",
+		syswarn(1, errno, "Unable to create temporary file %s",
 		    tempfile);
-		return(-1);
+		return (-1);
 	}
 	(void)unlink(tempfile);
 
@@ -616,7 +618,7 @@ chk_ftime(ARCHD *arcn)
 			syswarn(1, errno, "Failed %s on %s",
 			    "seek", "file time table");
 	} else
-		paxwarn(1, "Out of memory for %s", "file time table");
+		paxwarn(1, "%s for %s", "Out of memory", "file time table");
 
 	if (pt != NULL)
 		free(pt);
@@ -725,12 +727,12 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 			return (-1);
 		}
 	} else if ((path = strdup(path0)) == NULL) {
-		syswarn(1, errno, "deferred symlink path");
+		syswarn(1, errno, "%s %s", "deferred symlink", "path");
 		unlink(path0);
 		return (-1);
 	}
 	if ((value = strdup(value0)) == NULL) {
-		syswarn(1, errno, "deferred symlink value");
+		syswarn(1, errno, "%s value", "deferred symlink");
 		unlink(path);
 		free(path);
 		return (-1);
@@ -805,7 +807,7 @@ sltab_add_link(const char *path, const struct stat *sb)
 			continue;
 
 		if ((p = malloc(sizeof *p)) == NULL) {
-			syswarn(1, errno, "deferred symlink hardlink");
+			syswarn(1, errno, "%s hardlink", "deferred symlink");
 			return (-1);
 		}
 		if (havechd && *path != '/') {
@@ -816,7 +818,7 @@ sltab_add_link(const char *path, const struct stat *sb)
 				return (-1);
 			}
 		} else if ((p->sp_path = strdup(path)) == NULL) {
-			syswarn(1, errno, "deferred symlink hardlink path");
+			syswarn(1, errno, "%s hardlink path", "deferred symlink");
 			free(p);
 			return (-1);
 		}
@@ -851,7 +853,7 @@ sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
 
 	if (unlink(path) && errno != ENOENT) {
 		if (!in_sig)
-			syswarn(1, errno, "deferred symlink removal");
+			syswarn(1, errno, "%s removal", "deferred symlink");
 		return (0);
 	}
 
@@ -881,8 +883,8 @@ sltab_process_one(struct slinode *s, struct slpath *p, const char *first,
 			else
 				err = errno;
 
-			syswarn(1, err, "deferred symlink%s: %s",
-			    qualifier, path);
+			syswarn(1, err, "%s%s: %s",
+			    "deferred symlink", qualifier, path);
 		}
 		return (0);
 	}
@@ -987,7 +989,8 @@ name_start(void)
 	if (ntab != NULL)
 		return (0);
 	if ((ntab = calloc(N_TAB_SZ, sizeof(NAMT *))) == NULL) {
-		paxwarn(1, "Cannot allocate memory for %s", "interactive rename table");
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "interactive rename table");
 		return (-1);
 	}
 	return (0);
@@ -1059,7 +1062,7 @@ add_name(char *oname, int onamelen, char *nname)
 		}
 		free(pt);
 	}
-	paxwarn(1, "Out of memory for %s", "interactive rename table");
+	paxwarn(1, "%s for %s", "Out of memory", "interactive rename table");
 	return (-1);
 }
 
@@ -1160,7 +1163,8 @@ dev_start(void)
 	if (dtab != NULL)
 		return (0);
 	if ((dtab = calloc(D_TAB_SZ, sizeof(DEVT *))) == NULL) {
-		paxwarn(1, "Cannot allocate memory for %s", "device mapping table");
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "device mapping table");
 		return (-1);
 	}
 	return (0);
@@ -1233,7 +1237,7 @@ chk_dev(dev_t dev, int add)
 	 * list must be NULL.
 	 */
 	if ((pt = malloc(sizeof(DEVT))) == NULL) {
-		paxwarn(1, "Out of memory for %s", "device mapping table");
+		paxwarn(1, "%s for %s", "Out of memory", "device mapping table");
 		return (NULL);
 	}
 	pt->dev = dev;
@@ -1403,7 +1407,8 @@ atdir_start(void)
 	if (atab != NULL)
 		return (0);
 	if ((atab = calloc(A_TAB_SZ, sizeof(ATDIR *))) == NULL) {
-		paxwarn(1, "Cannot allocate memory for %s", "directory access time reset table");
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "directory access time reset table");
 		return (-1);
 	}
 	return (0);
@@ -1499,7 +1504,7 @@ add_atdir(const char *fname, const struct stat *sbp)
 	}
 
 	sigprocmask(SIG_SETMASK, &savedsigs, NULL);
-	paxwarn(1, "Out of memory for %s", "directory access time reset table");
+	paxwarn(1, "%s for %s", "Out of memory", "directory access time reset table");
 }
 
 /*
@@ -1596,8 +1601,9 @@ dir_start(void)
 
 	dirsize = DIRP_SIZE;
 	if ((dirp = reallocarray(NULL, dirsize, sizeof(DIRDATA))) == NULL) {
-		paxwarn(1, "Unable to allocate memory for directory times");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "directory times");
+		return (-1);
 	}
 	return(0);
 }
@@ -1645,7 +1651,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 		dblk = reallocarray(dirp, dirsize * 2, sizeof(DIRDATA));
 		if (dblk == NULL) {
 			paxwarn(1, "Unable to store mode and times for created"
-			    " directory: %s", name);
+			    " directory %s", name);
 #if (_POSIX_VERSION >= 200809L)
 			free(rp);
 #endif
@@ -1659,7 +1665,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	dblk = &dirp[dircnt];
 	if ((dblk->ft.ft_name = strdup(name)) == NULL) {
 		paxwarn(1, "Unable to store mode and times for created"
-		    " directory: %s", name);
+		    " directory %s", name);
 #if (_POSIX_VERSION >= 200809L)
 		free(rp);
 #endif
@@ -1846,7 +1852,8 @@ flnk_start(void)
 	if (fltab != NULL)
 		return (0);
 	if ((fltab = (HRDFLNK **)calloc(L_TAB_SZ, sizeof(HRDFLNK *))) == NULL) {
-		paxwarn(1, "Cannot allocate memory for %s", "hard link anonymisation table");
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "hard link anonymisation table");
 		return (-1);
 	}
 	return (0);
@@ -1928,6 +1935,6 @@ chk_flnk(ARCHD *arcn)
 		return (pt->newi);
 	}
 
-	paxwarn(1, "Out of memory for %s", "hard link anonymisation table");
+	paxwarn(1, "%s for %s", "Out of memory", "hard link anonymisation table");
 	return (-1);
 }

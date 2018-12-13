@@ -71,7 +71,7 @@
 #undef EXTERN
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.28 2018/12/12 18:08:43 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.29 2018/12/13 07:09:10 tg Exp $");
 
 /*
  * routines that deal with file operations such as: creating, removing;
@@ -105,7 +105,7 @@ file_creat(ARCHD *arcn)
 	 * Assume file doesn't exist, so just try to create it, most times this
 	 * works. We have to take special handling when the file does exist. To
 	 * detect this, we use O_EXCL. For example when trying to create a
-	 * file and a character device or fifo exists with the same name, we
+	 * file and a character device or FIFO exists with the same name, we
 	 * can accidently open the device by mistake (or block waiting to open).
 	 * If we find that the open has failed, then spend the effort to
 	 * figure out why. This strategy was found to have better average
@@ -206,9 +206,9 @@ lnk_creat(ARCHD *arcn, int *fdp)
 	 * is not a directory, so we lstat and check
 	 */
 	if (lstat(arcn->ln_name, &sb) < 0) {
-		syswarn(1,errno,"Unable to link to %s from %s", arcn->ln_name,
-		    arcn->name);
-		return(-1);
+		syswarn(1, errno, "Unable to link to %s from %s",
+		    arcn->ln_name, arcn->name);
+		return (-1);
 	}
 
 	if (S_ISDIR(sb.st_mode)) {
@@ -426,17 +426,17 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 		}
 		if (!ign) {
  lncp_failed:
-			syswarn(1, oerrno, "Could not link to %s from %s", to,
-			    from);
-			return(-1);
+			syswarn(1, oerrno, "Unable to link to %s from %s",
+			    to, from);
+			return (-1);
 		}
-		return(1);
+		return (1);
 	}
 
 	/*
 	 * all right the link was made
 	 */
-	return(0);
+	return (0);
 }
 
 /*
@@ -580,7 +580,7 @@ node_creat(ARCHD *arcn)
 			continue;
 
 		if (nodirs || chk_path(nm,arcn->sb.st_uid,arcn->sb.st_gid) < 0) {
-			syswarn(1, oerrno, "Could not create: %s", nm);
+			syswarn(1, oerrno, "Unable to create %s", nm);
 			free(allocd);
 			return (-1);
 		}
@@ -617,7 +617,7 @@ node_creat(ARCHD *arcn)
 		 * of the directory we created.
 		 */
 		if (lstat(nm, &sb) < 0) {
-			syswarn(0, errno,"Could not access %s (stat)", nm);
+			syswarn(0, errno, "Unable to stat %s", nm);
 		} else if (access(nm, R_OK | W_OK | X_OK) < 0) {
 			/*
 			 * We have to add rights to the dir, so we make
@@ -693,7 +693,7 @@ unlnk_exist(char *name, int type)
 	 * try to get rid of all non-directory type nodes
 	 */
 	if (unlink(name) < 0) {
-		syswarn(1, errno, "Could not unlink %s", name);
+		syswarn(1, errno, "Unable to remove %s", name);
 		return(-1);
 	}
 	return(0);
@@ -1070,20 +1070,20 @@ set_attr(const struct file_times *ft, int force_times, mode_t mode,
 	if (fd == -1) {
 		if (!in_sig)
 			syswarn(1, errno, "Unable to restore mode and times"
-			    " for directory: %s", ft->ft_name);
+			    " for directory %s", ft->ft_name);
 		return (-1);
 	}
 
 	if (fstat(fd, &sb) == -1) {
 		if (!in_sig)
-			syswarn(1, errno, "Unable to stat directory: %s",
+			syswarn(1, errno, "Unable to stat directory %s",
 			    ft->ft_name);
 		r = -1;
 #ifndef O_DIRECTORY
 	} else if (!S_ISDIR(sb.st_mode)) {
 		if (!in_sig)
 			syswarn(1, ENOTDIR, "Unable to restore mode and times"
-			    " for directory: %s", ft->ft_name);
+			    " for directory %s", ft->ft_name);
 		r = -1;
 #endif
 	} else if (ft->ft_ino != sb.st_ino || ft->ft_dev != sb.st_dev) {
@@ -1209,7 +1209,7 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 					if (errno == ESPIPE)
 						goto isapipe;
 					syswarn(1, errno,
-					    "File seek on %s", name);
+					    "Failed seek on file %s", name);
 					return (-1);
 				}
 				st = pt;

@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.34 2018/12/12 18:08:43 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.35 2018/12/13 07:09:10 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -64,7 +64,7 @@ int uar_trail(ARCHD *, char *, int, int *) MKSH_A_NORETURN;
  */
 extern const char *arcname;
 extern const char *compress_program;
-extern int force_one_volume;
+extern char force_one_volume;
 int ar_open(const char *);
 void ar_close(int _in_sig);
 void ar_drain(void);
@@ -76,7 +76,7 @@ int ar_rdsync(void);
 int ar_fow(off_t, off_t *);
 int ar_rev(off_t );
 int ar_next(void);
-extern int ar_do_keepopen;
+extern char ar_do_keepopen;
 int ar_next_keepopen(void);
 
 /*
@@ -225,10 +225,10 @@ int getoldopt(int, char **, const char *);
 /*
  * options.c
  */
-extern FSUB fsub[];
-extern const int ford[];
+extern const FSUB fsub[];
+extern const unsigned char ford[];
 extern int anonarch;
-extern int to_stdout;
+extern char to_stdout;
 void options(int, char **);
 OPLIST * opt_next(void);
 int opt_add(const char *);
@@ -252,35 +252,35 @@ int has_dotdot(const char *);
 /*
  * pax.c
  */
-extern int act;
-extern FSUB *frmt;
-extern int cflag;
-extern int cwdfd;
-extern int dflag;
-extern int iflag;
-extern int kflag;
-extern int lflag;
-extern int nflag;
-extern int tflag;
-extern int uflag;
-extern int Vflag;
-extern int vflag;
-extern int Dflag;
-extern int Hflag;
-extern int Lflag;
-extern int Xflag;
-extern int Yflag;
-extern int Zflag;
-extern int zeroflag;
-extern int vfpart;
-extern int patime;
-extern int pmtime;
-extern int nodirs;
-extern int pmode;
-extern int pids;
-extern int rmleadslash;
-extern int exit_val;
-extern int docrc;
+extern signed char act;
+extern const FSUB *frmt;
+extern signed char cflag;
+extern signed char cwdfd;
+extern signed char dflag;
+extern signed char iflag;
+extern signed char kflag;
+extern signed char lflag;
+extern signed char nflag;
+extern signed char tflag;
+extern signed char uflag;
+extern signed char Vflag;
+extern signed char vflag;
+extern signed char Dflag;
+extern signed char Hflag;
+extern signed char Lflag;
+extern signed char Xflag;
+extern signed char Yflag;
+extern signed char Zflag;
+extern signed char zeroflag;
+extern signed char vfpart;
+extern signed char patime;
+extern signed char pmtime;
+extern signed char nodirs;
+extern signed char pmode;
+extern signed char pids;
+extern signed char rmleadslash;
+extern signed char exit_val;
+extern signed char docrc;
 extern char *dirptr;
 extern const char *argv0;
 extern enum op_mode { OP_PAX, OP_TAR, OP_CPIO } op_mode;
@@ -288,7 +288,7 @@ extern FILE *listf;
 extern int listfd;
 extern char *tempfile;
 extern char *tempbase;
-extern int havechd;
+extern char havechd;
 extern time_t now;
 
 void sig_cleanup(int) MKSH_A_NORETURN;
@@ -336,14 +336,18 @@ int chk_flnk(ARCHD *);
  * tar.c
  */
 #ifndef SMALL
-extern int tar_nodir;
+extern char tar_nodir;
 #endif
 extern char *gnu_name_string, *gnu_link_string;
 int tar_endwr(void);
 off_t tar_endrd(void);
 int tar_trail(ARCHD *, char *, int, int *);
 int tar_id(char *, int);
+#ifndef SMALL
 int tar_opt(void);
+#else
+#define tar_opt bad_opt
+#endif
 int tar_rd(ARCHD *, char *);
 int tar_wr(ARCHD *);
 int ustar_strd(void);

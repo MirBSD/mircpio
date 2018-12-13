@@ -49,7 +49,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.16 2018/12/12 18:08:45 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/pat_rep.c,v 1.17 2018/12/13 07:09:11 tg Exp $");
 
 /*
  * data structure for storing user supplied replacement strings (-s)
@@ -129,8 +129,8 @@ rep_add(char *str)
 			break;
 	}
 	if (*pt1 == '\0') {
-		paxwarn(1, "Invalid replacement string %s", str);
-		return(-1);
+		paxwarn(1, "%s %s", "Invalid replacement string", str);
+		return (-1);
 	}
 
 	/*
@@ -138,8 +138,9 @@ rep_add(char *str)
 	 * and split out the regular expression and try to compile it
 	 */
 	if ((rep = malloc(sizeof(REPLACE))) == NULL) {
-		paxwarn(1, "Unable to allocate memory for replacement string");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "replacement string");
+		return (-1);
 	}
 
 	*pt1 = '\0';
@@ -167,8 +168,8 @@ rep_add(char *str)
 	if (*pt2 == '\0') {
 		regfree(&(rep->rcmp));
 		free(rep);
-		paxwarn(1, "Invalid replacement string %s", str);
-		return(-1);
+		paxwarn(1, "%s %s", "Invalid replacement string", str);
+		return (-1);
 	}
 
 	*pt2 = '\0';
@@ -193,8 +194,9 @@ rep_add(char *str)
 			regfree(&(rep->rcmp));
 			free(rep);
 			*pt1 = *str;
-			paxwarn(1, "Invalid replacement string option %s", str);
-			return(-1);
+			paxwarn(1, "%s option %s",
+			    "Invalid replacement string", str);
+			return (-1);
 		}
 		++pt2;
 	}
@@ -242,8 +244,9 @@ pat_add(char *str, char *chdirname)
 	 * node to the end of the pattern list
 	 */
 	if ((pt = malloc(sizeof(PATTERN))) == NULL) {
-		paxwarn(1, "Unable to allocate memory for pattern string");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "pattern string");
+		return (-1);
 	}
 
 	pt->pstr = str;
@@ -355,7 +358,8 @@ pat_sel(ARCHD *arcn)
 			*pt->pend = '\0';
 
 		if ((pt->pstr = strdup(arcn->name)) == NULL) {
-			paxwarn(1, "Pattern select out of memory");
+			paxwarn(1, "%s for %s", "Out of memory",
+			    "pattern select");
 			if (pt->pend != NULL)
 				*pt->pend = '/';
 			pt->pend = NULL;
@@ -1028,11 +1032,9 @@ rep_name(char *name, size_t nsize, int *nlen, int prnt)
 		 * inform the user of the result if wanted
 		 */
 		if (prnt && (pt->flgs & PRNT)) {
-			if (*nname == '\0')
-				(void)fprintf(stderr,"%s >> <empty string>\n",
-				    name);
-			else
-				(void)fprintf(stderr,"%s >> %s\n", name, nname);
+			(void)fprintf(stderr, "%s >> %s",
+			    name, *nname == '\0' ? "<empty string>" : nname);
+			(void)fputc('\n', stderr);
 		}
 
 		/*

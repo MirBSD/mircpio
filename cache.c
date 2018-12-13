@@ -55,7 +55,7 @@
 # error do not include this file if you do not need it
 #endif
 
-__RCSID("$MirOS: src/bin/pax/cache.c,v 1.10 2018/12/12 18:08:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cache.c,v 1.11 2018/12/13 07:09:09 tg Exp $");
 
 /*
  * Constants and data structures used to implement group and password file
@@ -128,8 +128,9 @@ uidtb_start(void)
 		return(-1);
 	if ((uidtb = calloc(UID_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
-		paxwarn(1, "Unable to allocate memory for user id cache table");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "user id cache table");
+		return (-1);
 	}
 	return(0);
 }
@@ -152,8 +153,9 @@ gidtb_start(void)
 		return(-1);
 	if ((gidtb = calloc(GID_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
-		paxwarn(1, "Unable to allocate memory for group id cache table");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "group id cache table");
+		return (-1);
 	}
 	return(0);
 }
@@ -177,8 +179,9 @@ usrtb_start(void)
 		return(-1);
 	if ((usrtb = calloc(UNM_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
-		paxwarn(1, "Unable to allocate memory for user name cache table");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "user name cache table");
+		return (-1);
 	}
 	return(0);
 }
@@ -201,8 +204,9 @@ grptb_start(void)
 		return(-1);
 	if ((grptb = calloc(GNM_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
-		paxwarn(1,"Unable to allocate memory for group name cache table");
-		return(-1);
+		paxwarn(1,"%s for %s", "Out of memory",
+		    "group name cache table");
+		return (-1);
 	}
 	return(0);
 }

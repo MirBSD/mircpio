@@ -58,7 +58,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.26 2018/12/12 18:08:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.27 2018/12/13 07:09:08 tg Exp $");
 
 #ifndef PAX_SAFE_PATH
 #define PAX_SAFE_PATH "/bin:/usr/bin"
@@ -75,21 +75,21 @@ __RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.26 2018/12/12 18:08:41 tg Exp $");
 #define STDO		"<STDOUT>"	/* pseudo name for stdout */
 #define STDN		"<STDIN>"	/* pseudo name for stdin */
 int arfd = -1;				/* archive file descriptor */
-static int artyp = ISREG;		/* archive type: file/FIFO/tape */
+static char artyp = ISREG;		/* archive type: file/FIFO/tape */
 static int arvol = 1;			/* archive volume number */
 static int lstrval = -1;		/* return value from last i/o */
-static int io_ok;			/* i/o worked on volume after resync */
-static int did_io;			/* did i/o ever occur on volume? */
-static int done;			/* set via tty termination */
+static char io_ok;			/* i/o worked on volume after resync */
+static char did_io;			/* did i/o ever occur on volume? */
+static char done;			/* set via tty termination */
 static struct stat arsb;		/* stat of archive device at open */
-static int invld_rec;			/* tape has out of spec record size */
-static int wr_trail = 1;		/* trailer was rewritten in append */
-static int can_unlnk = 0;		/* do we unlink null archives?  */
+static char invld_rec;			/* tape has out of spec record size */
+static char wr_trail = 1;		/* trailer was rewritten in append */
+static char can_unlnk = 0;		/* do we unlink null archives?  */
 const char *arcname;			/* printable name of archive */
 static char *arcname_alloc = NULL;	/* this is so we can free(3) it */
 const char *compress_program;		/* name of compression program */
 static pid_t zpid = -1;			/* pid of child process */
-int force_one_volume;			/* 1 if we ignore volume changes */
+char force_one_volume;			/* 1 if we ignore volume changes */
 
 #if HAVE_SYS_MTIO_H
 static int get_phys(void);
@@ -1245,7 +1245,7 @@ ar_next(void)
 			continue;
 		}
 		if (!strcmp(buf, "..")) {
-			tty_prnt("Illegal file name: .. try again\n");
+			tty_prnt("Illegal file name '..', try again\n");
 			free(buf);
 			continue;
 		}
@@ -1286,10 +1286,10 @@ ar_start_compress(int fd, int wr)
 		return;
 
 	if (pipe(fds) < 0)
-		err(1, "could not pipe");
+		err(1, "pipe");
 	zpid = fork();
 	if (zpid < 0)
-		err(1, "could not fork");
+		err(1, "fork");
 
 	/* parent */
 	if (zpid) {
@@ -1322,7 +1322,7 @@ ar_start_compress(int fd, int wr)
 
 		if (execlp(compress_program, compress_program,
 		    compress_flags, (char *)NULL) < 0)
-			err(1, "could not exec %s", compress_program);
+			err(1, "exec(%s)", compress_program);
 		/* NOTREACHED */
 	}
 }

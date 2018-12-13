@@ -60,7 +60,7 @@
 #include "ftimes.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.19 2018/12/12 18:08:41 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_subs.c,v 1.20 2018/12/13 07:09:09 tg Exp $");
 
 static void wr_archive(ARCHD *, int is_app);
 static int get_arc(void);
@@ -74,7 +74,7 @@ extern sigset_t s_mask;
 
 static char hdbuf[BLKMULT];		/* space for archive header on read */
 u_long flcnt;				/* number of files processed */
-int ar_do_keepopen = 0;			/* see append() below */
+char ar_do_keepopen = 0;		/* see append() below */
 
 /*
  * list()
@@ -370,7 +370,7 @@ extract(void)
 		if ((arcn->pat != NULL) && (arcn->pat->chdname != NULL))
 			if (!to_stdout && fchdir(cwdfd) != 0)
 				syswarn(1, errno,
-				    "Can't fchdir to starting directory");
+				    "Cannot fchdir to starting directory");
 	}
 
 	/*
@@ -610,7 +610,7 @@ append(void)
 	ARCHD *arcn;
 	int res;
 	ARCHD archd;
-	FSUB *orgfrmt;
+	const FSUB *orgfrmt;
 	int udev;
 	off_t tlen;
 

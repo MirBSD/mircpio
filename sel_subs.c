@@ -59,7 +59,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.9 2018/12/12 18:08:46 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.10 2018/12/13 07:09:11 tg Exp $");
 
 /*
  * data structure for storing uid/grp selects (-U, -G non standard options)
@@ -156,8 +156,9 @@ usr_add(char *str)
 		return(-1);
 	if ((usrtb == NULL) &&
 	    ((usrtb = calloc(USR_TB_SZ, sizeof(USRT *))) == NULL)) {
-		paxwarn(1, "Unable to allocate memory for user selection table");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "user selection table");
+		return (-1);
 	}
 
 	/*
@@ -170,8 +171,8 @@ usr_add(char *str)
 		if ((str[0] == '\\') && (str[1] == '#'))
 			++str;
 		if (uid_uncached(str, &uid) < 0) {
-			paxwarn(1, "Unable to find uid for user: %s", str);
-			return(-1);
+			paxwarn(1, "Unable to find uid for user %s", str);
+			return (-1);
 		}
 	} else
 		uid = (uid_t)strtoul(str+1, NULL, 10);
@@ -198,8 +199,9 @@ usr_add(char *str)
 		usrtb[indx] = pt;
 		return(0);
 	}
-	paxwarn(1, "User selection table out of memory");
-	return(-1);
+	paxwarn(1, "%s for %s", "Out of memory",
+	    "user selection table");
+	return (-1);
 }
 
 /*
@@ -251,8 +253,9 @@ grp_add(char *str)
 		return(-1);
 	if ((grptb == NULL) &&
 	    ((grptb = calloc(GRP_TB_SZ, sizeof(GRPT *))) == NULL)) {
-		paxwarn(1, "Unable to allocate memory fo group selection table");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "group selection table");
+		return (-1);
 	}
 
 	/*
@@ -265,8 +268,8 @@ grp_add(char *str)
 		if ((str[0] == '\\') && (str[1] == '#'))
 			++str;
 		if (gid_uncached(str, &gid) < 0) {
-			paxwarn(1,"Cannot determine gid for group name: %s", str);
-			return(-1);
+			paxwarn(1, "Unable to find gid for group %s", str);
+			return (-1);
 		}
 	} else
 		gid = (gid_t)strtoul(str+1, NULL, 10);
@@ -293,8 +296,9 @@ grp_add(char *str)
 		grptb[indx] = pt;
 		return(0);
 	}
-	paxwarn(1, "Group selection table out of memory");
-	return(-1);
+	paxwarn(1, "%s for %s", "Out of memory",
+	    "group selection table");
+	return (-1);
 }
 
 /*
@@ -402,8 +406,9 @@ trng_add(char *str)
 	 * allocate space for the time range and store the limits
 	 */
 	if ((pt = malloc(sizeof(TIME_RNG))) == NULL) {
-		paxwarn(1, "Unable to allocate memory for time range");
-		return(-1);
+		paxwarn(1, "%s for %s", "Out of memory",
+		    "time range");
+		return (-1);
 	}
 
 	/*
@@ -443,7 +448,7 @@ trng_add(char *str)
 		 * add lower limit
 		 */
 		if (str_sec(str, &(pt->low_time)) < 0) {
-			paxwarn(1, "Illegal lower time range %s", str);
+			paxwarn(1, "Illegal %ser time range %s", "low", str);
 			free(pt);
 			goto out;
 		}
@@ -455,7 +460,7 @@ trng_add(char *str)
 		 * add upper limit
 		 */
 		if (str_sec(up_pt, &(pt->high_time)) < 0) {
-			paxwarn(1, "Illegal upper time range %s", up_pt);
+			paxwarn(1, "Illegal %ser time range %s", "upp", up_pt);
 			free(pt);
 			goto out;
 		}
