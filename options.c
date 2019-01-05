@@ -2,7 +2,7 @@
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006, 2007, 2009, 2011, 2012, 2014, 2016
+ * Copyright (c) 2005, 2006, 2007, 2009, 2011, 2012, 2014, 2016, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -63,7 +63,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.66 2018/12/13 07:09:10 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.67 2019/01/05 10:29:50 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -351,7 +351,7 @@ gather_format(FSUB *fp, const char *name, int flag)
 {
 	size_t i;
 
-	if ((frmt = (FSUB *)bsearch((void *)fp, (void *)fsub,
+	if ((frmt = (const FSUB *)bsearch((const void *)fp, (const void *)fsub,
 	    sizeof(fsub) / sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
 		return (0);
 	paxwarn(1, "Unknown -%c format: %s", flag, optarg);
