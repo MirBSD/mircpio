@@ -39,7 +39,7 @@ ifeq (0,gmake ignores from here)
 #define __RCSID(x)		static const char __rcsid[] = x
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.6 2018/08/10 02:53:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.7 2019/01/05 16:39:26 tg Exp $");
 
 #ifdef WIDEC
 #ifdef OUTSIDE_OF_LIBKERN
@@ -72,6 +72,10 @@ typedef __WCHAR_TYPE__ wchar_t;
 
 #ifdef OUTSIDE_OF_LIBKERN
 extern size_t fn_len(const char_t *);
+#ifdef NEED_STRLFUN_PROTOS
+size_t fn_cat(char_t *, const char_t *, size_t);
+size_t fn_cpy(char_t *, const char_t *, size_t);
+#endif
 #endif
 
 #ifndef __predict_true
