@@ -35,7 +35,7 @@
 #define PAX_JUST_THE_WARNINGS
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.3 2019/02/10 21:50:06 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.4 2019/02/10 22:31:37 tg Exp $");
 
 int
 binopen3(int features, const char *path, int flags, mode_t mode)
@@ -89,11 +89,96 @@ dwrite(int fd, const void *data, size_t size)
 }
 
 #if !HAVE_DPRINTF
+#include <stdarg.h>
+#include <string.h>
+static char *dprintf_donum(char *, unsigned long long);
+
 /* replacement only as powerful as needed for this */
 void
-dprintf(int fd, const char *fmt MKSH_A_UNUSED, ...)
+dprintf(int fd, const char *fmt, ...)
 {
-	write(fd, "\nERROR: dprintf not yet implemented!\n", 37);
+	/* %s %llu %lu %d */
+	const char *ccp;
+	char *cp, buf[24];
+	unsigned long long uval;
+	va_list ap;
+
+	va_start(ap, fmt);
+ loop:
+	switch (*fmt) {
+	case 0:
+		goto out;
+	case '%':
+		break;
+	default:
+		ccp = fmt;
+		do {
+			++ccp;
+		} while (*ccp && *ccp != '%');
+		if (dwrite(fd, fmt, ccp - fmt) < 0)
+			goto out;
+		fmt = ccp;
+		goto loop;
+	}
+	switch (*++fmt) {
+	case 'd': {
+		int ival;
+
+		ival = va_arg(ap, int);
+		cp = buf;
+		if (ival < 0) {
+			*cp++ = '-';
+			uval = -(long long)ival;
+		} else
+			uval = ival;
+		goto num;
+	}
+	case 'l':
+		switch (*++fmt) {
+		case 'l':
+			if (*++fmt != 'u') {
+ errfmt:
+				/* could do something about this? */
+				goto loop;
+			}
+			uval = va_arg(ap, unsigned long long);
+			break;
+		case 'u':
+			uval = va_arg(ap, unsigned long);
+			break;
+		default:
+			goto errfmt;
+		}
+		cp = buf;
+ num:
+		*dprintf_donum(cp, uval) = '\0';
+		cp = buf;
+		if (0)
+			/* FALLTHROUGH */
+	case 's':
+		  cp = va_arg(ap, char *);
+		if (dwrite(fd, cp, strlen(cp)) < 0)
+			goto out;
+		break;
+	default:
+		goto errfmt;
+	}
+	++fmt;
+	goto loop;
+
+ out:
+	va_end(ap);
+}
+
+static char *
+dprintf_donum(char *cp, unsigned long long val)
+{
+	unsigned long long subval = val / 10;
+
+	if (subval)
+		cp = dprintf_donum(cp, subval);
+	*cp++ = '0' + (val % 10);
+	return (cp);
 }
 #endif
 
