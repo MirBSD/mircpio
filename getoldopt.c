@@ -6,8 +6,10 @@
  * arguments.  If the first argument begins with "-", it uses getopt;
  * otherwise, it uses the old rules used by tar, dump, and ps.
  *
- * Written 25 August 1985 by John Gilmore (ihnp4!hoptoad!gnu) and placed
- * in the Public Domain for your edification and enjoyment.
+ * Written 25 August 1985 by John Gilmore (ihnp4!hoptoad!gnu) and
+ * placed in the Public Domain for your edification and enjoyment,
+ * https://creativecommons.org/publicdomain/zero/1.0/legalcode (CC0)
+ * being an alternative licence, confirmed by eMail on 2019-02-10.
  */
 
 #include <sys/types.h>
@@ -22,7 +24,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.6 2018/12/12 18:08:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/getoldopt.c,v 1.7 2019/02/10 22:00:06 tg Exp $");
 
 int
 getoldopt(int argc, char **argv, const char *optstring)
