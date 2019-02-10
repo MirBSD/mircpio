@@ -2,7 +2,7 @@
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2006, 2012, 2016, 2017
+ * Copyright (c) 2006, 2012, 2016, 2017, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -57,7 +57,7 @@
 #include "extern.h"
 #include "tar.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.22 2018/12/13 07:09:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.23 2019/02/10 21:50:08 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -326,25 +326,25 @@ tar_id(char *blk, int size)
 	HD_USTAR *uhd;
 
 	if (size < BLKMULT)
-		return(-1);
+		return (-1);
 	hd = (HD_TAR *)blk;
 	uhd = (HD_USTAR *)blk;
 
 	/*
-	 * check for block of zero's first, a simple and fast test, then make
+	 * check for block of NULs first, a simple and fast test, then make
 	 * sure this is not a ustar header by looking for the ustar magic
 	 * cookie. We should use TMAGLEN, but some USTAR archive programs are
 	 * wrong and create archives missing the \0. Last we check the
 	 * checksum. If this is ok we have to assume it is a valid header.
 	 */
 	if (hd->name[0] == '\0')
-		return(-1);
-	if (strncmp(uhd->magic, TMAGIC, TMAGLEN - 1) == 0)
-		return(-1);
-	if (asc_ul(hd->chksum,sizeof(hd->chksum),OCT) != tar_chksm(blk,BLKMULT))
-		return(-1);
+		return (-1);
+	if (memcmp(uhd->magic, TMAGIC, TMAGLEN - 1) == 0)
+		return (-1);
+	if (asc_ul(hd->chksum, sizeof(hd->chksum), OCT) != tar_chksm(blk, BLKMULT))
+		return (-1);
 	force_one_volume = 1;
-	return(0);
+	return (0);
 }
 
 /*
@@ -733,22 +733,22 @@ ustar_id(char *blk, int size)
 	HD_USTAR *hd;
 
 	if (size < BLKMULT)
-		return(-1);
+		return (-1);
 	hd = (HD_USTAR *)blk;
 
 	/*
-	 * check for block of zero's first, a simple and fast test then check
+	 * check for block of NULs first, a simple and fast test, then check
 	 * ustar magic cookie. We should use TMAGLEN, but some USTAR archive
 	 * programs are fouled up and create archives missing the \0. Last we
 	 * check the checksum. If ok we have to assume it is a valid header.
 	 */
 	if (hd->prefix[0] == '\0' && hd->name[0] == '\0')
-		return(-1);
-	if (strncmp(hd->magic, TMAGIC, TMAGLEN - 1) != 0)
-		return(-1);
-	if (asc_ul(hd->chksum,sizeof(hd->chksum),OCT) != tar_chksm(blk,BLKMULT))
-		return(-1);
-	return(0);
+		return (-1);
+	if (memcmp(hd->magic, TMAGIC, TMAGLEN - 1) != 0)
+		return (-1);
+	if (asc_ul(hd->chksum, sizeof(hd->chksum), OCT) != tar_chksm(blk, BLKMULT))
+		return (-1);
+	return (0);
 }
 
 /*
@@ -1045,7 +1045,7 @@ ustar_wr(ARCHD *arcn)
 
 	t_uid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_uid;
 	t_gid   = (anonarch & ANON_UIDGID) ? 0UL : (u_long)arcn->sb.st_gid;
-	t_mtime = (anonarch & ANON_MTIME)  ? 0UL : arcn->sb.st_mtime;
+	t_mtime = (anonarch & ANON_MTIME)  ? 0   : arcn->sb.st_mtime;
 
 	/*
 	 * set the fields in the header that are type dependent
@@ -1105,8 +1105,8 @@ ustar_wr(ARCHD *arcn)
 		break;
 	}
 
-	strncpy(hd->magic, TMAGIC, TMAGLEN);
-	strncpy(hd->version, TVERSION, TVERSLEN);
+	memcpy(hd->magic, TMAGIC, TMAGLEN);
+	memcpy(hd->version, TVERSION, TVERSLEN);
 
 	/*
 	 * set the remaining fields. Some versions want all 16 bits of mode

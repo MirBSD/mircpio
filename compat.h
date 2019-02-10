@@ -1,6 +1,7 @@
 /*-
  * Copyright © 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
- *	       2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018
+ *	       2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
+ *	       2019
  *	mirabilos <m@mirbsd.org>
  * Copyright © 2018
  *	mirabilos <t.glaser@tarent.de>
@@ -102,7 +103,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.2 2018/12/12 18:08:42 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.3 2019/02/10 21:50:07 tg Exp $");
 #endif
 
 /* possibly missing types */
@@ -131,7 +132,20 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 typedef unsigned long u_long;
 #endif
 
+#if HAVE_OFFT_LONG
+#define OT_FMT "lu"
+#else
+#define OT_FMT "llu"
+#endif
+
 /* macros dealing with struct stat.sb_[acm]time */
+
+#ifndef timespeccmp
+#define	timespeccmp(tsp, usp, cmp)					\
+	(((tsp)->tv_sec == (usp)->tv_sec) ?				\
+	    ((tsp)->tv_nsec cmp (usp)->tv_nsec) :			\
+	    ((tsp)->tv_sec cmp (usp)->tv_sec))
+#endif
 
 #if HAVE_ST_MTIM
 #define st_timecmp(x,sbpa,sbpb,op) \
@@ -181,6 +195,9 @@ int binopen3(int, const char *, int, mode_t)
 ssize_t dwrite(int, const void *, size_t)
     MKSH_A_BOUNDED(__buffer__, 2, 3);
 
+/* exclude system replacement functions in early link check */
+#ifndef MIRTOCONF_EARLY
+
 #if !HAVE_DPRINTF
 /* replacement only as powerful as needed for this */
 void dprintf(int, const char *, ...)
@@ -202,5 +219,11 @@ size_t strlcpy(char *, const char *, size_t)
 #if !HAVE_STRMODE
 void strmode(mode_t, char *);
 #endif
+
+#if !HAVE_STRTONUM
+long long strtonum(const char *, long long, long long, const char **);
+#endif
+
+#endif /* !MIRTOCONF_EARLY */
 
 #endif

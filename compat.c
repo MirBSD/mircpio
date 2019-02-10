@@ -1,4 +1,6 @@
 /*-
+ * Copyright © 2019
+ *	mirabilos <m@mirbsd.org>
  * Copyright © 2018
  *	mirabilos <t.glaser@tarent.de>
  * The copyright notices and licences of the files in .linked/ inclu‐
@@ -33,7 +35,7 @@
 #define PAX_JUST_THE_WARNINGS
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.2 2018/12/12 18:08:42 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.3 2019/02/10 21:50:06 tg Exp $");
 
 int
 binopen3(int features, const char *path, int flags, mode_t mode)
@@ -101,6 +103,11 @@ dprintf(int fd, const char *fmt MKSH_A_UNUSED, ...)
 
 #if !HAVE_STRMODE
 #include ".linked/strmode.inc"
+#endif
+
+#if !HAVE_STRTONUM
+/* assumes serviceable “long long” */
+#include ".linked/strtonum.inc"
 #endif
 
 #if !HAVE_STRLCPY

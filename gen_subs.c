@@ -2,7 +2,7 @@
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2012, 2015, 2016
+ * Copyright (c) 2012, 2015, 2016, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -69,7 +69,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.20 2018/12/12 18:08:44 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/gen_subs.c,v 1.21 2019/02/10 21:50:07 tg Exp $");
 
 /*
  * a collection of general purpose subroutines used by pax
@@ -140,7 +140,7 @@ ls_list(ARCHD *arcn, FILE *fp)
 		    (unsigned long)MAJOR(sbp->st_rdev),
 		    (unsigned long)MINOR(sbp->st_rdev));
 	else
-		(void)fprintf(fp, "%9llu ", sbp->st_size);
+		(void)fprintf(fp, "%9" OT_FMT " ", sbp->st_size);
 
 	/*
 	 * print name and link info for hard and soft links

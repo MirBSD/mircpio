@@ -1,8 +1,8 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.3 2018/12/13 07:09:08 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.4 2019/02/10 21:50:05 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-#		2011, 2012, 2013, 2014, 2015, 2016, 2017
+#		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
 #	mirabilos <m@mirbsd.org>
 # Copyright (c) 2018
 #	mirabilos <t.glaser@tarent.de>
@@ -675,7 +675,7 @@ operating system '$TARGET_OS'$oswarn. If you can provide
 a shell account to the developer, this may improve; please
 drop us a success or failure notice or even send in diffs.
 "
-$e "$bi$me: Building MirCPIO (paxmirabilis)$ao $ui$dstversion$ao on $TARGET_OS ${TARGET_OSREV}..."
+$e "$bi$me: Building MirCPIO (paxmirabilis)$ao on $TARGET_OS ${TARGET_OSREV}..."
 
 #
 # Start of mirtoconf checks
@@ -1490,6 +1490,7 @@ else
 		#include <vis.h>
 		#endif
 		#define EXTERN
+		#define MIRTOCONF_EARLY
 		#include "pax.h"
 		#include "ftimes.h"
 		#include "ar.h"
@@ -1537,9 +1538,11 @@ ac_test dprintf <<-'EOF'
 EOF
 
 ac_test fchmodat <<-'EOF'
+	#include <sys/types.h>
+	#include <sys/stat.h>
 	#include <fcntl.h>
 	#include <unistd.h>
-	int main(void) { return (fchownat(AT_FDCWD, ".",
+	int main(void) { return (fchmodat(AT_FDCWD, ".",
 	    0, AT_SYMLINK_NOFOLLOW)); }
 EOF
 
@@ -1661,22 +1664,7 @@ EOF
 #
 # other checks
 #
-ac_test offt_llong '' 'whether off_t is as wide as long long' <<-'EOF'
-	#include <sys/types.h>
-	#include <limits.h>
-	#include <unistd.h>
-	#ifndef CHAR_BIT
-	#define CHAR_BIT 0
-	#endif
-	struct ctasserts {
-	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
-		cta(char_is_8_bits, (CHAR_BIT) == 8);
-		cta(off_t_is_llong, sizeof(off_t) == sizeof(long long));
-	};
-	int main(void) { return (sizeof(struct ctasserts)); }
-EOF
-
-ac_testn offt_long '!' offt_llong 0 'whether off_t is as wide as long' <<-'EOF'
+ac_test offt_long '' 'whether off_t is as wide as long' <<-'EOF'
 	#include <sys/types.h>
 	#include <limits.h>
 	#include <unistd.h>
@@ -1691,35 +1679,28 @@ ac_testn offt_long '!' offt_llong 0 'whether off_t is as wide as long' <<-'EOF'
 	int main(void) { return (sizeof(struct ctasserts)); }
 EOF
 
-case $HAVE_OFFT_LLONG$HAVE_OFFT_LONG in
-10|01)	;;
-*)	echo Cannot determine width of off_t
-	exit 1 ;;
-esac
-
-ac_test timet_llong '' 'whether time_t is as wide as long long' <<-'EOF'
+ac_testn offt_llong '!' offt_long 0 'whether off_t is as wide as long long' <<-'EOF'
 	#include <sys/types.h>
-	#if HAVE_BOTH_TIME_H
-	#include <sys/time.h>
-	#include <time.h>
-	#elif HAVE_SYS_TIME_H
-	#include <sys/time.h>
-	#elif HAVE_TIME_H
-	#include <time.h>
-	#endif
 	#include <limits.h>
+	#include <unistd.h>
 	#ifndef CHAR_BIT
 	#define CHAR_BIT 0
 	#endif
 	struct ctasserts {
 	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
 		cta(char_is_8_bits, (CHAR_BIT) == 8);
-		cta(time_t_is_llong, sizeof(time_t) == sizeof(long long));
+		cta(off_t_is_llong, sizeof(off_t) == sizeof(long long));
 	};
 	int main(void) { return (sizeof(struct ctasserts)); }
 EOF
 
-ac_testn timet_long '!' timet_llong 0 'whether time_t is as wide as long' <<-'EOF'
+case $HAVE_OFFT_LLONG$HAVE_OFFT_LONG in
+10|01)	;;
+*)	echo Cannot determine width of off_t
+	exit 1 ;;
+esac
+
+ac_test timet_long '' 'whether time_t is as wide as long' <<-'EOF'
 	#include <sys/types.h>
 	#if HAVE_BOTH_TIME_H
 	#include <sys/time.h>
@@ -1741,11 +1722,55 @@ ac_testn timet_long '!' timet_llong 0 'whether time_t is as wide as long' <<-'EO
 	int main(void) { return (sizeof(struct ctasserts)); }
 EOF
 
+ac_testn timet_llong '!' timet_long 0 'whether time_t is as wide as long long' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <limits.h>
+	#ifndef CHAR_BIT
+	#define CHAR_BIT 0
+	#endif
+	struct ctasserts {
+	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+		cta(char_is_8_bits, (CHAR_BIT) == 8);
+		cta(time_t_is_llong, sizeof(time_t) == sizeof(long long));
+	};
+	int main(void) { return (sizeof(struct ctasserts)); }
+EOF
+
 case $HAVE_TIMET_LLONG$HAVE_TIMET_LONG in
 10|01)	;;
 *)	echo Cannot determine width of time_t
 	exit 1 ;;
 esac
+
+ac_test timet_large '' 'whether time_t is wider than 32 bit' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <limits.h>
+	#ifndef CHAR_BIT
+	#define CHAR_BIT 0
+	#endif
+	struct ctasserts {
+	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+		cta(char_is_8_bits, (CHAR_BIT) == 8);
+		cta(time_t_is_large, sizeof(time_t) > 4);
+	};
+	int main(void) { return (sizeof(struct ctasserts)); }
+EOF
 
 ac_test st_mtim '' 'whether struct stat has usable st_mtim' <<-'EOF'
 	#include <sys/types.h>
@@ -1758,6 +1783,7 @@ ac_test st_mtim '' 'whether struct stat has usable st_mtim' <<-'EOF'
 	#include <time.h>
 	#endif
 	#include <sys/stat.h>
+	#include "compat.h"
 	int main(void) {
 		struct stat sb;
 		struct timespec ts = { 1544585569L, 0L };
@@ -1857,7 +1883,7 @@ echo "for x in $paxexe $cpioexe $tarexe; do" >>Rebuild.sh
 echo "  ln \$tcfn \$x || cp \$tcfn \$x || exit 1" >>Rebuild.sh
 echo "done" >>Rebuild.sh
 if test $cm = makefile; then
-	extras='.linked/reallocarray.inc .linked/strlfun.inc .linked/strmode.inc ar.h compat.h cpio.h extern.h ftimes.h pax.h tar.h'
+	extras='.linked/reallocarray.inc .linked/strlfun.inc .linked/strmode.inc .linked/strtonum.inc ar.h compat.h cpio.h extern.h ftimes.h pax.h tar.h'
 	cat >Makefrag.inc <<EOF
 # Makefile fragment for building paxmirabilis
 
@@ -1946,7 +1972,7 @@ test -f /usr/ucb/$i && i=/usr/ucb/$i
 test 1 = $eq && e=:
 $e
 $e Installing the executable:
-$e "# $i -c -s -o root -g bin -m 555 $tfn /bin/$paxexe"
+$e "# $i -c -s -o root -g bin -m 555 $paxexe /bin/$paxexe"
 for x in $cpioexe $tarexe; do
 	$e "# ln /bin/$paxexe /bin/$x || cp /bin/$paxexe /bin/$x"
 done

@@ -2,7 +2,7 @@
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2012, 2016, 2017
+ * Copyright (c) 2012, 2016, 2017, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -58,7 +58,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.27 2018/12/13 07:09:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar_io.c,v 1.28 2019/02/10 21:50:06 tg Exp $");
 
 #ifndef PAX_SAFE_PATH
 #define PAX_SAFE_PATH "/bin:/usr/bin"
@@ -414,17 +414,17 @@ ar_close(int in_sig)
 	 */
 	if (frmt == NULL) {
 		(void)dprintf(listfd,
-		    "%s: unknown format, %llu bytes skipped.\n", argv0, rdcnt);
+		    "%s: unknown format, %" OT_FMT " bytes skipped.\n", argv0, rdcnt);
 		flcnt = 0;
 		return;
 	}
 
 	if (op_mode == OP_PAX)
 		(void)dprintf(listfd, "%s: %s vol %d, %lu files,"
-		    " %llu bytes read, %llu bytes written.\n",
+		    " %" OT_FMT " bytes read, %" OT_FMT " bytes written.\n",
 		    argv0, frmt->name, arvol-1, flcnt, rdcnt, wrcnt);
 	else if (op_mode == OP_CPIO)
-		(void)dprintf(listfd, "%llu blocks\n",
+		(void)dprintf(listfd, "%" OT_FMT " blocks\n",
 		    (rdcnt ? rdcnt : wrcnt) / 5120);
 	flcnt = 0;
 }

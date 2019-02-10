@@ -1,5 +1,5 @@
 /*-
- * Copyright © 2011, 2017
+ * Copyright © 2011, 2017, 2019
  *	mirabilos <m@mirbsd.org>
  *
  * Provided that these terms and disclaimer and all copyright notices
@@ -41,7 +41,7 @@
 #include "ar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/ar.c,v 1.11 2018/12/13 07:12:00 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/ar.c,v 1.12 2019/02/10 21:50:06 tg Exp $");
 
 /*
  * Routines for reading and writing Unix Archiver format libraries
@@ -250,10 +250,12 @@ uar_wr(ARCHD *arcn)
 	if (!(anonarch & ANON_MTIME))
 		t_mtime = arcn->sb.st_mtime;
 
-	if (sizeof(time_t) > 4 && t_mtime > (time_t)999999999999ULL) {
+#if HAVE_TIMET_LARGE
+	if (t_mtime > (time_t)999999999999ULL) {
 		paxwarn(1, "%s overflow for %s", "mtime", arcn->org_name);
 		t_mtime = (time_t)999999999999ULL;
 	}
+#endif
 	if (t_uid > 999999UL) {
 		paxwarn(1, "%s overflow for %s", "uid", arcn->org_name);
 		t_uid = 999999UL;

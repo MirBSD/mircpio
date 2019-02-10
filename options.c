@@ -63,7 +63,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.67 2019/01/05 10:29:50 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.68 2019/02/10 21:50:08 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -1781,12 +1781,12 @@ opt_add(const char *str)
  *	0 for an error, a positive value o.w.
  */
 
-#if HAVE_OFFT_LLONG
-#define OT_MAX	LLONG_MAX
-#define strtoot	strtoll
-#else
+#if HAVE_OFFT_LONG
 #define OT_MAX	LONG_MAX
 #define strtoot	strtol
+#else
+#define OT_MAX	LLONG_MAX
+#define strtoot	strtoll
 #endif
 
 static off_t

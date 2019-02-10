@@ -2,7 +2,7 @@
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2012, 2016
+ * Copyright (c) 2005, 2012, 2016, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -51,7 +51,7 @@
 #include "cpio.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.25 2018/12/13 07:09:09 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.26 2019/02/10 21:50:07 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -221,7 +221,7 @@ rd_ln_nm(ARCHD *arcn)
 	 */
 	if ((arcn->sb.st_size <= 0) ||
 	    (arcn->sb.st_size >= (off_t)sizeof(arcn->ln_name))) {
-		paxwarn(1, "cpio link name length is invalid: %lld",
+		paxwarn(1, "cpio link name length is invalid: %" OT_FMT,
 		    arcn->sb.st_size);
 		return(-1);
 	}

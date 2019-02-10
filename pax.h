@@ -2,7 +2,7 @@
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2006, 2009, 2011, 2012, 2016, 2017
+ * Copyright (c) 2006, 2009, 2011, 2012, 2016, 2017, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -41,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.22 2018/12/13 07:09:11 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.23 2019/02/10 21:50:08 tg Exp $");
 #endif
 
 /*
@@ -303,8 +303,8 @@ enum fsub_order {
 #define OCT		8
 #define _PAX_		1
 #define _TFILE_BASE	"paxXXXXXXXXXX"
-#if HAVE_TIMET_LLONG
-#define MAX_TIME_T	LLONG_MAX
-#else
+#if HAVE_TIMET_LONG
 #define MAX_TIME_T	LONG_MAX
+#else
+#define MAX_TIME_T	LLONG_MAX
 #endif

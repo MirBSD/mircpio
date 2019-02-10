@@ -2,7 +2,7 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018
+ * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2018
  *	Jonathan de Boyne Pollard <J.deBoynePollard-newsgroups@NTLWorld.COM>
@@ -71,7 +71,7 @@
 #undef EXTERN
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.29 2018/12/13 07:09:10 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.30 2019/02/10 21:50:07 tg Exp $");
 
 /*
  * routines that deal with file operations such as: creating, removing;
@@ -859,7 +859,7 @@ set_ftime(const char *fnm, const struct stat *sbp, int frc,
 
 	/* set the times */
 #if HAVE_UTIMENSAT
-	rv = utimensat(AT_FDCWD, fnm, tv, AT_SYMLINK_NOFOLLOW);
+	rv = utimensat(AT_FDCWD, fnm, ts, AT_SYMLINK_NOFOLLOW);
 #elif HAVE_UTIMES
 	tv[0].tv_sec = ts[0].tv_sec;
 	tv[0].tv_usec = ts[0].tv_nsec / 1000;
