@@ -2,7 +2,7 @@
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
- * Copyright © 2013, 2015, 2016, 2018
+ * Copyright © 2013, 2015, 2016, 2018, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.37 2018/12/13 07:14:16 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.38 2019/02/20 22:07:01 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -117,23 +117,21 @@ int buf_fill(void);
 int buf_fill_internal(int);
 int buf_flush(int);
 
-#if !HAVE_UGID_FROM_UG
 /*
  * cache.c
  */
 #if !HAVE_UG_FROM_UGID
 int uidtb_start(void);
 int gidtb_start(void);
-#endif
-int usrtb_start(void);
-int grptb_start(void);
-#if HAVE_UG_FROM_UGID
-#define name_uid(u, frc) ((const char *)user_from_uid((u), !(frc)))
-#define name_gid(g, frc) ((const char *)group_from_gid((g), !(frc)))
-#else
 const char *name_uid(uid_t, int);
 const char *name_gid(gid_t, int);
+#else
+#define name_uid(u, frc) ((const char *)user_from_uid((u), !(frc)))
+#define name_gid(g, frc) ((const char *)group_from_gid((g), !(frc)))
 #endif
+#if !HAVE_UGID_FROM_UG
+int usrtb_start(void);
+int grptb_start(void);
 int uid_name(const char *, uid_t *);
 int gid_name(const char *, gid_t *);
 int uid_uncached(const char *, uid_t *);

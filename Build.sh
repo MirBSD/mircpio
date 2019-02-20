@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.4 2019/02/10 21:50:05 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.5 2019/02/20 22:07:01 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
@@ -572,6 +572,10 @@ Linux)
 	*tendracc*) ;;
 	*) add_cppflags -D_GNU_SOURCE ;;
 	esac
+	;;
+MidnightBSD)
+	add_cppflags -D_WITH_DPRINTF
+	add_cppflags -DUT_NAMESIZE=32
 	;;
 MirBSD)
 	add_cppflags -D_ALL_SOURCE
