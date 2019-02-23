@@ -103,7 +103,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.3 2019/02/10 21:50:07 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.4 2019/02/23 23:24:54 tg Exp $");
 #endif
 
 /* possibly missing types */
@@ -131,6 +131,16 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #if !HAVE_CAN_ULONG
 typedef unsigned long u_long;
 #endif
+
+/* missing macros / header bug workarounds */
+
+#if !defined(LLONG_MIN) && defined(LONG_LONG_MIN)
+#define LLONG_MIN LONG_LONG_MIN
+#define LLONG_MAX LONG_LONG_MAX
+#define ULLONG_MAX ULONG_LONG_MAX
+#endif
+
+/* macros dealing with types differing across systems */
 
 #if HAVE_OFFT_LONG
 #define OT_FMT "lu"

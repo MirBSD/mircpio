@@ -29,13 +29,14 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <unistd.h>
 
 #include "compat.h"
 #define PAX_JUST_THE_WARNINGS
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.4 2019/02/10 22:31:37 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.5 2019/02/23 23:24:54 tg Exp $");
 
 int
 binopen3(int features, const char *path, int flags, mode_t mode)
