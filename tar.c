@@ -57,7 +57,7 @@
 #include "extern.h"
 #include "tar.h"
 
-__RCSID("$MirOS: src/bin/pax/tar.c,v 1.23 2019/02/10 21:50:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tar.c,v 1.24 2019/02/23 22:39:25 tg Exp $");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -1144,9 +1144,9 @@ ustar_wr(ARCHD *arcn)
 	    ul_oct(arcn->sb.st_mode, hd->mode, sizeof(hd->mode), 3))
 		goto out;
 	if (!(anonarch & ANON_NUMID)) {
-		if ((name = name_uid(arcn->sb.st_uid, 0)) != NULL)
+		if ((name = name_uid(t_uid, 0)) != NULL)
 			strncpy(hd->uname, name, sizeof(hd->uname));
-		if ((name = name_gid(arcn->sb.st_gid, 0)) != NULL)
+		if ((name = name_gid(t_gid, 0)) != NULL)
 			strncpy(hd->gname, name, sizeof(hd->gname));
 	}
 
