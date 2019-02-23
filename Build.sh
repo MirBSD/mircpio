@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.5 2019/02/20 22:07:01 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.6 2019/02/23 22:20:01 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
@@ -1561,7 +1561,7 @@ ac_test futimens <<-'EOF'
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	#include <fcntl.h>
-	struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
+	struct timespec ts[2] = {{0L, 0L}, {0L, UTIME_OMIT}};
 	int main(void) { return (futimens(0, ts)); }
 EOF
 
@@ -1650,7 +1650,7 @@ ac_test utimensat <<-'EOF'
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	#include <fcntl.h>
-	struct timespec ts[2] = {{0L, 0L}, {0L, 0L}};
+	struct timespec ts[2] = {{0L, 0L}, {0L, UTIME_OMIT}};
 	int main(void) { return (utimensat(AT_FDCWD, ".", ts,
 	    AT_SYMLINK_NOFOLLOW)); }
 EOF
