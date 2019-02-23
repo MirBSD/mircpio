@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.25 2019/02/10 21:56:04 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.26 2019/02/23 22:23:29 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017
@@ -86,6 +86,15 @@ CLEANFILES+=	${MAN:S/$/.htm/} ${MAN:S/$/.htm.gz/}
 CLEANFILES+=	${MAN:S/$/.txt/} ${MAN:S/$/.txt.gz/}
 
 .include <bsd.prog.mk>
+
+CLEANFILES+=	cpio tar
+all: cpio tar
+
+cpio:
+	ln -sf ${PROG} cpio
+
+tar:
+	ln -sf ${PROG} tar
 
 .ifmake cats
 V_GROFF!=	pkg_info -e 'groff-*'
