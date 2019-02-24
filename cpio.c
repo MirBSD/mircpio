@@ -51,7 +51,7 @@
 #include "cpio.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.26 2019/02/10 21:50:07 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.27 2019/02/24 01:49:17 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -385,13 +385,17 @@ cpio_stwr(int is_app MKSH_A_UNUSED)
 	return (dev_start());
 }
 
+#ifndef SMALL
 int
 dist_stwr(int is_app)
 {
+	mircpio_deprecated("'dist' format",
+	    "the cpio format with 512 bytes blocksize and -M dist");
 	anonarch &= ANON_DEBUG | ANON_VERBOSE;
 	anonarch |= ANON_UIDGID | ANON_INODES | ANON_HARDLINKS;
 	return (cpio_stwr(is_app));
 }
+#endif
 
 /*
  * cpio_wr()
@@ -730,9 +734,12 @@ crc_stwr(int is_app MKSH_A_UNUSED)
 	return(dev_start());
 }
 
+#ifndef SMALL
 int
 v4root_stwr(int is_app)
 {
+	mircpio_deprecated("'v4norm' format",
+	    "the sv4crc format with 512 bytes blocksize and -M root");
 	anonarch &= ANON_DEBUG | ANON_VERBOSE;
 	anonarch |= ANON_UIDGID | ANON_INODES;
 	return (crc_stwr(is_app));
@@ -741,10 +748,13 @@ v4root_stwr(int is_app)
 int
 v4norm_stwr(int is_app)
 {
+	mircpio_deprecated("'v4norm' format",
+	    "the sv4crc format with 512 bytes blocksize and -M norm");
 	anonarch &= ANON_DEBUG | ANON_VERBOSE;
 	anonarch |= ANON_UIDGID | ANON_INODES | ANON_MTIME | ANON_HARDLINKS;
 	return (crc_stwr(is_app));
 }
+#endif
 
 /*
  * vcpio_wr()

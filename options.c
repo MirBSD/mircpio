@@ -63,7 +63,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.68 2019/02/10 21:50:08 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.69 2019/02/24 01:49:18 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -222,10 +222,12 @@ const FSUB fsub[] = {
 	cpio_rd, cpio_endrd, cpio_stwr, cpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
+#ifndef SMALL
 /* FSUB_DIST: OLD OCTAL CHARACTER CPIO, UID/GID CLEARED (ANONYMISED) */
 	{"dist", 512, sizeof(HD_CPIO), 1, 0, 0, cpio_id, cpio_strd,
 	cpio_rd, cpio_endrd, dist_stwr, cpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
+#endif
 
 /* FSUB_SV4CPIO: SVR4 HEX CPIO */
 	{"sv4cpio", 5120, sizeof(HD_VCPIO), 1, 0, 0, vcpio_id, cpio_strd,
@@ -249,6 +251,7 @@ const FSUB fsub[] = {
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
 	rd_wrfile, wr_rdfile, tar_opt, 0, 0},
 
+#ifndef SMALL
 /* FSUB_V4NORM: SVR4 HEX CPIO WITH CRC, UID/GID/MTIME CLEARED (NORMALISED) */
 	{"v4norm", 512, sizeof(HD_VCPIO), 1, 0, 0, crc_id, crc_strd,
 	vcpio_rd, vcpio_endrd, v4norm_stwr, vcpio_wr, cpio_endwr, cpio_trail,
@@ -259,7 +262,6 @@ const FSUB fsub[] = {
 	vcpio_rd, vcpio_endrd, v4root_stwr, vcpio_wr, cpio_endwr, cpio_trail,
 	rd_wrfile, wr_rdfile, bad_opt, 1, 0},
 
-#ifndef SMALL
 /* FSUBFAIL_Z: compress, to detect failure to use -Z */
 	{NULL, 0, 4, 0, 0, 0, compress_id, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL,
@@ -990,10 +992,14 @@ tar_options(int argc, char **argv)
 			 */
 			nflag = 1;
 			break;
+#ifndef SMALL
 		case 'R':
 			Oflag = FSUB_SV4CPIO;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
+			mircpio_deprecated("-R flag",
+			    "the sv4cpio format with -M set");
 			break;
+#endif
 		case 'r':
 		case 'u':
 			/*
@@ -1001,10 +1007,14 @@ tar_options(int argc, char **argv)
 			 */
 			tar_set_action(APPND);
 			break;
+#ifndef SMALL
 		case 'S':
 			Oflag = FSUB_SV4CRC;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
+			mircpio_deprecated("-S flag",
+			    "the sv4crc format with -M set");
 			break;
+#endif
 		case 's':
 			/*
 			 * file name substitution name pattern
@@ -2116,5 +2126,12 @@ xz_id(char *blk, int size)
 		exit(1);
 	}
 	return (-1);
+}
+
+void
+mircpio_deprecated(const char *what, const char *with)
+{
+	paxwarn(0, "the old MirCPIO %s is deprecated and will be removed soon; use %s instead",
+	    what, with);
 }
 #endif /* !SMALL */

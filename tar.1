@@ -1,8 +1,8 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.38 2018/12/25 19:38:11 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.39 2019/02/24 01:49:18 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.61 2018/07/23 19:02:49 kn Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016,
-.\"		  2017, 2018
+.\"		  2017, 2018, 2019
 .\"	mirabilos <m@mirbsd.org>
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -83,7 +83,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: December 25 2018 $
+.Dd $Mdocdate: February 24 2019 $
 .\"
 .\" Check which macro package we use, and do other -mdoc setup.
 .\"
@@ -228,7 +228,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578AabefHhJjLmNOoPpqRSsvwXZz
+.No { Cm crtux No } Op Cm 014578AabefHhJjLmNOoPpqsvwXZz
 .Sm on
 .Bk -words
 .Op Ar blocking-factor \*(Ba archive \*(Ba replstr
@@ -239,7 +239,7 @@
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
-.Op Fl 014578AaeHhJjLmNOoPpqRSvwXZz
+.Op Fl 014578AaeHhJjLmNOoPpqvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl f Ar archive
@@ -477,14 +477,6 @@ No more than one archive member is matched for each
 .Ar file .
 When members of type directory are matched, the file hierarchy rooted at that
 directory is also matched.
-.It Fl R
-Write SysVR4 CPIO files instead of tar or POSIX ustar files.
-Serialise inode numbers, zero out device information.
-The file content of hard links is stored only once.
-.It Fl S
-Write SysVR4 CPIO files with CRC instead of tar or POSIX ustar files.
-Serialise inode numbers, zero out device information.
-The file content of hard links is stored only once.
 .It Fl s Ar replstr
 Modify the archive member names according to the substitution expression
 .Ar replstr ,
@@ -707,10 +699,25 @@ extensions by
 .An mirabilos Aq m@mirbsd.org .
 .Sh CAVEATS
 The flags
-.Fl AaJjLMNRS
+.Fl AaJjLMN
 are not portable to other implementations of
 .Nm tar
 where they may have a different meaning or not exist at all.
+This implementation may have support for other non-standard options that
+are undocumented because removal-inducing deprecation was issued.
+There is no option to select a different output format from
+.Cm ustar
+or
+.Cm tar
+except
+.Fl A ,
+which selects
+.Cm ar ;
+use the
+.Xr \*(nc 1
+or
+.Xr \*(np 1
+front-ends for that.
 .Sh BUGS
 The
 .Ar pax

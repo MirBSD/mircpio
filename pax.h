@@ -41,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.23 2019/02/10 21:50:08 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.24 2019/02/24 01:49:18 tg Exp $");
 #endif
 
 /*
@@ -262,16 +262,18 @@ enum fsub_order {
 	FSUB_BCPIO,
 #endif
 	FSUB_CPIO,
+#ifndef SMALL
 	FSUB_DIST,
+#endif
 	FSUB_SV4CPIO,
 	FSUB_SV4CRC,
 #ifndef SMALL
 	FSUB_TAR,
 #endif
 	FSUB_USTAR,
+#ifndef SMALL
 	FSUB_V4NORM,
 	FSUB_V4ROOT,
-#ifndef SMALL
 	FSUBFAIL_Z,
 	FSUBFAIL_XZ,
 	FSUBFAIL_BZ2,

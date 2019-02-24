@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.38 2019/02/20 22:07:01 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.39 2019/02/24 01:49:17 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -233,6 +233,7 @@ int opt_add(const char *);
 int bad_opt(void);
 void guess_compress_program(int);
 void anonarch_init(void);
+void mircpio_deprecated(const char *, const char *);
 extern char *chdname;
 
 /*
