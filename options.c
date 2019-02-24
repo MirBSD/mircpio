@@ -63,11 +63,14 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.69 2019/02/24 01:49:18 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.70 2019/02/24 02:04:29 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
 #endif
+
+#define NELEM(a) (sizeof(a) / sizeof((a)[0]))
+#define SELEM(a) (sizeof((a)[0]))
 
 /*
  * argv[0] names. Used for tar and cpio emulation
@@ -354,11 +357,11 @@ gather_format(FSUB *fp, const char *name, int flag)
 	size_t i;
 
 	if ((frmt = (const FSUB *)bsearch((const void *)fp, (const void *)fsub,
-	    sizeof(fsub) / sizeof(FSUB), sizeof(FSUB), c_frmt)) != NULL)
+	    NELEM(fsub), SELEM(fsub), c_frmt)) != NULL)
 		return (0);
 	paxwarn(1, "Unknown -%c format: %s", flag, optarg);
 	fprintf(stderr, "%s: Known -%c formats are:", name, flag);
-	for (i = 0; i < (sizeof(fsub)/sizeof(FSUB)); ++i)
+	for (i = 0; i < NELEM(fsub); ++i)
 		if (fsub[i].name != NULL)
 			fprintf(stderr, " %s", fsub[i].name);
 	fputs("\n\n", stderr);
