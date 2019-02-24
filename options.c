@@ -63,7 +63,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.70 2019/02/24 02:04:29 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.71 2019/02/24 02:08:24 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -1668,6 +1668,8 @@ printflg(unsigned int flg)
 static int
 c_frmt(const void *a, const void *b)
 {
+	if (!((const FSUB *)b)->name)
+		return (-1);
 	return(strcmp(((const FSUB *)a)->name, ((const FSUB *)b)->name));
 }
 
