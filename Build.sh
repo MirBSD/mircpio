@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.6 2019/02/23 22:20:01 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.7 2019/03/16 21:13:53 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
@@ -584,6 +584,10 @@ MSYS_*)
 	oswarn="; it is untested"
 	# broken on this OE (from ir0nh34d)
 	: "${HAVE_STDINT_H=0}"
+	;;
+NetBSD)
+	add_cppflags -D_NETBSD_SOURCE
+	add_cppflags -D_OPENBSD_SOURCE
 	;;
 NEXTSTEP)
 	oswarn="; it is untested"
