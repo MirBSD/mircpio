@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.9 2019/07/25 17:11:02 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.10 2019/07/25 21:25:17 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
@@ -88,7 +88,7 @@ vq() {
 rmf() {
 	for _f in "$@"; do
 		case $_f in
-		Build.sh|*.1|*.c|*.h) ;;
+		*.1) ;;
 		*) rm -f "$_f" ;;
 		esac
 	done
@@ -476,7 +476,7 @@ oswarn=
 ccpc=-Wc,
 ccpl=-Wl,
 tsts=
-ccpr='|| for _f in ${tcfn}*; do case $_f in Build.sh|*.1|*.c|*.h) ;; *) rm -f "$_f" ;; esac; done'
+ccpr='|| for _f in ${tcfn}*; do case $_f in *.1) ;; *) rm -f "$_f" ;; esac; done'
 
 # Evil hack
 if test x"$TARGET_OS" = x"Android"; then
