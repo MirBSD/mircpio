@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.11 2019/08/01 19:53:08 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.12 2019/08/01 22:08:56 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
@@ -359,7 +359,7 @@ mans=0
 for i
 do
 	case $last:$i in
-	c:combine|c:dragonegg|c:llvm|c:lto)
+	c:dragonegg|c:llvm)
 		cm=$i
 		last=
 		;;
