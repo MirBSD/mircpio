@@ -2,7 +2,7 @@
 /*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2012, 2015, 2016, 2018
+ * Copyright (c) 2005, 2012, 2015, 2016, 2018, 2019
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
@@ -65,7 +65,11 @@
 #include "ftimes.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.28 2018/12/13 07:09:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.29 2019/08/25 23:02:36 tg Exp $");
+
+#if (_POSIX_VERSION >= 200809L)
+#define REALPATH_CAN_ALLOCATE
+#endif
 
 /*
  * Routines for controlling the contents of all the different databases pax
@@ -233,6 +237,24 @@ static size_t dircnt = 0;	/* entries in dir time/mode storage */
 static int ffd = -1;		/* tmp file for file time table name storage */
 
 static DEVT *chk_dev(dev_t, int);
+
+#ifndef REALPATH_CAN_ALLOCATE
+static char realname[PATH_MAX];
+#endif
+
+static char *
+xrealpath(const char *path)
+{
+#ifndef REALPATH_CAN_ALLOCATE
+	char *rv;
+
+	if ((rv = realpath(path, realname)))
+		rv = strdup(rv);
+	return (rv);
+#else
+	return (realpath(path, NULL));
+#endif
+}
 
 /*
  * hard link table routines
@@ -721,7 +743,7 @@ sltab_add_sym(const char *path0, const char *value0, mode_t mode)
 	close(fd);
 
 	if (havechd && *path0 != '/') {
-		if ((path = realpath(path0, NULL)) == NULL) {
+		if ((path = xrealpath(path0)) == NULL) {
 			syswarn(1, errno, "Cannot canonicalise %s", path0);
 			unlink(path0);
 			return (-1);
@@ -811,7 +833,7 @@ sltab_add_link(const char *path, const struct stat *sb)
 			return (-1);
 		}
 		if (havechd && *path != '/') {
-			if ((p->sp_path = realpath(path, NULL)) == NULL) {
+			if ((p->sp_path = xrealpath(path)) == NULL) {
 				syswarn(1, errno, "Cannot canonicalise %s",
 				    path);
 				free(p);
@@ -1626,17 +1648,13 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 {
 	DIRDATA *dblk;
 	sigset_t allsigs, savedsigs;
-#if (_POSIX_VERSION >= 200809L)
 	char *rp = NULL;
-#else
-	char realname[PATH_MAX], *rp;
-#endif
 
 	if (dirp == NULL)
 		return;
 
 	if (havechd && *name != '/') {
-#if (_POSIX_VERSION >= 200809L)
+#ifdef REALPATH_CAN_ALLOCATE
 		if ((rp = realpath(name, NULL)) == NULL)
 #else
 		if ((rp = realpath(name, realname)) == NULL)
@@ -1652,7 +1670,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 		if (dblk == NULL) {
 			paxwarn(1, "Unable to store mode and times for created"
 			    " directory %s", name);
-#if (_POSIX_VERSION >= 200809L)
+#ifdef REALPATH_CAN_ALLOCATE
 			free(rp);
 #endif
 			return;
@@ -1666,7 +1684,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	if ((dblk->ft.ft_name = strdup(name)) == NULL) {
 		paxwarn(1, "Unable to store mode and times for created"
 		    " directory %s", name);
-#if (_POSIX_VERSION >= 200809L)
+#ifdef REALPATH_CAN_ALLOCATE
 		free(rp);
 #endif
 		return;
@@ -1680,7 +1698,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	sigprocmask(SIG_BLOCK, &allsigs, &savedsigs);
 	++dircnt;
 	sigprocmask(SIG_SETMASK, &savedsigs, NULL);
-#if (_POSIX_VERSION >= 200809L)
+#ifdef REALPATH_CAN_ALLOCATE
 	free(rp);
 #endif
 }
