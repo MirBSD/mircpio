@@ -1,7 +1,7 @@
-# $MirOS: src/bin/pax/Makefile,v 1.26 2019/02/23 22:23:29 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.27 2019/08/25 23:06:40 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-#		2011, 2012, 2013, 2014, 2015, 2016, 2017
+#		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019
 #	mirabilos <m@mirbsd.org>
 # Copyright (c) 2018
 #	mirabilos <t.glaser@tarent.de>
@@ -62,6 +62,8 @@ CPPFLAGS+=	-I.
 COPTS+=		-Wall
 .endif
 COPTS+=		-std=c89 -U__STRICT_ANSI__
+# for MirBSD only, for a while
+CPPFLAGS+=	-DREALPATH_CAN_ALLOCATE=2
 
 SAFE_PATH=	/bin:/usr/bin:/usr/mpkg/bin:/usr/local/bin
 CPPFLAGS+=	-DPAX_SAFE_PATH=\"${SAFE_PATH:Q}\"

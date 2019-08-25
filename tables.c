@@ -39,6 +39,9 @@
  * SUCH DAMAGE.
  */
 
+#ifdef __MirBSD__
+#include <sys/param.h>
+#endif
 #include <sys/types.h>
 #if HAVE_BOTH_TIME_H
 #include <sys/time.h>
@@ -65,9 +68,9 @@
 #include "ftimes.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.29 2019/08/25 23:02:36 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.30 2019/08/25 23:06:40 tg Exp $");
 
-#if (_POSIX_VERSION >= 200809L)
+#if (_POSIX_VERSION >= 200809L) || (defined(MirBSD) && (MirBSD > 0x0AB9))
 #define REALPATH_CAN_ALLOCATE
 #endif
 
