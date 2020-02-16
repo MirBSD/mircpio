@@ -2,7 +2,8 @@
 /*	$NetBSD: options.c,v 1.6 1996/03/26 23:54:18 mrg Exp $	*/
 
 /*-
- * Copyright (c) 2005, 2006, 2007, 2009, 2011, 2012, 2014, 2016, 2019
+ * Copyright (c) 2005, 2006, 2007, 2009, 2011, 2012, 2014, 2016,
+ *		 2019, 2020
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -63,7 +64,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.71 2019/02/24 02:08:24 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.72 2020/02/16 03:26:59 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -999,8 +1000,12 @@ tar_options(int argc, char **argv)
 		case 'R':
 			Oflag = FSUB_SV4CPIO;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
+#if 0
+			/*XXX still used by MirPorts package tools */
+			/*XXX no option to choose format, gtar -H already used */
 			mircpio_deprecated("-R flag",
 			    "the sv4cpio format with -M set");
+#endif
 			break;
 #endif
 		case 'r':
@@ -1014,8 +1019,12 @@ tar_options(int argc, char **argv)
 		case 'S':
 			Oflag = FSUB_SV4CRC;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
+#if 0
+			/*XXX still used by MirPorts package tools */
+			/*XXX no option to choose format, gtar -H already used */
 			mircpio_deprecated("-S flag",
 			    "the sv4crc format with -M set");
+#endif
 			break;
 #endif
 		case 's':
