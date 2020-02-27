@@ -1,7 +1,7 @@
 /*-
  * Copyright © 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
  *	       2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
- *	       2019
+ *	       2019, 2020
  *	mirabilos <m@mirbsd.org>
  * Copyright © 2018
  *	mirabilos <t.glaser@tarent.de>
@@ -25,6 +25,9 @@
 #ifndef PAX_COMPAT_H
 #define PAX_COMPAT_H
 
+#ifdef __MirBSD__
+#include <sys/param.h>
+#endif
 #if HAVE_SYS_MKDEV_H
 #include <sys/mkdev.h>
 #endif
@@ -103,7 +106,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.4 2019/02/23 23:24:54 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.5 2020/02/27 17:03:33 tg Exp $");
 #endif
 
 /* possibly missing types */
