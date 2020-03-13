@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2004 Ted Unangst and Todd Miller
+ * Copyright (c) 2005 mirabilos
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -21,7 +22,11 @@
 #include <limits.h>
 #include <stdlib.h>
 
-__RCSID("$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.3 2020/03/13 00:17:21 tg Exp $");
+#ifdef MBSDPORT_H
+#include MBSDPORT_H
+#endif
+
+__RCSID("$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.4 2020/03/13 00:26:12 tg Exp $");
 
 #define	INVALID		1
 #define	TOOSMALL	2
