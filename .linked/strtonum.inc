@@ -1,5 +1,4 @@
-/**	$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.2 2005/05/23 13:49:00 tg Exp $ */
-/*	$OpenBSD: strtonum.c,v 1.6 2004/08/03 19:38:01 millert Exp $	*/
+/*	$OpenBSD: strtonum.c,v 1.8 2015/09/13 08:31:48 guenther Exp $	*/
 
 /*
  * Copyright (c) 2004 Ted Unangst and Todd Miller
@@ -22,19 +21,19 @@
 #include <limits.h>
 #include <stdlib.h>
 
-__RCSID("$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.2 2005/05/23 13:49:00 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.3 2020/03/13 00:17:21 tg Exp $");
 
-#define INVALID 	1
-#define TOOSMALL 	2
-#define TOOLARGE 	3
+#define	INVALID		1
+#define	TOOSMALL	2
+#define	TOOLARGE	3
 
 long long
 strtonum(const char *numstr, long long minval, long long maxval,
     const char **errstrp)
 {
 	long long ll = 0;
-	char *ep;
 	int error = 0;
+	char *ep;
 	struct errval {
 		const char *errstr;
 		int err;
@@ -47,9 +46,9 @@ strtonum(const char *numstr, long long minval, long long maxval,
 
 	ev[0].err = errno;
 	errno = 0;
-	if (minval > maxval)
+	if (minval > maxval) {
 		error = INVALID;
-	else {
+	} else {
 		ll = strtoll(numstr, &ep, 0);
 		if (numstr == ep || *ep != '\0')
 			error = INVALID;
@@ -66,3 +65,6 @@ strtonum(const char *numstr, long long minval, long long maxval,
 
 	return (ll);
 }
+#ifdef DEF_WEAK
+DEF_WEAK(strtonum);
+#endif
