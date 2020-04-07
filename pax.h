@@ -41,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.24 2019/02/24 01:49:18 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.25 2020/04/07 11:56:43 tg Exp $");
 #endif
 
 /*
@@ -285,7 +285,7 @@ enum fsub_order {
 /*
  * General Macros
  */
-#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
+#define MINIMUM(a,b)	(((a) < (b)) ? (a) : (b))
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
 #ifdef __INTERIX

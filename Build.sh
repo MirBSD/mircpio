@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.15 2020/03/26 23:08:11 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.16 2020/04/07 11:56:42 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -1689,7 +1689,7 @@ ac_test offt_long '' 'whether off_t is as wide as long' <<-'EOF'
 	#define CHAR_BIT 0
 	#endif
 	struct ctasserts {
-	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+	#define cta(name,assertion) char name[(assertion) ? 1 : -1]
 		cta(char_is_8_bits, (CHAR_BIT) == 8);
 		cta(off_t_is_long, sizeof(off_t) == sizeof(long));
 	};
@@ -1704,7 +1704,7 @@ ac_testn offt_llong '!' offt_long 0 'whether off_t is as wide as long long' <<-'
 	#define CHAR_BIT 0
 	#endif
 	struct ctasserts {
-	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+	#define cta(name,assertion) char name[(assertion) ? 1 : -1]
 		cta(char_is_8_bits, (CHAR_BIT) == 8);
 		cta(off_t_is_llong, sizeof(off_t) == sizeof(long long));
 	};
@@ -1732,7 +1732,7 @@ ac_test timet_long '' 'whether time_t is as wide as long' <<-'EOF'
 	#define CHAR_BIT 0
 	#endif
 	struct ctasserts {
-	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+	#define cta(name,assertion) char name[(assertion) ? 1 : -1]
 		cta(char_is_8_bits, (CHAR_BIT) == 8);
 		cta(time_t_is_long, sizeof(time_t) == sizeof(long));
 	};
@@ -1754,7 +1754,7 @@ ac_testn timet_llong '!' timet_long 0 'whether time_t is as wide as long long' <
 	#define CHAR_BIT 0
 	#endif
 	struct ctasserts {
-	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+	#define cta(name,assertion) char name[(assertion) ? 1 : -1]
 		cta(char_is_8_bits, (CHAR_BIT) == 8);
 		cta(time_t_is_llong, sizeof(time_t) == sizeof(long long));
 	};
@@ -1782,7 +1782,7 @@ ac_test timet_large '' 'whether time_t is wider than 32 bit' <<-'EOF'
 	#define CHAR_BIT 0
 	#endif
 	struct ctasserts {
-	#define cta(name, assertion) char name[(assertion) ? 1 : -1]
+	#define cta(name,assertion) char name[(assertion) ? 1 : -1]
 		cta(char_is_8_bits, (CHAR_BIT) == 8);
 		cta(time_t_is_large, sizeof(time_t) > 4);
 	};

@@ -59,7 +59,7 @@
 #include "pax.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.10 2018/12/13 07:09:11 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/sel_subs.c,v 1.11 2020/04/07 11:56:43 tg Exp $");
 
 /*
  * data structure for storing uid/grp selects (-U, -G non standard options)
@@ -92,7 +92,7 @@ typedef struct time_rng {
 #define HASHIGH		0x02		/* has higher time limit */
 #define CMPMTME		0x04		/* compare file modification time */
 #define CMPCTME		0x08		/* compare inode change time */
-#define CMPBOTH	(CMPMTME|CMPCTME)	/* compare inode and mod time */
+#define CMPBOTH	(CMPMTME | CMPCTME)	/* compare inode and mod time */
 	struct time_rng	*fow;		/* next pattern */
 } TIME_RNG;
 

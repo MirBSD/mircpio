@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.39 2019/02/24 01:49:17 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.40 2020/04/07 11:56:43 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -126,8 +126,8 @@ int gidtb_start(void);
 const char *name_uid(uid_t, int);
 const char *name_gid(gid_t, int);
 #else
-#define name_uid(u, frc) ((const char *)user_from_uid((u), !(frc)))
-#define name_gid(g, frc) ((const char *)group_from_gid((g), !(frc)))
+#define name_uid(u,frc) ((const char *)user_from_uid((u), !(frc)))
+#define name_gid(g,frc) ((const char *)group_from_gid((g), !(frc)))
 #endif
 #if !HAVE_UGID_FROM_UG
 int usrtb_start(void);

@@ -94,9 +94,9 @@
 #define __IDSTRING_CONCAT(l,p)		__LINTED__ ## l ## _ ## p
 #define __IDSTRING_EXPAND(l,p)		__IDSTRING_CONCAT(l,p)
 #ifdef MKSH_DONT_EMIT_IDSTRING
-#define __IDSTRING(prefix, string)	/* nothing */
+#define __IDSTRING(prefix,string)	/* nothing */
 #else
-#define __IDSTRING(prefix, string)				\
+#define __IDSTRING(prefix,string)				\
 	static const char __IDSTRING_EXPAND(__LINE__,prefix) []	\
 	    MKSH_A_USED = "@(""#)" #prefix ": " string
 #endif
@@ -106,7 +106,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.5 2020/02/27 17:03:33 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.6 2020/04/07 11:56:43 tg Exp $");
 #endif
 
 /* possibly missing types */
@@ -154,7 +154,7 @@ typedef unsigned long u_long;
 /* macros dealing with struct stat.sb_[acm]time */
 
 #ifndef timespeccmp
-#define	timespeccmp(tsp, usp, cmp)					\
+#define	timespeccmp(tsp,usp,cmp)					\
 	(((tsp)->tv_sec == (usp)->tv_sec) ?				\
 	    ((tsp)->tv_nsec cmp (usp)->tv_nsec) :			\
 	    ((tsp)->tv_sec cmp (usp)->tv_sec))
