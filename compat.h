@@ -24,6 +24,7 @@
 
 #ifndef PAX_COMPAT_H
 #define PAX_COMPAT_H
+#undef MBSDPORT_H
 
 #ifdef __MirBSD__
 #include <sys/param.h>
@@ -106,7 +107,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.6 2020/04/07 11:56:43 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.7 2020/09/04 21:09:00 tg Exp $");
 #endif
 
 /* possibly missing types */

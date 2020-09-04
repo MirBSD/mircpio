@@ -26,7 +26,7 @@
 #include MBSDPORT_H
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strtonum.inc,v 1.4 2020/03/13 00:26:12 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/strtonum.c,v 1.4 2020/03/13 00:26:12 tg Exp $");
 
 #define	INVALID		1
 #define	TOOSMALL	2

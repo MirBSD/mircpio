@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.16 2020/04/07 11:56:42 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.17 2020/09/04 21:08:59 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -458,6 +458,7 @@ rm -rf mans
 SRCS="ar.c ar_io.c ar_subs.c buf_subs.c compat.c cpio.c"
 SRCS="$SRCS file_subs.c ftree.c gen_subs.c getoldopt.c options.c"
 SRCS="$SRCS pat_rep.c pax.c sel_subs.c tables.c tar.c tty_subs.c"
+add_cppflags -DMBSDPORT_H=\\\"compat.h\\\"
 
 if test x"$srcdir" = x"."; then
 	CPPFLAGS="-I. $CPPFLAGS"
@@ -1619,10 +1620,14 @@ ac_test setpgent grp_h 0 'for setpassent and setgroupent' <<-'EOF'
 	int main(void) { return (setpassent(1) + setgroupent(1)); }
 EOF
 
-ac_test strlcpy '' 'for strlcpy and strlcat' <<-'EOF'
+ac_test strlcpy <<-'EOF'
 	#include <string.h>
-	int main(int ac, char *av[]) { return (strlcpy(*av, av[1],
-	    strlcat(av[1], av[2], (size_t)ac))); }
+	int main(int ac, char *av[]) { return (strlcpy(*av, av[1], (size_t)ac)); }
+EOF
+
+ac_test strlcat strlcpy 0 <<-'EOF'
+	#include <string.h>
+	int main(int ac, char *av[]) { return (strlcat(*av, av[1], (size_t)ac)); }
 EOF
 
 ac_test strmode <<-'EOF'
@@ -1833,6 +1838,9 @@ $e ... done.
 rmf vv.out
 
 addsrcs '!' HAVE_UGID_FROM_UG cache.c
+addsrcs '!' HAVE_REALLOCARRAY reallocarray.c
+addsrcs '!' HAVE_STRMODE strmode.c
+addsrcs '!' HAVE_STRTONUM strtonum.c
 test 1 = "$HAVE_CAN_VERB" && CFLAGS="$CFLAGS -verbose"
 
 $e $bi$me: Finished configuration testing, now producing output.$ao

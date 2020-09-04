@@ -31,18 +31,20 @@ ifeq (0,gmake ignores from here)
  */
 
 #include <sys/types.h>
-#ifndef OUTSIDE_OF_LIBKERN
+#if defined(MBSDPORT_H)
+#include MBSDPORT_H
+#elif !defined(OUTSIDE_OF_LIBKERN)
 #include <libckern.h>
 #endif
 
 #ifndef __RCSID
-#define __RCSID(x)		static const char __rcsid[] = x
+#define __RCSID(x)		/* fallback */ static const char __rcsid[] = x
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.7 2019/01/05 16:39:26 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.8 2020/09/04 20:32:58 tg Exp $");
 
 #ifdef WIDEC
-#ifdef OUTSIDE_OF_LIBKERN
+#if defined(MBSDPORT_H) || defined(OUTSIDE_OF_LIBKERN)
 #ifdef __WCHAR_TYPE__
 typedef __WCHAR_TYPE__ wchar_t;
 #else
@@ -70,7 +72,7 @@ typedef __WCHAR_TYPE__ wchar_t;
 #define L_strlcpy
 #endif
 
-#ifdef OUTSIDE_OF_LIBKERN
+#if defined(MBSDPORT_H) || defined(OUTSIDE_OF_LIBKERN)
 extern size_t fn_len(const char_t *);
 #ifdef NEED_STRLFUN_PROTOS
 size_t fn_cat(char_t *, const char_t *, size_t);

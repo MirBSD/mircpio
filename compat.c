@@ -1,5 +1,5 @@
 /*-
- * Copyright © 2019
+ * Copyright © 2019, 2020
  *	mirabilos <m@mirbsd.org>
  * Copyright © 2018
  *	mirabilos <t.glaser@tarent.de>
@@ -36,7 +36,7 @@
 #define PAX_JUST_THE_WARNINGS
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/compat.c,v 1.5 2019/02/23 23:24:54 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/compat.c,v 1.6 2020/09/04 21:09:00 tg Exp $");
 
 int
 binopen3(int features, const char *path, int flags, mode_t mode)
@@ -183,23 +183,14 @@ dprintf_donum(char *cp, unsigned long long val)
 }
 #endif
 
-#if !HAVE_REALLOCARRAY
-#include ".linked/reallocarray.inc"
-#endif
-
-#if !HAVE_STRMODE
-#include ".linked/strmode.inc"
-#endif
-
-#if !HAVE_STRTONUM
-/* assumes serviceable “long long” */
-#include ".linked/strtonum.inc"
-#endif
-
-#if !HAVE_STRLCPY
+#if !HAVE_STRLCPY || !HAVE_STRLCAT
 #undef WIDEC
 #define OUTSIDE_OF_LIBKERN
+#if !HAVE_STRLCPY
 #define L_strlcat
+#endif
+#if !HAVE_STRLCAT
 #define L_strlcpy
+#endif
 #include ".linked/strlfun.inc"
 #endif

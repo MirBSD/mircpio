@@ -1,4 +1,4 @@
-/*	$OpenBSD: strmode.c,v 1.7 2005/08/08 08:05:37 espie Exp $ */
+/*	$OpenBSD: strmode.c,v 1.8 2015/08/31 02:53:57 guenther Exp $ */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -32,7 +32,11 @@
 #include <sys/stat.h>
 #include <string.h>
 
-__RCSID("$MirOS: src/bin/pax/.linked/strmode.inc,v 1.4 2018/12/13 07:09:13 tg Exp $");
+#ifdef MBSDPORT_H
+#include MBSDPORT_H
+#endif
+
+__RCSID("$MirOS: src/bin/pax/strmode.c,v 1.5 2020/09/04 20:32:59 tg Exp $");
 
 void
 strmode(mode_t mode, char *p)
@@ -42,13 +46,13 @@ strmode(mode_t mode, char *p)
 	case S_IFDIR:			/* directory */
 		*p++ = 'd';
 		break;
-	case S_IFCHR:			/* character special */
+	case S_IFCHR:			/* character special device */
 		*p++ = 'c';
 		break;
-	case S_IFBLK:			/* block special */
+	case S_IFBLK:			/* block special device */
 		*p++ = 'b';
 		break;
-	case S_IFREG:			/* regular */
+	case S_IFREG:			/* regular file */
 		*p++ = '-';
 		break;
 	case S_IFLNK:			/* symbolic link */
@@ -138,3 +142,6 @@ strmode(mode_t mode, char *p)
 	*p++ = ' ';		/* will be a '+' if ACLs implemented */
 	*p = '\0';
 }
+#ifdef DEF_WEAK
+DEF_WEAK(strmode);
+#endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: reallocarray.c,v 1.1 2014/05/08 21:43:49 deraadt Exp $	*/
+/*	$OpenBSD: reallocarray.c,v 1.3 2015/09/13 08:31:47 guenther Exp $	*/
 /*
  * Copyright (c) 2008 Otto Moerbeek <otto@drijf.net>
  *
@@ -20,11 +20,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef MBSDPORT_H
+#include MBSDPORT_H
+#endif
+
+__RCSID("$MirOS: src/bin/pax/reallocarray.c,v 1.2 2020/09/04 20:32:58 tg Exp $");
+
 /*
  * This is sqrt(SIZE_MAX+1), as s1*s2 <= SIZE_MAX
  * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW
  */
-#define MUL_NO_OVERFLOW	(1UL << (sizeof(size_t) * 4))
+#define MUL_NO_OVERFLOW	((size_t)1 << (sizeof(size_t) * 4))
 
 void *
 reallocarray(void *optr, size_t nmemb, size_t size)
@@ -36,3 +42,6 @@ reallocarray(void *optr, size_t nmemb, size_t size)
 	}
 	return realloc(optr, size * nmemb);
 }
+#ifdef DEF_WEAK
+DEF_WEAK(reallocarray);
+#endif
