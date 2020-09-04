@@ -64,7 +64,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.73 2020/09/04 22:20:43 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.74 2020/09/04 22:25:49 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -852,6 +852,7 @@ tar_options(int argc, char **argv)
 #ifndef SMALL
 		case 'A':
 			Oflag = FSUB_AR;
+			mircpio_deprecated("-A flag", "-D ar");
 			break;
 #endif
 		case 'a':
@@ -1020,12 +1021,7 @@ tar_options(int argc, char **argv)
 		case 'R':
 			Oflag = FSUB_SV4CPIO;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
-#if 0
-			/*XXX still used by MirPorts package tools */
-			/*XXX no option to choose format, gtar -H already used */
-			mircpio_deprecated("-R flag",
-			    "the sv4cpio format with -M set");
-#endif
+			mircpio_deprecated("-R flag", "-D sv4cpio -M set");
 			break;
 #endif
 		case 'r':
@@ -1039,12 +1035,7 @@ tar_options(int argc, char **argv)
 		case 'S':
 			Oflag = FSUB_SV4CRC;
 			anonarch |= ANON_INODES | ANON_HARDLINKS;
-#if 0
-			/*XXX still used by MirPorts package tools */
-			/*XXX no option to choose format, gtar -H already used */
-			mircpio_deprecated("-S flag",
-			    "the sv4crc format with -M set");
-#endif
+			mircpio_deprecated("-S flag", "-D sv4crc -M set");
 			break;
 #endif
 		case 's':

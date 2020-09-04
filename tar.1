@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.41 2020/09/04 22:20:44 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.42 2020/09/04 22:25:49 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.61 2018/07/23 19:02:49 kn Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016,
@@ -228,7 +228,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578AabefHhJjLmNOoPpqsvwXZz
+.No { Cm crtux No } Op Cm 014578abefHhJjLmNOoPpqsvwXZz
 .Sm on
 .Op Ar blocking-factor \*(Ba archive \*(Ba replstr
 .Op Fl C Ar directory
@@ -238,7 +238,7 @@
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
-.Op Fl 014578AaeHhJjLmNOoPpqvwXZz
+.Op Fl 014578aeHhJjLmNOoPpqvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl D Ar format-options
@@ -323,8 +323,6 @@ The file mode is subject to modification by the
 In addition to the flags mentioned above, any of the following
 flags may be used:
 .Bl -tag -width Ds
-.It Fl A
-Write Unix Archiver libraries instead of tape archives.
 .It Fl a
 Guess the compression utility based on the archive filename.
 Inability to guess will result in quietly not using any compression.
@@ -778,7 +776,7 @@ extensions by
 .An mirabilos Aq m@mirbsd.org .
 .Sh CAVEATS
 The flags
-.Fl AaDJjLMNo
+.Fl aDJjLMNo
 are not portable to other implementations of
 .Nm tar
 where they may have a different meaning or not exist at all.
