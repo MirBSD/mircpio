@@ -64,7 +64,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.72 2020/02/16 03:26:59 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.73 2020/09/04 22:20:43 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -817,6 +817,8 @@ tar_options(int argc, char **argv)
 		char *dir;
 	};
 	struct incfile *incfiles = NULL;
+	FSUB tmp;
+	char *bp, *cp;
 
 	/*
 	 * Set default values.
@@ -827,7 +829,7 @@ tar_options(int argc, char **argv)
 	 * process option flags
 	 */
 	while ((c = getoldopt(argc, argv,
-	    "014578AaBb:C:cef:HhI:JjLM:mNOoPpqRrSs:tuvwXxZz")) != -1) {
+	    "014578AaBb:C:cD:ef:HhI:JjLM:mNOoPpqRrSs:tuvwXxZz")) != -1) {
 		switch (c) {
 		case '0':
 			arcname = DEV_0;
@@ -884,6 +886,24 @@ tar_options(int argc, char **argv)
 			 * create an archive
 			 */
 			tar_set_action(ARCHIVE);
+			break;
+		case 'D':
+			/*
+			 * specify archive format and options
+			 */
+			if (!(bp = strdup(optarg))) {
+				paxwarn(0, "out of memory");
+				exit(1);
+			}
+			if ((cp = strchr(bp, ',')))
+				*cp++ = '\0';
+			tmp.name = bp;
+			if (gather_format(&tmp, "tar", 'D'))
+				tar_usage();
+			if (cp && opt_add(cp) < 0)
+				tar_usage();
+			free(bp);
+			Oflag = -666; /* "frmt already set" */
 			break;
 		case 'e':
 			/*
@@ -1196,7 +1216,8 @@ tar_options(int argc, char **argv)
 	case APPND:
 		if (Oflag == FSUB_MAX)
 			tar_usage();
-		frmt = &(fsub[Oflag]);
+		else if (Oflag != -666)
+			frmt = &(fsub[Oflag]);
 
 		if (chdname != NULL) {
 			/* initial chdir() */
@@ -1725,8 +1746,9 @@ bad_opt(void)
 
 /*
  * opt_add()
- *	breaks the value supplied to -o into a option name and value. options
- *	are given to -o in the form -o name-value,name=value
+ *	breaks the value supplied to -o into a option name and value.
+ *	options are given to -o in the form -o name=value,name=value
+ *	or to -D in the form format,name=value[,name=value ...]
  *	multiple -o may be specified.
  * Return:
  *	0 if format in name=value format, -1 if -o is passed junk
@@ -1927,8 +1949,8 @@ tar_usage(void)
 	    "           [blocking-factor | archive | replstr] [-C directory] [-I file]\n"
 	    "           [file ...]\n"
 	    "       tar {-crtux} [-014578AaeHhJjLmNOoPpqRSvwXZz] [-b blocking-factor]\n"
-	    "           [-C directory] [-f archive] [-I file] [-M flag] [-s replstr]\n"
-	    "           [file ...]\n",
+	    "           [-C directory] [-D format-options] [-f archive] [-I file]\n"
+	    "           [-M flag] [-s replstr] [file ...]\n",
 	    stderr);
 	exit(1);
 }

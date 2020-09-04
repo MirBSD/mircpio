@@ -1,8 +1,8 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.40 2019/02/24 01:51:49 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.41 2020/09/04 22:20:44 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.61 2018/07/23 19:02:49 kn Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016,
-.\"		  2017, 2018, 2019
+.\"		  2017, 2018, 2019, 2020
 .\"	mirabilos <m@mirbsd.org>
 .\" Copyright (c) 1996 SigmaSoft, Th. Lockert
 .\" All rights reserved.
@@ -83,7 +83,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: February 24 2019 $
+.Dd $Mdocdate: September 4 2020 $
 .\"
 .\" Check which macro package we use, and do other -mdoc setup.
 .\"
@@ -230,18 +230,18 @@
 .Sm off
 .No { Cm crtux No } Op Cm 014578AabefHhJjLmNOoPpqsvwXZz
 .Sm on
-.Bk -words
 .Op Ar blocking-factor \*(Ba archive \*(Ba replstr
 .Op Fl C Ar directory
 .Op Fl I Ar file
 .Op Ar
-.Ek
+.Pp
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
 .Op Fl 014578AaeHhJjLmNOoPpqvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
+.Op Fl D Ar format-options
 .Op Fl f Ar archive
 .Op Fl I Ar file
 .Op Fl M Ar flag
@@ -349,6 +349,82 @@ following files.
 When extracting, files will be extracted into
 the specified directory; when creating, the specified files will be matched
 from the directory.
+.It Fl D Ar format-options
+Specify the archive format, with the default (output) format being
+.Cm ustar ,
+and, comma-separated, format options, if any.
+.Nm
+currently supports the following formats and options:
+.Bl -tag -width "sv4cpio"
+.It Cm ar
+The Unix Archiver library format.
+This format matches APT repositories and the BSD
+.Xr ar 1
+specification, not GNU binutils (which can however read them) or SYSV systems.
+See
+.Xr ar 5
+on some operating systems for more information.
+.It Cm bcpio
+The old binary cpio format.
+The default blocksize for this format is 5120 bytes.
+This format is not very portable and should not be used when other formats
+are available.
+Inode and device information about a file (used for detecting file hard links
+by this format), which may be truncated by this format, is detected by
+.Nm
+and is repaired.
+.It Cm cpio
+The extended cpio interchange format specified in the
+.St -p1003.2
+standard.
+The default blocksize for this format is 5120 bytes.
+Inode and device information about a file (used for detecting file hard links
+by this format), which may be truncated by this format, is detected by
+.Nm
+and is repaired.
+.It Cm sv4cpio
+The System V release 4 cpio.
+The default blocksize for this format is 5120 bytes.
+Inode and device information about a file (used for detecting file hard links
+by this format), which may be truncated by this format, is detected by
+.Nm
+and is repaired.
+.It Cm sv4crc
+The System V release 4 cpio with file CRC checksums.
+The default blocksize for this format is 5120 bytes.
+Inode and device information about a file (used for detecting file hard links
+by this format), which may be truncated by this format, is detected by
+.Nm
+and is repaired.
+.It Cm tar
+The old
+.Bx
+tar format as found in
+.Bx 4.3 .
+The default blocksize for this format is 10240 bytes.
+Pathnames stored by this format must be 100 characters or less in length.
+Only regular files, hard links, soft links, and directories
+will be archived (other filesystem types are not supported).
+.Pp
+For backwards compatibility with even older tar formats, the
+.Cm write_opt=nodir
+option can be used when writing an archive to omit the storage of directories.
+.It Cm ustar
+The extended tar interchange format specified in the
+.St -p1003.2
+standard.
+The default blocksize for this format is 10240 bytes.
+Filenames stored by this format must be 100 characters or less in length;
+the total pathname must be 256 characters or less.
+.El
+.Pp
+.Nm
+will detect and report any file that it is unable to store or extract
+as the result of any specific archive format restrictions.
+The individual archive formats may impose additional restrictions on use.
+Typical archive format restrictions include (but are not limited to):
+file pathname length, file size, link pathname length, and the type of the
+file.
 .It Fl e
 Stop after the first error.
 .It Fl f Ar archive
@@ -449,9 +525,12 @@ If reading, extract files to standard output.
 If writing, write old-style (non-POSIX) archives.
 .It Fl o
 If writing, write old-style (non-POSIX) archives.
+.br
 Don't write directory information that the older (V7) style
 .Nm tar
 is unable to decode.
+Same as
+.Fl D Ar tar,write_opt=nodir .
 .It Fl P
 For security reasons,
 .Nm
@@ -699,25 +778,13 @@ extensions by
 .An mirabilos Aq m@mirbsd.org .
 .Sh CAVEATS
 The flags
-.Fl AaJjLMNo
+.Fl AaDJjLMNo
 are not portable to other implementations of
 .Nm tar
 where they may have a different meaning or not exist at all.
+.Pp
 This implementation may have support for other non-standard options that
 are undocumented because removal-inducing deprecation was issued.
-There is no option to select a different output format from
-.Cm ustar
-or
-.Cm tar
-except
-.Fl A ,
-which selects
-.Cm ar ;
-use the
-.Xr \*(nc 1
-or
-.Xr \*(np 1
-front-ends for that.
 .Sh BUGS
 The
 .Ar pax
