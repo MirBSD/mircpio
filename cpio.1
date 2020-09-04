@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/cpio.1,v 1.41 2018/12/25 19:38:10 tg Exp $
+.\"	$MirOS: src/bin/pax/cpio.1,v 1.42 2020/09/04 22:37:02 tg Exp $
 .\"	$OpenBSD: cpio.1,v 1.35 2014/09/08 01:27:54 schwarze Exp $
 .\"
 .\" Copyright (c) 2005, 2009, 2011, 2012, 2014, 2015, 2016,
@@ -34,7 +34,8 @@
 .\"   thus use - for hyphens and \- for minus signs and option dashes
 .\" * ~ is size-reduced and placed atop in groff, so use \*(TI
 .\" * ^ is size-reduced and placed atop in groff, so use \*(ha
-.\" * \(en does not work in nroff, so use \*(en
+.\" * \(en does not work in nroff, so use \*(en for a solo en dash
+.\" *   and \*(EM for a correctly spaced em dash
 .\" * <>| are problematic, so redefine and use \*(Lt\*(Gt\*(Ba
 .\" Also make sure to use \& *before* a punctuation char that is to not
 .\" be interpreted as punctuation, and especially with two-letter words
@@ -68,6 +69,12 @@
 .	ds ha ^
 .	ds en \(em
 .\}
+.ie n \{\
+.	ds EM \ \*(en\ \&
+.\}
+.el \{\
+.	ds EM \f(TR\^\(em\^\fP
+.\}
 .\"
 .\" Implement .Dd with the Mdocdate RCS keyword
 .\"
@@ -83,7 +90,7 @@
 .\" with -mandoc, it might implement .Mx itself, but we want to
 .\" use our own definition. And .Dd must come *first*, always.
 .\"
-.Dd $Mdocdate: December 25 2018 $
+.Dd $Mdocdate: September 4 2020 $
 .\"
 .\" Check which macro package we use, and do other -mdoc setup.
 .\"
