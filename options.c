@@ -64,7 +64,7 @@
 #include "tar.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/options.c,v 1.74 2020/09/04 22:25:49 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/options.c,v 1.75 2020/09/04 22:27:49 tg Exp $");
 
 #ifndef _PATH_DEFTAPE
 #define _PATH_DEFTAPE "/dev/rmt0"
@@ -980,10 +980,13 @@ tar_options(int argc, char **argv)
 			 */
 			pmtime = 0;
 			break;
+#ifndef SMALL
 		case 'N':
 			/* numeric uid and gid only */
 			anonarch |= ANON_NUMID;
+			mircpio_deprecated("-N flag", "-M numid");
 			break;
+#endif
 		case 'O':
 #ifndef SMALL
 			Oflag = FSUB_TAR;

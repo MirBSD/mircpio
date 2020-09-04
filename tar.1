@@ -1,4 +1,4 @@
-.\"	$MirOS: src/bin/pax/tar.1,v 1.42 2020/09/04 22:25:49 tg Exp $
+.\"	$MirOS: src/bin/pax/tar.1,v 1.43 2020/09/04 22:27:50 tg Exp $
 .\"	$OpenBSD: tar.1,v 1.61 2018/07/23 19:02:49 kn Exp $
 .\"
 .\" Copyright (c) 2005, 2008, 2009, 2011, 2012, 2014, 2016,
@@ -228,7 +228,7 @@
 .Sh SYNOPSIS
 .Nm \*(nm
 .Sm off
-.No { Cm crtux No } Op Cm 014578abefHhJjLmNOoPpqsvwXZz
+.No { Cm crtux No } Op Cm 014578abefHhJjLmOoPpqsvwXZz
 .Sm on
 .Op Ar blocking-factor \*(Ba archive \*(Ba replstr
 .Op Fl C Ar directory
@@ -238,7 +238,7 @@
 .Nm \*(nm
 .No { Ns Fl crtux Ns }
 .Bk -words
-.Op Fl 014578aeHhJjLmNOoPpqvwXZz
+.Op Fl 014578aeHhJjLmOoPpqvwXZz
 .Op Fl b Ar blocking-factor
 .Op Fl C Ar directory
 .Op Fl D Ar format-options
@@ -514,9 +514,6 @@ This option is only implemented for the ar, cpio, sv4cpio,
 sv4crc, and ustar file format writing routines.
 .It Fl m
 Do not preserve modification time.
-.It Fl N
-Same as
-.Fl M Ar numid .
 .It Fl O
 If reading, extract files to standard output.
 .br
@@ -776,7 +773,7 @@ extensions by
 .An mirabilos Aq m@mirbsd.org .
 .Sh CAVEATS
 The flags
-.Fl aDJjLMNo
+.Fl aDJjLMo
 are not portable to other implementations of
 .Nm tar
 where they may have a different meaning or not exist at all.
