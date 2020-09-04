@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.17 2020/09/04 21:08:59 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.18 2020/09/04 21:17:40 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -542,6 +542,14 @@ esac
 
 # Configuration depending on OS name
 case $TARGET_OS in
+A/UX)
+	oswarn="; it is untested"
+	add_cppflags -D_POSIX_SOURCE
+	: "${CC=gcc}"
+	: "${LIBS=-lposix}"
+	# GCC defines AUX but cc nothing
+	add_cppflags -D__A_UX__
+	;;
 AIX)
 	oswarn="; it is untested"
 	add_cppflags -D_ALL_SOURCE
@@ -1841,6 +1849,7 @@ addsrcs '!' HAVE_UGID_FROM_UG cache.c
 addsrcs '!' HAVE_REALLOCARRAY reallocarray.c
 addsrcs '!' HAVE_STRMODE strmode.c
 addsrcs '!' HAVE_STRTONUM strtonum.c
+
 test 1 = "$HAVE_CAN_VERB" && CFLAGS="$CFLAGS -verbose"
 
 $e $bi$me: Finished configuration testing, now producing output.$ao
@@ -1880,7 +1889,6 @@ for file in $SRCS; do
 	op=`echo x"$file" | sed 's/^x\(.*\)\.c$/\1./'`
 	test -f $file || file=$srcdir/$file
 	files="$files$sp$file"
-	sp=' '
 	echo "$CC $CFLAGS $CPPFLAGS $emitbc $file || exit 1" >>Rebuild.sh
 	if test $cm = dragonegg; then
 		echo "mv ${op}s ${op}ll" >>Rebuild.sh
@@ -1889,6 +1897,7 @@ for file in $SRCS; do
 	else
 		objs="$objs$sp${op}o"
 	fi
+	sp=' '
 done
 case $cm in
 dragonegg|llvm)
@@ -2040,7 +2049,7 @@ HAVE_STRING_H			ac_header
 HAVE_CAN_FSTACKPROTECTORALL	ac_flags
 
 ==== cpp definitions ====
-DEBUG				dont use in production, wants gcc
+DEBUG				don’t use in production, wants gcc
 MKSH_DONT_EMIT_IDSTRING		omit RCS IDs from binary
 MKSH_TYPEDEF_SSIZE_T		define to e.g. 'long' if your OS has no ssize_t
 PAX_SAFE_PATH			subprocess PATH, default "/bin:/usr/bin"
