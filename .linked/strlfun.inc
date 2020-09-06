@@ -21,13 +21,11 @@ ifeq (0,gmake ignores from here)
  * of said person's immediate fault when using the work as intended.
  *-
  * The original implementations of strlcpy(3) and strlcat(3) are from
- * Todd C. Miller; the licence is reproduced below. However, this ap-
- * plies only to the strlcpy(3) portion of the code, as Thorsten Gla-
- * ser write the following strlcat(3) implementation according to the
- * spec. Both functions below have been optimised according to sugge-
- * stions from Bodo Eggert. mirabilos merged the code with strxfrm(3)
- * for UTF-8-only systems and the wide character variants wcslcat(3),
- * wcslcpy(3), and wcsxfrm(3).
+ * Todd C. Miller; its licence is reproduced in the L_strlcpy part as
+ * it applies to only that now; mirabilos rewrote strlcat from specs,
+ * optimised both from suggestions by Bodo Eggert, aliased strlcpy as
+ * just-copying strxfrm(3) and introduced wcslcat(3), wcslcpy(3) and,
+ * symmetrically, wcsxfrm(3) as wide character variants.
  */
 
 #include <sys/types.h>
@@ -41,7 +39,7 @@ ifeq (0,gmake ignores from here)
 #define __RCSID(x)		/* fallback */ static const char __rcsid[] = x
 #endif
 
-__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.8 2020/09/04 20:32:58 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/.linked/strlfun.inc,v 1.9 2020/09/06 02:24:02 tg Exp $");
 
 #ifdef WIDEC
 #if defined(MBSDPORT_H) || defined(OUTSIDE_OF_LIBKERN)
