@@ -28,6 +28,8 @@
 
 #ifdef __MirBSD__
 #include <sys/param.h>
+#else
+#include <sys/types.h>
 #endif
 #if HAVE_SYS_MKDEV_H
 #include <sys/mkdev.h>
@@ -107,7 +109,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.7 2020/09/04 21:09:00 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.8 2020/10/30 06:56:00 tg Exp $");
 #endif
 
 /* possibly missing types */
