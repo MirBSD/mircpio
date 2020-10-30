@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.18 2020/09/04 21:17:40 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.19 2020/10/30 06:56:40 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -553,6 +553,10 @@ A/UX)
 AIX)
 	oswarn="; it is untested"
 	add_cppflags -D_ALL_SOURCE
+	;;
+CYGWIN*)
+	# libc lacks dprintf but the headers declare it unless #define’d
+	add_cppflags -Ddprintf=rpl_dprintf
 	;;
 Darwin)
 	oswarn="; it is untested"
