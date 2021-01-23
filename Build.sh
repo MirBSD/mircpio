@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.19 2020/10/30 06:56:40 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.20 2021/01/23 03:36:56 tg Exp $'
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -624,6 +624,9 @@ OS/390)
 	: "${SIZE=: size}"
 	add_cppflags -D_ALL_SOURCE
 	;;
+OpenBSD)
+	oswarn="; it is untested"
+	;;
 OSF1)
 	oswarn="; it is untested"
 	add_cppflags -D_OSF_SOURCE
@@ -731,6 +734,10 @@ ct="icc"
 ct="xlc"
 #elif defined(__SUNPRO_C)
 ct="sunpro"
+#elif defined(__neatcc__)
+ct="neatcc"
+#elif defined(__lacc__)
+ct="lacc"
 #elif defined(__ACK__)
 ct="ack"
 #elif defined(__BORLANDC__)
@@ -863,6 +870,9 @@ icc)
 kencc)
 	vv '|' "$CC $CFLAGS $CPPFLAGS $LDFLAGS $NOWARN -v conftest.c $LIBS"
 	;;
+lacc)
+	# no version information
+	;;
 lcc)
 	vv '|' "$CC $CFLAGS $CPPFLAGS $LDFLAGS $NOWARN -v conftest.c $LIBS"
 	add_cppflags -D__inline__=__inline
@@ -893,6 +903,10 @@ msc)
 		vv '|' "$C89_LINKER /LINK >&2"
 		;;
 	esac
+	;;
+neatcc)
+	add_cppflags -DMKSH_DONT_EMIT_IDSTRING
+	vv '|' "$CC"
 	;;
 nwcc)
 	vv '|' "$CC $CFLAGS $CPPFLAGS $LDFLAGS $NOWARN $LIBS -version"
@@ -946,7 +960,7 @@ xlc)
 *)
 	test x"$ct" = x"untested" && $e "!!! detecting preprocessor failed"
 	ct=unknown
-	vv "$CC --version"
+	vv '|' "$CC --version"
 	vv '|' "$CC $CFLAGS $CPPFLAGS $LDFLAGS $NOWARN -v conftest.c $LIBS"
 	vv '|' "$CC $CFLAGS $CPPFLAGS $LDFLAGS $NOWARN -V conftest.c $LIBS"
 	;;
@@ -1137,6 +1151,7 @@ dmc)
 	ac_flags 1 schk "${ccpc}-s" 'for stack overflow checking'
 	;;
 gcc)
+	ac_flags 1 fnolto -fno-lto 'whether we can explicitly disable buggy GCC LTO' -fno-lto
 	# The following tests run with -Werror (gcc only) if possible
 	NOWARN=$DOWARN; phase=u
 	# paxmirabilis is not written in CFrustFrust!
@@ -2070,7 +2085,7 @@ $ sh Build.sh -r 2>&1 | tee log
 
 Install as /bin/pax and hardlink to /bin/cpio and /bin/tar or install as
 $prefix/bin/mirpax and hardlink to $prefix/bin/mir{cpio,tar}; install the
-manpages, if omitting the -r flag a catmanpages are made using $NROFF.
+manpages, if omitting the -r flag catmanpages are made using $NROFF.
 
 Add -tmir to install as mir{pax,cpio,tar} or -tpax for pax{,cpio,tar}.
 
