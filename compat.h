@@ -22,6 +22,12 @@
  * of said person’s immediate fault when using the work as intended.
  */
 
+#ifdef MKSH_USE_AUTOCONF_H
+/* things that “should” have been on the command line */
+#include "autoconf.h"
+#undef MKSH_USE_AUTOCONF_H
+#endif
+
 #ifndef PAX_COMPAT_H
 #define PAX_COMPAT_H
 #undef MBSDPORT_H
@@ -109,7 +115,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.9 2021/07/27 20:11:55 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.10 2021/07/27 20:13:40 tg Exp $");
 #endif
 
 /* possibly missing types */
