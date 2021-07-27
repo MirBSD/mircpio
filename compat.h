@@ -109,7 +109,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.8 2020/10/30 06:56:00 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.9 2021/07/27 20:11:55 tg Exp $");
 #endif
 
 /* possibly missing types */
@@ -156,24 +156,7 @@ typedef unsigned long u_long;
 
 /* macros dealing with struct stat.sb_[acm]time */
 
-#ifndef timespeccmp
-#define	timespeccmp(tsp,usp,cmp)					\
-	(((tsp)->tv_sec == (usp)->tv_sec) ?				\
-	    ((tsp)->tv_nsec cmp (usp)->tv_nsec) :			\
-	    ((tsp)->tv_sec cmp (usp)->tv_sec))
-#endif
-
-#if HAVE_ST_MTIM
-#define st_timecmp(x,sbpa,sbpb,op) \
-	timespeccmp(&(sbpa)->st_ ## x ## tim, &(sbpb)->st_ ## x ## tim, op)
-#define st_timecpy(x,sbpd,sbps) do {					\
-	(sbpd)->st_ ## x ## tim = (sbps)->st_ ## x ## tim;		\
-} while (/* CONSTCOND */ 0)
-#define st_timexp(x,ts,sbp) do {					\
-	(ts)->tv_sec = (sbp)->st_ ## x ## tim.tv_sec;			\
-	(ts)->tv_nsec = (sbp)->st_ ## x ## tim.tv_nsec;			\
-} while (/* CONSTCOND */ 0)
-#elif HAVE_ST_MTIMENSEC
+#if HAVE_ST_MTIMENSEC
 #define st_timecmp(x,sbpa,sbpb,op) ( \
 	((sbpa)->st_ ## x ## time == (sbpb)->st_ ## x ## time) ? \
 	    ((sbpa)->st_ ## x ## timensec op (sbpb)->st_ ## x ## timensec) : \
