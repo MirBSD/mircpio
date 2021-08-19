@@ -115,7 +115,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.10 2021/07/27 20:13:40 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.11 2021/08/19 00:34:29 tg Exp $");
 #endif
 
 /* possibly missing types */
@@ -128,13 +128,6 @@ typedef unsigned int uint32_t;
 typedef u_int32_t uint32_t;
 #endif
 #endif
-#if !HAVE_CAN_INT16TYPE
-#if !HAVE_CAN_UCBINT16
-typedef unsigned short int uint16_t;
-#else
-typedef u_int16_t uint16_t;
-#endif
-#endif
 
 #ifdef MKSH_TYPEDEF_SSIZE_T
 typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
@@ -143,6 +136,8 @@ typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #if !HAVE_CAN_ULONG
 typedef unsigned long u_long;
 #endif
+
+typedef unsigned char paxbool;
 
 /* missing macros / header bug workarounds */
 
