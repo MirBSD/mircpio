@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.30 2021/08/19 00:36:48 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.31 2021/10/03 21:13:51 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -38,7 +38,7 @@ MAN=		cpio.1 pax.1 tar.1
 LINKS+=		${BINDIR}/pax ${BINDIR}/cpio
 LINKS+=		${BINDIR}/pax ${BINDIR}/tar
 .if !make(test-build)
-CPPFLAGS+=	-D_ALL_SOURCE \
+CPPFLAGS+=	\
 		-DHAVE_ATTRIBUTE_BOUNDED=1 -DHAVE_ATTRIBUTE_FORMAT=1 \
 		-DHAVE_ATTRIBUTE_NONNULL=1 -DHAVE_ATTRIBUTE_NORETURN=1 \
 		-DHAVE_ATTRIBUTE_PURE=1 -DHAVE_ATTRIBUTE_UNUSED=1 \
@@ -59,6 +59,7 @@ CPPFLAGS+=	-D_ALL_SOURCE \
 		-DHAVE_ST_MTIMENSEC=1
 #XXX TODO: sparc has a non-large time_t
 CPPFLAGS+=	-I.
+CPPFLAGS+=	-D_ALL_SOURCE
 COPTS+=		-Wall
 .endif
 COPTS+=		-std=c89 -U__STRICT_ANSI__
