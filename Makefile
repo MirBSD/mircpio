@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.31 2021/10/03 21:13:51 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.32 2021/12/06 21:42:39 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -57,7 +57,6 @@ CPPFLAGS+=	\
 		-DHAVE_UGID_FROM_UG=0 -DHAVE_UTIMENSAT=0 -DHAVE_UTIMES=1 \
 		-DHAVE_OFFT_LONG=0 -DHAVE_TIMET_LONG=0 -DHAVE_TIMET_LARGE=1 \
 		-DHAVE_ST_MTIMENSEC=1
-#XXX TODO: sparc has a non-large time_t
 CPPFLAGS+=	-I.
 CPPFLAGS+=	-D_ALL_SOURCE
 COPTS+=		-Wall
