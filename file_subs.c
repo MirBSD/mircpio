@@ -71,7 +71,7 @@
 #undef EXTERN
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.31 2019/02/23 23:42:22 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.32 2023/01/03 17:28:25 tg Exp $");
 
 /*
  * routines that deal with file operations such as: creating, removing;
@@ -1026,7 +1026,7 @@ set_pmode(char *fnm, mode_t mode, int issymlink MKSH_A_UNUSED)
 #elif HAVE_LCHMOD
 	rv = (issymlink ? lchmod : chmod)(fnm, mode);
 	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
-		/* similarily glibc */
+		/* similarly glibc */
 		return;
 #else
 	if (issymlink)
