@@ -2,7 +2,7 @@
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
- * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018, 2019
+ * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018, 2019, 2024
  *	mirabilos <m@mirbsd.org>
  * Copyright (c) 2018
  *	Jonathan de Boyne Pollard <J.deBoynePollard-newsgroups@NTLWorld.COM>
@@ -71,7 +71,7 @@
 #undef EXTERN
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.32 2023/01/03 17:28:25 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.33 2024/08/17 23:33:51 tg Exp $");
 
 /*
  * routines that deal with file operations such as: creating, removing;
@@ -865,7 +865,14 @@ set_ftime(const char *fnm, const struct stat *sbp, int frc,
 	tv[0].tv_usec = ts[0].tv_nsec / 1000;
 	tv[1].tv_sec = ts[1].tv_sec;
 	tv[1].tv_usec = ts[1].tv_nsec / 1000;
+#if HAVE_LUTIMES
 	rv = (issymlink ? lutimes : utimes)(fnm, tv);
+#else
+	if (issymlink)
+		/* no can do */
+		return;
+	rv = utimes(fnm, tv);
+#endif
 	if (rv < 0 && issymlink && (errno == ENOSYS || errno == ENOTSUP))
 		/* might be glibc */
 		return;
@@ -1361,7 +1368,7 @@ set_crc(ARCHD *arcn, int fd)
 	 * safety check. we want to avoid archiving files that are active as
 	 * they can create inconsistent archive copies.
 	 */
-	if (cpcnt != arcn->sb.st_size)
+	if (cpcnt != (off_t)arcn->sb.st_size)
 		paxwarn(1, "File changed size %s", arcn->org_name);
 	else if (fstat(fd, &sb) < 0)
 		syswarn(1, errno, "Failed stat on %s", arcn->org_name);

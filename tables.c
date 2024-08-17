@@ -65,7 +65,7 @@
 #include "ftimes.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/tables.c,v 1.32 2021/08/19 00:34:29 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/tables.c,v 1.33 2024/08/17 23:33:52 tg Exp $");
 
 #if (_POSIX_VERSION >= 200809L) || (defined(MirBSD) && (MirBSD > 0x0AB9))
 #define REALPATH_CAN_ALLOCATE
@@ -211,7 +211,7 @@ typedef struct atdir {
 typedef struct dirdata {
 	struct file_times ft;
 	mode_t tr_mode;		/* file mode to restore */
-	paxbool frc_mode;	/* do we force mode settings? */
+	Wahr frc_mode;		/* do we force mode settings? */
 } DIRDATA;
 
 /*
@@ -1694,7 +1694,7 @@ add_dir(char *name, struct stat *psb, int frc_mode)
 	dblk->ft.ft_ino = psb->st_ino;
 	dblk->ft.ft_dev = psb->st_dev;
 	dblk->tr_mode = psb->st_mode & ABITS;
-	dblk->frc_mode = !!frc_mode;
+	dblk->frc_mode = isWahr(frc_mode);
 	sigprocmask(SIG_BLOCK, &allsigs, &savedsigs);
 	++dircnt;
 	sigprocmask(SIG_SETMASK, &savedsigs, NULL);

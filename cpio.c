@@ -51,7 +51,7 @@
 #include "cpio.h"
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.28 2021/07/27 20:11:55 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/cpio.c,v 1.29 2024/08/17 23:33:51 tg Exp $");
 
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
@@ -219,8 +219,8 @@ rd_ln_nm(ARCHD *arcn)
 	/*
 	 * check the length specified for bogus values
 	 */
-	if ((arcn->sb.st_size <= 0) ||
-	    (arcn->sb.st_size >= (off_t)sizeof(arcn->ln_name))) {
+	if (((off_t)arcn->sb.st_size <= 0) ||
+	    ((off_t)arcn->sb.st_size >= (off_t)sizeof(arcn->ln_name))) {
 		paxwarn(1, "cpio link name length is invalid: %" OT_FMT,
 		    arcn->sb.st_size);
 		return(-1);
@@ -937,9 +937,9 @@ bcpio_id(char *blk, int size)
 	/*
 	 * check both normal and byte swapped magic cookies
 	 */
-	if (((u_short)SHRT_EXT(blk)) == MAGIC)
+	if (((unsigned short)SHRT_EXT(blk)) == MAGIC)
 		return(0);
-	if (((u_short)RSHRT_EXT(blk)) == MAGIC) {
+	if (((unsigned short)RSHRT_EXT(blk)) == MAGIC) {
 		if (!swp_head)
 			++swp_head;
 		return(0);
@@ -1110,7 +1110,8 @@ bcpio_wr(ARCHD *arcn)
 		hd->h_filesize_2[1] = CHR_WR_3(arcn->sb.st_size);
 		t_offt = (off_t)(SHRT_EXT(hd->h_filesize_1));
 		t_offt = (t_offt<<16) | ((off_t)(SHRT_EXT(hd->h_filesize_2)));
-		if (arcn->sb.st_size != t_offt) {
+		/* sb.st_size is off_t in POSIX but not dietlibc */
+		if ((off_t)arcn->sb.st_size != t_offt) {
 			paxwarn(1, "File is too large for %s format %s",
 			    "bcpio", arcn->org_name);
 			return (1);

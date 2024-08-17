@@ -1,10 +1,10 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.26 2024/08/17 22:29:12 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.27 2024/08/17 23:33:49 tg Exp $'
 set +evx
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
-#		2020, 2021, 2023
+#		2020, 2021, 2023, 2024
 #	mirabilos <m@mirbsd.org>
 # Copyright (c) 2018
 #	mirabilos <t.glaser@tarent.de>
@@ -195,6 +195,11 @@ ac_testinit() {
 			shift
 		fi
 		eval ft=\$HAVE_`upper $2`
+		if test_z "$ft"; then
+			echo >&2
+			echo >&2 "E: test $f depends on $2 which is not defined yet"
+			exit 255
+		fi
 		shift
 	fi
 	fd=${3-$f}
@@ -1663,6 +1668,7 @@ test $ct = pcc && phase=u
 #
 # Compiler: check for stuff that only generates warnings
 #
+: "${HAVE_ATTRIBUTE_EXTENSION=1}" # not a separate test but a dependency
 ac_test attribute_bounded attribute_extension 0 'for __attribute__((__bounded__))' <<-'EOF'
 	#include <string.h>
 	#undef __attribute__
@@ -1925,12 +1931,6 @@ ac_test futimens <<-'EOF'
 	int main(void) { return (futimens(0, ts)); }
 EOF
 
-ac_test futimes '!' futimens 0 <<-'EOF'
-	#include <sys/time.h>
-	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
-	int main(void) { return (futimes(0, tv)); }
-EOF
-
 ac_test lchmod '!' fchmodat 0 <<-'EOF'
 	#include <sys/types.h>
 	#include <sys/stat.h>
@@ -2024,6 +2024,18 @@ ac_test utimes '!' utimensat 0 <<-'EOF'
 	#include <sys/time.h>
 	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	int main(void) { return (utimes(".", tv)); }
+EOF
+
+ac_test lutimes '!' utimensat 0 <<-'EOF'
+	#include <sys/time.h>
+	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
+	int main(void) { return (lutimes(".", tv)); }
+EOF
+
+ac_test futimes '!' futimens 0 <<-'EOF'
+	#include <sys/time.h>
+	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
+	int main(void) { return (futimes(0, tv)); }
 EOF
 
 #

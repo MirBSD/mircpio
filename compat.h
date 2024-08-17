@@ -117,7 +117,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.14 2024/08/17 22:49:40 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.15 2024/08/17 23:33:51 tg Exp $");
 __IDSTRING(rcsid_mbsdcc_h, SYSKERN_MBSDCC_H);
 #endif
 
@@ -136,7 +136,11 @@ typedef u_int32_t uint32_t;
 typedef unsigned long u_long;
 #endif
 
-typedef unsigned char paxbool;
+/* boolean type (no <stdbool.h> deliberately) */
+typedef unsigned char Wahr;
+#define Ja		1U
+#define Nee		0U
+#define isWahr(cond)	((cond) ? Ja : Nee)
 
 /* missing macros / header bug workarounds */
 

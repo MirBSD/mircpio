@@ -1,4 +1,4 @@
-# $MirOS: src/bin/pax/Makefile,v 1.33 2024/08/17 22:29:12 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.34 2024/08/17 23:33:50 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
@@ -55,13 +55,13 @@ CPPFLAGS+=	\
 		-DHAVE_UTMPX_H=0 -DHAVE_VIS_H=1 -DHAVE_CAN_INTTYPES=1 \
 		-DHAVE_CAN_UCBINTS=1 -DHAVE_CAN_ULONG=1 -DHAVE_DPRINTF=0 \
 		-DHAVE_FCHMODAT=0 -DHAVE_FCHOWNAT=0 -DHAVE_FUTIMENS=0 \
-		-DHAVE_FUTIMES=1 -DHAVE_LCHMOD=1 -DHAVE_LCHOWN=1 \
-		-DHAVE_LINKAT=0 -DHAVE_PLEDGE=1 -DHAVE_REALLOCARRAY=1 \
-		-DHAVE_SETPGENT=1 -DHAVE_STRLCPY=1 -DHAVE_STRLCAT=1 \
-		-DHAVE_STRMODE=1 -DHAVE_STRTONUM=1 -DHAVE_UG_FROM_UGID=1 \
-		-DHAVE_UGID_FROM_UG=0 -DHAVE_UTIMENSAT=0 -DHAVE_UTIMES=1 \
-		-DHAVE_OFFT_LONG=0 -DHAVE_TIMET_LONG=0 -DHAVE_TIMET_LARGE=1 \
-		-DHAVE_ST_MTIMENSEC=1
+		-DHAVE_LCHMOD=1 -DHAVE_LCHOWN=1 -DHAVE_LINKAT=0 \
+		-DHAVE_PLEDGE=0 -DHAVE_REALLOCARRAY=1 -DHAVE_SETPGENT=1 \
+		-DHAVE_STRLCPY=1 -DHAVE_STRLCAT=1 -DHAVE_STRMODE=1 \
+		-DHAVE_STRTONUM=1 -DHAVE_UG_FROM_UGID=1 -DHAVE_UGID_FROM_UG=0 \
+		-DHAVE_UTIMENSAT=0 -DHAVE_UTIMES=1 -DHAVE_LUTIMES=1 \
+		-DHAVE_FUTIMES=1 -DHAVE_OFFT_LONG=0 -DHAVE_TIMET_LONG=0 \
+		-DHAVE_TIMET_LARGE=1 -DHAVE_ST_MTIMENSEC=1
 CPPFLAGS+=	-I.
 CPPFLAGS+=	-D_ALL_SOURCE
 COPTS+=		-Wall
@@ -74,6 +74,7 @@ SAFE_PATH=	/bin:/usr/bin:/usr/mpkg/bin:/usr/local/bin
 CPPFLAGS+=	-DPAX_SAFE_PATH=\"${SAFE_PATH:Q}\"
 
 TEST_BUILD_ENV:=	TARGET_OS= CPP=
+TEST_BUILD_ENV+=	HAVE_PLEDGE=0	# for now, on MirBSD
 
 test-build: .PHONY
 	-rm -rf build-dir
@@ -129,7 +130,7 @@ cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 	    awk '/Mir''OS:/ { print $$4$$5; }' | \
 	    tr -dc 0-9); (( $${#x} == 14 )) || exit 1; exec \
 	    ${MKSH} ${BSDSRCDIR:Q}/contrib/hosted/tg/ps2pdfmir -p pa4 -c \
-	    -o ${_m}.${_n}.pdf '[' /Author '(The MirOS Project)' \
+	    -o ${_m}.${_n}.pdf '[' /Author '(MirBSD)' \
 	    /Title '('${CATS_TITLE_${_m}_${_n}:Q}')' \
 	    /Subject '(BSD Reference Manual)' /ModDate "(D:$$x)" \
 	    /Creator '(GNU groff version ${V_GROFF:S/groff-//} \(MirPorts\))' \
