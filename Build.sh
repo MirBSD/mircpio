@@ -1,9 +1,10 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.24 2021/10/11 22:23:05 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.25 2024/08/17 21:41:05 tg Exp $'
+set +evx
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
-#		2020, 2021
+#		2020, 2021, 2023
 #	mirabilos <m@mirbsd.org>
 # Copyright (c) 2018
 #	mirabilos <t.glaser@tarent.de>
@@ -54,18 +55,19 @@ test_tool() {
 
 	test x"$y" = x"0" && test x"$x" = x"$4" && return
 	echo >&2 "E: your $1 does not work correctly!"
-	echo >&2 "N: 'echo $2 | $3' exited $y and returned '$x' instead of '$4'"
-	echo >&2 'N: install a better one and prepend e.g. /usr/local/bin to $PATH'
+	echo >&2 "N: 'echo $2 | $3' exited $y and returned '$x'; expected '$4'"
+	echo >&2 'N: install a better one and prepend its location to $PATH'
 	exit 1
 }
 test_tool grep foobarbaz 'grep bar' foobarbaz
 test_tool sed abc 'sed y/ac/AC/' AbC
 test_tool tr abc 'tr ac AC' AbC
 
+sp=' '
+ht='	'
 nl='
 '
-safeIFS='	'
-safeIFS=" $safeIFS$nl"
+safeIFS="$sp$ht$nl"
 IFS=$safeIFS
 allu=QWERTYUIOPASDFGHJKLZXCVBNM
 alll=qwertyuiopasdfghjklzxcvbnm
@@ -95,12 +97,13 @@ echo "For the build logs, demonstrate that /dev/null and /dev/tty exist:"
 ls -l /dev/null /dev/tty
 cat <<EOF
 Flags on entry (plus HAVE_* which are not shown here):
- CC        <$CC>
- CFLAGS    <$CFLAGS>
- CPPFLAGS  <$CPPFLAGS>
- LDFLAGS   <$LDFLAGS>
- LIBS      <$LIBS>
- TARGET_OS <$TARGET_OS> TARGET_OSREV <$TARGET_OSREV>
+- CC        <$CC>
+- CFLAGS    <$CFLAGS>
+- CPPFLAGS  <$CPPFLAGS>
+- LDFLAGS   <$LDFLAGS>
+- LIBS      <$LIBS>
+- LDSTATIC  <$LDSTATIC>
+- TARGET_OS <$TARGET_OS> TARGET_OSREV <$TARGET_OSREV>
 
 EOF
 
@@ -217,15 +220,15 @@ cat_h_blurb() {
 }
 
 # pipe .c | ac_test[n] [!] label [!] checkif[!]0 [setlabelifcheckis[!]0] useroutput
-ac_testnnd() {
+ac_testnndnd() {
 	if test x"$1" = x"!"; then
 		fr=1
 		shift
 	else
 		fr=0
 	fi
-	ac_testinit "$@" || return 1
 	cat_h_blurb >conftest.c
+	ac_testinit "$@" || return 1
 	vv ']' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN conftest.c $LIBS $ccpr"
 	test $tcfn = no && test -f a.out && tcfn=a.out
 	test $tcfn = no && test -f a.exe && tcfn=a.exe
@@ -238,18 +241,28 @@ ac_testnnd() {
 	fi
 	vscan=
 	if test $phase = u; then
-		test $ct = gcc && vscan='unrecogni[sz]ed'
-		test $ct = hpcc && vscan='unsupported'
-		test $ct = pcc && vscan='unsupported'
-		test $ct = sunpro && vscan='-e ignored -e turned.off'
+		case $ct in
+		gcc*) vscan='unrecogni[sz]ed' ;;
+		hpcc) vscan='unsupported' ;;
+		pcc) vscan='unsupported' ;;
+		sunpro) vscan='-e ignored -e turned.off' ;;
+		esac
 	fi
 	test_n "$vscan" && grep $vscan vv.out >/dev/null 2>&1 && fv=$fr
 	return 0
 }
 ac_testn() {
-	ac_testnnd "$@" || return
-	rmf conftest.c conftest.o ${tcfn}* vv.out
-	ac_testdone
+	if ac_testnndnd "$@"; then
+		rmf conftest.c conftest.o ${tcfn}* vv.out
+		ac_testdone
+	else
+		rm -f conftest.c
+	fi
+}
+ac_testnnd() {
+	if ac_testnndnd "$@"; then
+		ac_testdone
+	fi
 }
 
 # ac_ifcpp cppexpr [!] label [!] checkif[!]0 [setlabelifcheckis[!]0] useroutput
@@ -393,25 +406,42 @@ addsrcs() {
 		fr=1
 	fi
 	eval i=\$$1
-	test $fr = "$i" && case " $SRCS " in
-	*\ $2\ *)	;;
-	*)		SRCS="$SRCS $2" ;;
+	test $fr = "$i" && case "$sp$SRCS$sp" in
+	*"$sp$2$sp"*)	;;
+	*)		SRCS="$SRCS$sp$2" ;;
 	esac
 }
 
 # --- main ---
 
 curdir=`pwd` srcdir=`dirname "$0" 2>/dev/null`
+curdisp=.
+case x$curdir in
+x)
+	curdir=.
+	;;
+*"$sp"*|*"$ht"*|*"$nl"*)
+	echo >&2 Current directory should not contain space or tab or newline.
+	echo >&2 Errors may occur.
+	;;
+*"'"*)
+	echo >&2 Current directory should not contain single quotes.
+	echo >&2 Errors may occur.
+	;;
+*)
+	curdisp=$curdir
+	;;
+esac
 case x$srcdir in
 x)
 	srcdir=.
 	;;
-*\ *|*"	"*|*"$nl"*)
+*"$sp"*|*"$ht"*|*"$nl"*)
 	echo >&2 Source directory should not contain space or tab or newline.
 	echo >&2 Errors may occur.
 	;;
 *"'"*)
-	echo Source directory must not contain single quotes.
+	echo >&2 Source directory must not contain single quotes.
 	exit 1
 	;;
 esac
@@ -542,7 +572,7 @@ SRCS="$SRCS file_subs.c ftree.c gen_subs.c getoldopt.c options.c"
 SRCS="$SRCS pat_rep.c pax.c sel_subs.c tables.c tar.c tty_subs.c"
 add_cppflags -DMBSDPORT_H=\\\"compat.h\\\"
 
-if test x"$srcdir" = x"."; then
+if test_z "$srcdisp"; then
 	CPPFLAGS="-I. $CPPFLAGS"
 else
 	CPPFLAGS="-I. -I'$srcdir' $CPPFLAGS"
@@ -635,10 +665,17 @@ NEXTSTEP)
 	    grep 'NeXT Mach [0-9][0-9.]*:' | \
 	    sed 's/^.*NeXT Mach \([0-9][0-9.]*\):.*$/\1/'`
 	;;
-BeOS|QNX|SCO_SV)
+BeOS|HP-UX|QNX|SCO_SV)
 	test_n "$TARGET_OSREV" || TARGET_OSREV=`uname -r`
 	;;
 esac
+
+# SVR4 (some) workaround
+int_as_ssizet() {
+	cpp_define SSIZE_MIN INT_MIN
+	cpp_define SSIZE_MAX INT_MAX
+	cpp_define ssize_t int
+}
 
 cmplrflgs=
 
@@ -646,6 +683,10 @@ cmplrflgs=
 case $TARGET_OS in
 386BSD)
 	osnote='; it is untested'
+	: "${HAVE_CAN_OTWO=0}"
+	;;
+4.4BSD)
+	osnote='; assuming BOW (BSD on Windows)'
 	;;
 A/UX)
 	oswarn='; it is untested'
@@ -665,7 +706,6 @@ BeOS)
 	;;
 BSD/OS)
 	osnote='; it is untested'
-	: "${HAVE_SETLOCALE_CTYPE=0}"
 	;;
 Coherent)
 	oswarn='; it is untested, possibly has major issues'
@@ -717,6 +757,13 @@ Harvey)
 	;;
 HP-UX)
 	osnote='; it is untested'
+	case $TARGET_OSREV in
+	B.09.*)
+		: "${CC=c89}"
+		add_cppflags -D_HPUX_SOURCE
+		cpp_define MBSDINT_H_SMALL_SYSTEM 1
+		;;
+	esac
 	;;
 Interix)
 	oswarn='; it is untested'
@@ -763,6 +810,7 @@ Minix3)
 	;;
 Minoca)
 	oswarn='; it is untested'
+	: "${CC=gcc}"
 	;;
 MirBSD)
 	add_cppflags -D_ALL_SOURCE
@@ -790,6 +838,8 @@ OpenBSD)
 	;;
 OS/2)
 	oswarn='; it is not ported'
+	# cf. https://github.com/komh/pdksh-os2/commit/590f2b19b0ff92a9a373295bce914654f9f5bf22
+	HAVE_TERMIOS_H=0
 	: "${CC=gcc}"
 	: "${SIZE=: size}"
 	;;
@@ -814,6 +864,7 @@ Plan9)
 	add_cppflags -D_BSD_EXTENSION
 	add_cppflags -D_SUSV2_SOURCE
 	cpp_define MKSH__NO_SYMLINK 1
+	# this is for detecting kencc
 	cmplrflgs=-DMKSH_MAYBE_KENCC
 	;;
 PW32*)
@@ -827,13 +878,29 @@ QNX)
 scosysv)
 	oswarn='; it is untested'
 	cmplrflgs=-DMKSH_MAYBE_QUICK_C
-	cpp_define MKSH_TYPEDEF_SSIZE_T int
+	int_as_ssizet
 	;;
 SCO_SV)
 	oswarn='; it is untested'
+	case $TARGET_OSREV in
+	3.2*)
+		# SCO OpenServer 5
+		;;
+	5*)
+		# SCO OpenServer 6
+		;;
+	*)
+		oswarn='; this is an unknown version of'
+		oswarn="$oswarn$nl$TARGET_OS ${TARGET_OSREV}, please tell me what to do"
+		;;
+	esac
 	;;
 SerenityOS)
 	oswarn='; it is untested'
+	;;
+SINIX-Z)
+	: "${CC=cc -Xa}"
+	cmplrflgs=-DMKSH_MAYBE_SCDE
 	;;
 skyos)
 	oswarn='; it is untested'
@@ -850,7 +917,7 @@ syllable)
 ULTRIX)
 	oswarn='; it is untested'
 	: "${CC=cc -YPOSIX}"
-	cpp_define MKSH_TYPEDEF_SSIZE_T int
+	int_as_ssizet
 	;;
 UnixWare|UNIX_SV)
 	# SCO UnixWare
@@ -866,12 +933,18 @@ XENIX)
 	oswarn='; it is untested'
 	# mostly when crosscompiling from scosysv
 	cmplrflgs=-DMKSH_MAYBE_QUICK_C
+	# this can barely do anything
+	int_as_ssizet
 	cpp_define MKSH__NO_SYMLINK 1
+	# these are broken
+	HAVE_TERMIOS_H=0
 	;;
 _svr4)
 	# generic target for SVR4 Unix with uname -s = uname -n
-	# this duplicates the * target below
 	oswarn='; it may or may not work'
+	: "${CC=cc -Xa}"
+	cmplrflgs=-DMKSH_MAYBE_SCDE
+	int_as_ssizet #XXX maybe not for *all* _svr4? here for Dell UNIX
 	;;
 *)
 	oswarn='; it may or may not work'
@@ -879,7 +952,7 @@ _svr4)
 esac
 test_n "$TARGET_OSREV" || TARGET_OSREV=`uname -r`
 
-: "${CC=cc}${NROFF=nroff}${SIZE=size}"
+: "${AWK=awk}${CC=cc}${NROFF=nroff}${SIZE=size}"
 test 0 = $r && echo | $NROFF -v 2>&1 | grep GNU >/dev/null 2>&1 && \
     echo | $NROFF -c >/dev/null 2>&1 && NROFF="$NROFF -c"
 
@@ -991,6 +1064,8 @@ ct="tcc"
 ct="clang"
 #elif defined(__NWCC__)
 ct="nwcc"
+#elif defined(__GNUC__) && (__GNUC__ < 2)
+ct="gcc1"
 #elif defined(__GNUC__)
 ct="gcc"
 #elif defined(_COMPILER_VERSION)
@@ -1010,6 +1085,8 @@ ct="quickc"
 #elif defined(MKSH_MAYBE_KENCC)
 /* and none of the above matches */
 ct="kencc"
+#elif defined(MKSH_MAYBE_SCDE)
+ct="tryscde"
 #else
 ct="unknown"
 #endif
@@ -1017,6 +1094,8 @@ ct="unknown"
 const char *
 #if defined(__KLIBC__) && !defined(__OS2__)
 et="klibc"
+#elif defined(__dietlibc__)
+et="dietlibc"
 #else
 et="unknown"
 #endif
@@ -1034,6 +1113,16 @@ cat_h_blurb >conftest.c <<'EOF'
 int main(void) { return (isatty(0)); }
 EOF
 test_z "$Cg" || Cg=-g  # generic
+case $ct:$TARGET_OS in
+tryscde:*)
+	case `LC_ALL=C; export LC_ALL; $CC -V 2>&1` in
+	*'Standard C Development Environment'*)
+		ct=scde ;;
+	*)
+		ct=unknown ;;
+	esac
+	;;
+esac
 case $ct in
 ack)
 	# work around "the famous ACK const bug"
@@ -1053,10 +1142,9 @@ bcc)
 	;;
 clang)
 	# does not work with current "ccc" compiler driver
-	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS -version"
+	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS --version"
 	# one of these two works, for now
 	vv '|' "${CLANG-clang} -version"
-	vv '|' "${CLANG-clang} --version"
 	# ensure compiler and linker are in sync unless overridden
 	case $CCC_CC:$CCC_LD in
 	:*)	;;
@@ -1074,6 +1162,12 @@ dmc)
 	echo >&2 "    of this platform. Continue at your own risk,"
 	echo >&2 "    please report success/failure to the developers."
 	;;
+gcc1)
+	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN -v conftest.c $LIBS"
+	vv '|' 'eval echo "\`$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS -dumpmachine\`" \
+		 "gcc\`$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS -dumpversion\`"'
+	: "${HAVE_ATTRIBUTE_EXTENSION=0}" # false positive
+	;;
 gcc)
 	test_z "$Cg" || Cg='-g3 -fno-builtin'
 	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN -v conftest.c $LIBS"
@@ -1082,6 +1176,11 @@ gcc)
 	;;
 hpcc)
 	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN -V conftest.c $LIBS"
+	case $TARGET_OS,$TARGET_OSREV in
+	HP-UX,B.09.*)
+		: "${HAVE_ATTRIBUTE_EXTENSION=0}"
+		;;
+	esac
 	;;
 iar)
 	echo >&2 'Warning: IAR Systems (http://www.iar.com) compiler for embedded
@@ -1110,7 +1209,10 @@ metrowerks)
     own risk, please report success/failure to the developers.'
 	;;
 mipspro)
+	test_z "$Cg" || Cg='-g3'
 	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS -version"
+	: "${HAVE_STDINT_H=0}" # broken unless building with __c99
+	: "${HAVE_ATTRIBUTE_EXTENSION=0}"  # skip checking as we know it absent
 	;;
 msc)
 	ccpr=		# errorlevels are not reliable
@@ -1150,6 +1252,10 @@ quickc)
 	# no version information
 	: "${HAVE_ATTRIBUTE_EXTENSION=0}"  # skip checking as we know it absent
 	;;
+scde)
+	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN -V conftest.c $LIBS"
+	: "${HAVE_ATTRIBUTE_EXTENSION=0}"  # skip checking as we know it absent
+	;;
 sdcc)
 	echo >&2 'Warning: sdcc (http://sdcc.sourceforge.net), the small devices
     C compiler for embedded systems detected. This has not yet
@@ -1165,6 +1271,7 @@ tcc)
 tendra)
 	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS -V 2>&1 | \
 	    grep -i -e version -e release"
+	: "${HAVE_ATTRIBUTE_EXTENSION=0}" # false positive
 	;;
 ucode)
 	vv '|' "$CC $CFLAGS $Cg $CPPFLAGS $LDFLAGS $NOWARN $LIBS -V"
@@ -1204,7 +1311,12 @@ dragonegg|llvm)
 	;;
 esac
 etd=" on $et"
+# still imake style but… can’t be helped
 case $et in
+dietlibc)
+	# live, BSD, live❣
+	add_cppflags -D_BSD_SOURCE
+	;;
 klibc)
 	;;
 unknown)
@@ -1292,6 +1404,8 @@ msc)
 	;;
 quickc)
 	;;
+scde)
+	;;
 sunpro)
 	test x"$save_NOWARN" = x"" && save_NOWARN='-errwarn=%none'
 	ac_flags 0 errwarnnone "$save_NOWARN"
@@ -1344,7 +1458,7 @@ hpcc)
 	ac_flags 1 otwo +O2
 	phase=x
 	;;
-kencc|quickc|tcc|tendra)
+kencc|quickc|scde|tcc|tendra)
 	# no special optimisation
 	;;
 sunpro)
@@ -1393,6 +1507,15 @@ dec)
 dmc)
 	ac_flags 1 decl "${ccpc}-r" 'for strict prototype checks'
 	ac_flags 1 schk "${ccpc}-s" 'for stack overflow checking'
+	;;
+gcc1)
+	# The following tests run with -Werror (gcc only) if possible
+	NOWARN=$DOWARN; phase=u
+	# we do not even use CFrustFrust in MirBSD so don’t code in it…
+	ac_flags 1 no_eh_frame -fno-asynchronous-unwind-tables
+	ac_flags 1 fnostrictaliasing -fno-strict-aliasing
+	ac_flags 1 data_abi_align -malign-data=abi
+	i=1
 	;;
 gcc)
 	ac_flags 1 fnolto -fno-lto 'whether we can explicitly disable buggy GCC LTO' -fno-lto
@@ -1535,11 +1658,6 @@ test $ct = pcc && phase=u
 # Compiler: check for stuff that only generates warnings
 #
 ac_test attribute_bounded attribute_extension 0 'for __attribute__((__bounded__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#include <string.h>
 	#undef __attribute__
 	int xcopy(const void *, void *, size_t)
@@ -1553,14 +1671,8 @@ ac_test attribute_bounded attribute_extension 0 'for __attribute__((__bounded__)
 		 */
 		memmove(d, s, n); return ((int)n);
 	}
-	#endif
 EOF
 ac_test attribute_format attribute_extension 0 'for __attribute__((__format__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#define fprintf printfoo
 	#include <stdio.h>
 	#undef __attribute__
@@ -1568,70 +1680,39 @@ ac_test attribute_format attribute_extension 0 'for __attribute__((__format__))'
 	extern int fprintf(FILE *, const char *format, ...)
 	    __attribute__((__format__(__printf__, 2, 3)));
 	int main(int ac, char *av[]) { return (fprintf(stderr, "%s%d", *av, ac)); }
-	#endif
 EOF
 ac_test attribute_nonnull attribute_extension 0 'for __attribute__((__nonnull__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#include <stdio.h>
 	#undef __attribute__
 	int fnord(const char *) __attribute__((__nonnull__(1)));
 	int main(void) { return (fnord("x")); }
 	int fnord(const char *x) { return (fputc(*x, stderr)); }
-	#endif
 EOF
 ac_test attribute_noreturn attribute_extension 0 'for __attribute__((__noreturn__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#include <stdlib.h>
 	#undef __attribute__
 	void fnord(void) __attribute__((__noreturn__));
 	int main(void) { fnord(); }
 	void fnord(void) { exit(0); }
-	#endif
 EOF
 ac_test attribute_pure attribute_extension 0 'for __attribute__((__pure__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#include <unistd.h>
 	#undef __attribute__
 	int foo(const char *) __attribute__((__pure__));
 	int main(int ac, char *av[]) { return (foo(av[ac - 1]) + isatty(0)); }
 	int foo(const char *s) { return ((int)s[0]); }
-	#endif
 EOF
 ac_test attribute_unused attribute_extension 0 'for __attribute__((__unused__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#include <unistd.h>
 	#undef __attribute__
 	int main(int ac __attribute__((__unused__)), char *av[]
 	    __attribute__((__unused__))) { return (isatty(0)); }
-	#endif
 EOF
 ac_test attribute_used attribute_extension 0 'for __attribute__((__used__))' <<-'EOF'
-	#if defined(__TenDRA__) || (defined(__GNUC__) && (__GNUC__ < 2))
-	extern int thiswillneverbedefinedIhope(void);
-	/* force a failure: TenDRA and gcc 1.42 have false positive here */
-	int main(void) { return (thiswillneverbedefinedIhope()); }
-	#else
 	#include <unistd.h>
 	#undef __attribute__
 	static const char fnord[] __attribute__((__used__)) = "42";
 	int main(void) { return (isatty(0)); }
-	#endif
 EOF
 
 # End of tests run with -Werror
@@ -1671,11 +1752,10 @@ ac_header vis.h stdlib.h
 echo '#include <sys/types.h>
 #include <fts.h>
 #include <unistd.h>
-/* check that off_t can represent 2^63-1 correctly, thx FSF */
-#define LARGE_OFF_T ((((off_t)1 << 31) << 31) - 1 + (((off_t)1 << 31) << 31))
-int off_t_is_large[(LARGE_OFF_T % 2147483629 == 721 &&
-    LARGE_OFF_T % 2147483647 == 1) ? 1 : -1];
-int main(void) { return (isatty(0)); }' >lft.c
+struct ctassert_offt {
+	off_t min63bits:63;
+};
+int main(void) { return ((int)sizeof(struct ctassert_offt)); }' >lft.c
 ac_testn can_lfs '' "for large file support" <lft.c
 save_CPPFLAGS=$CPPFLAGS
 add_cppflags -D_FILE_OFFSET_BITS=64
@@ -1715,7 +1795,7 @@ if test $cm = makefile; then
 	: nothing to check
 else
 	HAVE_LINK_WORKS=x
-	ac_testinit link_works '' 'checking if the final link command may succeed'
+	ac_testinit link_works '' 'if the final link command may succeed'
 	fv=1
 	cat >conftest.c <<-EOF
 		#include <sys/types.h>
@@ -2130,7 +2210,7 @@ $e $bi$me: Finished configuration testing, now producing output.$ao
 
 files=
 objs=
-sp=
+fsp=
 case $tcfn in
 a.exe|conftest.exe)
 	buildoutput=$tfn.exe
@@ -2162,16 +2242,16 @@ echo set -x >>Rebuild.sh
 for file in $SRCS; do
 	op=`echo x"$file" | sed 's/^x\(.*\)\.c$/\1./'`
 	test -f $file || file=$srcdir/$file
-	files="$files$sp$file"
+	files="$files$fsp$file"
 	echo "$CC $CFLAGS $Cg $CPPFLAGS $emitbc $file || exit 1" >>Rebuild.sh
 	if test $cm = dragonegg; then
 		echo "mv ${op}s ${op}ll" >>Rebuild.sh
 		echo "llvm-as ${op}ll || exit 1" >>Rebuild.sh
-		objs="$objs$sp${op}bc"
+		objs="$objs$fsp${op}bc"
 	else
-		objs="$objs$sp${op}o"
+		objs="$objs$fsp${op}o"
 	fi
-	sp=' '
+	fsp=' '
 done
 case $cm in
 dragonegg|llvm)
@@ -2198,6 +2278,8 @@ if test $cm = makefile; then
 PROG=		$buildoutput
 # install as $paxexe and $cpioexe and $tarexe though
 MAN=		cpio.1 pax.1 tar.1
+SRCDIR=		$srcdir
+MF_DIR=		$curdisp
 SRCS=		$SRCS
 SRCS_FP=	$files
 OBJS_BP=	$objs
@@ -2211,7 +2293,7 @@ LDFLAGS=	$LDFLAGS
 LIBS=		$LIBS
 
 # not BSD make only:
-#VPATH=		$srcdir
+#VPATH=		\$(SRCDIR)
 #all: \$(PROG)
 #\$(PROG): \$(OBJS_BP)
 #	\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$@ \$(OBJS_BP) \$(LIBS)
@@ -2220,7 +2302,7 @@ LIBS=		$LIBS
 #	\$(CC) \$(CFLAGS) \$(CPPFLAGS) -c \$<
 
 # for BSD make only:
-#.PATH: $srcdir
+#.PATH: \$(SRCDIR)
 #.include <bsd.prog.mk>
 EOF
 	$e
@@ -2260,7 +2342,13 @@ dragonegg|llvm)
 	;;
 esac
 tcfn=$buildoutput
-test $cm = combine || v "$CC $CFLAGS $Cg $LDFLAGS -o $tcfn $lobjs $LIBS $ccpr"
+case $cm in
+combine)
+	;;
+*)
+	v "$CC $CFLAGS $Cg $LDFLAGS -o $tcfn $lobjs $LIBS $ccpr"
+	;;
+esac
 test -f $tcfn || exit 1
 rm -f $paxexe $cpioexe $tarexe
 for x in $paxexe $cpioexe $tarexe; do
@@ -2314,8 +2402,8 @@ LDSTATIC			set this to '-static'; default unset
 LIBS				default empty; added after sources
 NOWARN				-Wno-error or similar
 NROFF				default: nroff
-TARGET_OS			default: $(uname -s || uname)
-TARGET_OSREV			default: $(uname -r) [only needed on some OS]
+TARGET_OS			default: `uname -s || uname`
+TARGET_OSREV			default: `uname -r` [only needed on some OS]
 
 ===== general format =====
 HAVE_STRLEN			ac_test
@@ -2325,7 +2413,6 @@ HAVE_CAN_FSTACKPROTECTORALL	ac_flags
 ==== cpp definitions ====
 DEBUG				don’t use in production, wants gcc
 MKSH_DONT_EMIT_IDSTRING		omit RCS IDs from binary
-MKSH_TYPEDEF_SSIZE_T		define to e.g. 'long' if your OS has no ssize_t
 PAX_SAFE_PATH			subprocess PATH, default "/bin:/usr/bin"
 SMALL				for the MirBSD installer/rescue system
 

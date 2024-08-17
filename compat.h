@@ -115,7 +115,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.11 2021/08/19 00:34:29 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.12 2024/08/17 21:41:05 tg Exp $");
 #endif
 
 /* possibly missing types */
@@ -127,10 +127,6 @@ typedef unsigned int uint32_t;
 #else
 typedef u_int32_t uint32_t;
 #endif
-#endif
-
-#ifdef MKSH_TYPEDEF_SSIZE_T
-typedef MKSH_TYPEDEF_SSIZE_T ssize_t;
 #endif
 
 #if !HAVE_CAN_ULONG
