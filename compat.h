@@ -47,6 +47,8 @@
 #include <stdint.h>
 #endif
 
+#include ".linked/mbsdcc.h"
+
 #undef __attribute__
 #if HAVE_ATTRIBUTE_BOUNDED
 #define MKSH_A_BOUNDED(x,y,z)	__attribute__((__bounded__(x, y, z)))
@@ -115,7 +117,8 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.12 2024/08/17 21:41:05 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.14 2024/08/17 22:49:40 tg Exp $");
+__IDSTRING(rcsid_mbsdcc_h, SYSKERN_MBSDCC_H);
 #endif
 
 /* possibly missing types */
