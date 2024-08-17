@@ -1,8 +1,8 @@
-# $MirOS: src/bin/pax/Makefile,v 1.32 2021/12/06 21:42:39 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.33 2024/08/17 22:29:12 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
-#		2020
+#		2020, 2023
 #	mirabilos <m@mirbsd.org>
 # Copyright (c) 2018
 #	mirabilos <t.glaser@tarent.de>
@@ -25,6 +25,10 @@
 # MirMakefile explicitly as part of MirBSD base; use Build.sh if you
 # wish to build paxmirabilis (MirCPIO) on anything else, these days.
 
+.ifdef cats
+.MAIN: cats
+.endif
+
 .include <bsd.own.mk>
 
 SRCDIR=		${.CURDIR}
@@ -38,6 +42,7 @@ MAN=		cpio.1 pax.1 tar.1
 LINKS+=		${BINDIR}/pax ${BINDIR}/cpio
 LINKS+=		${BINDIR}/pax ${BINDIR}/tar
 .if !make(test-build)
+# ^K/ mksh /usr/src/contrib/hosted/tg/retab
 CPPFLAGS+=	\
 		-DHAVE_ATTRIBUTE_BOUNDED=1 -DHAVE_ATTRIBUTE_FORMAT=1 \
 		-DHAVE_ATTRIBUTE_NONNULL=1 -DHAVE_ATTRIBUTE_NORETURN=1 \
@@ -75,8 +80,8 @@ test-build: .PHONY
 	mkdir -p build-dir
 	cd build-dir; env CC=${CC:Q} CFLAGS=${CFLAGS:M*:Q} \
 	    CPPFLAGS=${CPPFLAGS:M*:Q} LDFLAGS=${LDFLAGS:M*:Q} \
-	    LIBS= NOWARN=-Wno-error ${TEST_BUILD_ENV} /bin/sh \
-	    ${SRCDIR}/Build.sh -Q -r
+	    LIBS=${LDADD:Q} NOWARN=-Wno-error ${TEST_BUILD_ENV} \
+	    /bin/sh ${SRCDIR:Q}/Build.sh -Q -r
 
 cleandir: clean-extra
 
@@ -110,11 +115,16 @@ CATS_KW=	cpio, pax, tar
 CATS_TITLE_cpio_1=paxcpio - copy file archives in and out
 CATS_TITLE_pax_1=pax - read and write file archives and copy directory hierarchies
 CATS_TITLE_tar_1=paxtar - Unix tape archiver
-cats: ${MANALL} ${MANALL:S/.cat/.ps/}
-.if "${MANALL:Ncpio.cat1:Npax.cat1:Ntar.cat1}" != ""
+CATS_PAGES=	cpio 1 pax 1 tar 1
+catsall:=	${MANALL}
+.for _m _n in ${CATS_PAGES}
+catsall:=	${catsall:N${_m}.cat${_n}}
+.endfor
+.if "${catsall}" != ""
 .  error Adjust here.
 .endif
-.for _m _n in cpio 1 pax 1 tar 1
+cats: ${MANALL} ${MANALL:S/.cat/.ps/}
+.for _m _n in ${CATS_PAGES}
 	x=$$(ident ${SRCDIR:Q}/${_m}.${_n} | \
 	    awk '/Mir''OS:/ { print $$4$$5; }' | \
 	    tr -dc 0-9); (( $${#x} == 14 )) || exit 1; exec \
@@ -137,3 +147,11 @@ cats: ${MANALL} ${MANALL:S/.cat/.ps/}
 		do_conversion_verbose "$$bn" "$$ext" "$$m" "$$bn.$$ext.htm"; \
 		rm -f "$$bn.$$ext.htm.gz"; gzip -n9 "$$bn.$$ext.htm"; \
 	done
+.ifdef cats
+.  for _m _n in ${CATS_PAGES}
+	mv -f ${_m}.cat${_n}.gz ${_m}-${cats}.cat${_n}.gz
+	mv -f ${_m}.${_n}.htm.gz ${_m}-${cats}.htm.gz
+	mv -f ${_m}.${_n}.pdf ${_m}-${cats}.pdf
+	mv -f ${_m}.${_n}.txt.gz ${_m}-${cats}.txt.gz
+.  endfor
+.endif

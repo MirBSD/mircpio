@@ -1,5 +1,5 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.25 2024/08/17 21:41:05 tg Exp $'
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.26 2024/08/17 22:29:12 tg Exp $'
 set +evx
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
@@ -563,8 +563,8 @@ if test -d $tfn || test -d $tfn.exe; then
 fi
 test x"$use_ach" = x"1" || use_ach=0
 cpp_define MKSH_BUILDSH 1
-rmf a.exe* a.out* conftest.c conftest.exe* *core core.* ${tfn}* *.bc *.dbg \
-    *.ll *.o Rebuild.sh lft no x vv.out
+rmf a.exe* a.out* conftest.* *core core.* ${tfn}* *.bc *.dbg *.ll *.o *.cat? \
+    *.gen Rebuild.sh Makefrag.inc lft no x vv.out
 rm -rf mans
 
 SRCS="ar.c ar_io.c ar_subs.c buf_subs.c compat.c cpio.c"
@@ -1315,7 +1315,11 @@ etd=" on $et"
 case $et in
 dietlibc)
 	# live, BSD, live❣
-	add_cppflags -D_BSD_SOURCE
+	#add_cppflags -D_BSD_SOURCE
+	# dietlibc has u_long as uint32_t in many versions, ouch,
+	# but thankfully ifdef _BSD_SOURCE, so… ouch²…
+	add_cppflags -U_BSD_SOURCE
+	: "${HAVE_CAN_ULONG=0}"
 	;;
 klibc)
 	;;
@@ -1511,6 +1515,7 @@ dmc)
 gcc1)
 	# The following tests run with -Werror (gcc only) if possible
 	NOWARN=$DOWARN; phase=u
+	ac_flags 1 wnodeprecateddecls -Wno-deprecated-declarations
 	# we do not even use CFrustFrust in MirBSD so don’t code in it…
 	ac_flags 1 no_eh_frame -fno-asynchronous-unwind-tables
 	ac_flags 1 fnostrictaliasing -fno-strict-aliasing
@@ -1521,6 +1526,7 @@ gcc)
 	ac_flags 1 fnolto -fno-lto 'whether we can explicitly disable buggy GCC LTO' -fno-lto
 	# The following tests run with -Werror (gcc only) if possible
 	NOWARN=$DOWARN; phase=u
+	ac_flags 1 wnodeprecateddecls -Wno-deprecated-declarations
 	# we do not even use CFrustFrust in MirBSD so don’t code in it…
 	ac_flags 1 no_eh_frame -fno-asynchronous-unwind-tables
 	ac_flags 1 fnostrictaliasing -fno-strict-aliasing
@@ -1951,7 +1957,7 @@ EOF
 
 ac_test reallocarray <<-'EOF'
 	#include <stdlib.h>
-	int main(void) { return (reallocarray(NULL, 3, 3) == NULL); }
+	int main(void) { return ((void *)reallocarray(NULL, 3, 3) == (void *)0UL); }
 EOF
 
 ac_test setpgent grp_h 0 'for setpassent and setgroupent' <<-'EOF'
@@ -2186,6 +2192,25 @@ if test 1 = "$HAVE_ST_MTIM"; then
 	cpp_define st_mtimensec st_mtim.tv_nsec
 	HAVE_ST_MTIMENSEC=1
 fi
+ac_testn st_mtime_nsec '!' st_mtimensec 0 'for struct stat.st_mtime_nsec' <<-'EOF'
+	#include <sys/types.h>
+	#if HAVE_BOTH_TIME_H
+	#include <sys/time.h>
+	#include <time.h>
+	#elif HAVE_SYS_TIME_H
+	#include <sys/time.h>
+	#elif HAVE_TIME_H
+	#include <time.h>
+	#endif
+	#include <sys/stat.h>
+	int main(void) { struct stat sb; return (sizeof(sb.st_mtime_nsec)); }
+EOF
+if test 1 = "$HAVE_ST_MTIME_NSEC"; then
+	cpp_define st_atimensec st_atime_nsec
+	cpp_define st_ctimensec st_ctime_nsec
+	cpp_define st_mtimensec st_mtime_nsec
+	HAVE_ST_MTIMENSEC=1
+fi
 ac_cppflags ST_MTIMENSEC
 
 
@@ -2251,7 +2276,7 @@ for file in $SRCS; do
 	else
 		objs="$objs$fsp${op}o"
 	fi
-	fsp=' '
+	fsp=$sp
 done
 case $cm in
 dragonegg|llvm)
@@ -2287,7 +2312,7 @@ INDSRCS=	$extras
 NONSRCS_INST=	\$(MAN)
 NONSRCS_NOINST=	Build.sh Makefile Rebuild.sh
 CC=		$CC
-CPPFLAGS=	$CPPFLAGS
+CPPFLAGS=	$CPPFLAGS -I'\$(MF_DIR)'
 CFLAGS=		$CFLAGS $Cg
 LDFLAGS=	$LDFLAGS
 LIBS=		$LIBS
