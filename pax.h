@@ -41,7 +41,7 @@
 #include "compat.h"
 
 #ifdef EXTERN
-__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.26 2021/10/03 20:48:06 tg Exp $");
+__IDSTRING(rcsid_pax_h, "$MirOS: src/bin/pax/pax.h,v 1.27 2024/08/18 00:12:43 tg Exp $");
 #endif
 
 /*
@@ -311,4 +311,4 @@ enum fsub_order {
 #define MAX_TIME_T	LLONG_MAX
 #endif
 
-#define MIRCPIO_VERSION	"2021-10-03"
+#define MIRCPIO_VERSION	"2024-08-17"
