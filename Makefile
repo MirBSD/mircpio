@@ -1,11 +1,9 @@
-# $MirOS: src/bin/pax/Makefile,v 1.35 2024/08/18 00:17:14 tg Exp $
+# $MirOS: src/bin/pax/Makefile,v 1.36 2025/07/27 23:12:03 tg Exp $
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-#		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
-#		2020, 2023, 2024
-#	mirabilos <m@mirbsd.org>
-# Copyright (c) 2018
-#	mirabilos <t.glaser@tarent.de>
+#		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
+#		2019, 2020, 2023, 2024
+#	mirabilos <m$(date +%Y)@mirbsd.de>
 #
 # Provided that these terms and disclaimer and all copyright notices
 # are retained or reproduced in an accompanying document, permission
@@ -45,8 +43,7 @@ LINKS+=		${BINDIR}/pax ${BINDIR}/tar
 # ^K/ mksh /usr/src/contrib/hosted/tg/retab
 CPPFLAGS+=	\
 		-DHAVE_ATTRIBUTE_BOUNDED=1 -DHAVE_ATTRIBUTE_FORMAT=1 \
-		-DHAVE_ATTRIBUTE_NONNULL=1 -DHAVE_ATTRIBUTE_NORETURN=1 \
-		-DHAVE_ATTRIBUTE_PURE=1 -DHAVE_ATTRIBUTE_UNUSED=1 \
+		-DHAVE_ATTRIBUTE_NORETURN=1 -DHAVE_ATTRIBUTE_UNUSED=1 \
 		-DHAVE_ATTRIBUTE_USED=1 -DHAVE_SYS_TIME_H=1 -DHAVE_TIME_H=1 \
 		-DHAVE_BOTH_TIME_H=1 -DHAVE_SYS_MKDEV_H=0 -DHAVE_SYS_MTIO_H=1 \
 		-DHAVE_SYS_RESOURCE_H=1 -DHAVE_SYS_SYSMACROS_H=0 \
