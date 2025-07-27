@@ -3,10 +3,9 @@
 
 /*-
  * Copyright (c) 2007, 2008, 2009, 2012, 2014, 2016, 2018, 2019, 2024
- *	mirabilos <m@mirbsd.org>
+ *	mirabilos <m$(date +%Y)@mirbsd.de>
  * Copyright (c) 2018
  *	Jonathan de Boyne Pollard <J.deBoynePollard-newsgroups@NTLWorld.COM>
- *	mirabilos <t.glaser@tarent.de>
  * Copyright (c) 2011
  *	Svante Signell <svante.signell@telia.com>
  * Copyright (c) 1992 Keith Muller.
@@ -41,6 +40,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <sys/stat.h>
 #if HAVE_BOTH_TIME_H
 #include <sys/time.h>
@@ -71,7 +71,7 @@
 #undef EXTERN
 #include "extern.h"
 
-__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.33 2024/08/17 23:33:51 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/file_subs.c,v 1.34 2025/07/27 23:02:46 tg Exp $");
 
 /*
  * routines that deal with file operations such as: creating, removing;

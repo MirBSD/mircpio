@@ -17,6 +17,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -24,7 +25,7 @@
 #include MBSDPORT_H
 #endif
 
-__RCSID("$MirOS: src/bin/pax/reallocarray.c,v 1.2 2020/09/04 20:32:58 tg Exp $");
+__RCSID("$MirOS: src/bin/pax/reallocarray.c,v 1.3 2025/07/27 23:02:46 tg Exp $");
 
 /*
  * This is sqrt(SIZE_MAX+1), as s1*s2 <= SIZE_MAX

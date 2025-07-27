@@ -2,9 +2,7 @@
  * Copyright © 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
  *	       2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
  *	       2019, 2020
- *	mirabilos <m@mirbsd.org>
- * Copyright © 2018
- *	mirabilos <t.glaser@tarent.de>
+ *	mirabilos <m$(date +%Y)@mirbsd.de>
  *
  * Provided that these terms and disclaimer and all copyright notices
  * are retained or reproduced in an accompanying document, permission
@@ -43,6 +41,7 @@
 #if HAVE_SYS_SYSMACROS_H
 #include <sys/sysmacros.h>
 #endif
+#include <stdarg.h>
 #if HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -60,20 +59,10 @@
 #else
 #define MKSH_A_FORMAT(x,y,z)	/* nothing */
 #endif
-#if HAVE_ATTRIBUTE_NONNULL
-#define MKSH_A_NONNULL(x)	__attribute__((__nonnull__(x)))
-#else
-#define MKSH_A_NONNULL(x)	/* nothing */
-#endif
 #if HAVE_ATTRIBUTE_NORETURN
 #define MKSH_A_NORETURN		__attribute__((__noreturn__))
 #else
 #define MKSH_A_NORETURN		/* nothing */
-#endif
-#if HAVE_ATTRIBUTE_PURE
-#define MKSH_A_PURE		__attribute__((__pure__))
-#else
-#define MKSH_A_PURE		/* nothing */
 #endif
 #if HAVE_ATTRIBUTE_UNUSED
 #define MKSH_A_UNUSED		__attribute__((__unused__))
@@ -117,7 +106,7 @@
 #endif
 
 #ifdef EXTERN
-__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.15 2024/08/17 23:33:51 tg Exp $");
+__IDSTRING(rcsid_compat_h, "$MirOS: src/bin/pax/compat.h,v 1.16 2025/07/27 23:02:45 tg Exp $");
 __IDSTRING(rcsid_mbsdcc_h, SYSKERN_MBSDCC_H);
 #endif
 
@@ -192,8 +181,7 @@ typedef unsigned char Wahr;
 #define BO_CLEXEC	0x02	/* set close-on-exec flag or warn */
 #define BO_MAYBE_DIR	0x04	/* add O_DIRECTORY if defined */
 #define binopen2(feat,path,flags) binopen3((feat) | BO__TWO, (path), (flags), 0)
-int binopen3(int, const char *, int, mode_t)
-    MKSH_A_NONNULL(2);
+int binopen3(int, const char *, int, mode_t);
 
 ssize_t dwrite(int, const void *, size_t)
     MKSH_A_BOUNDED(__buffer__, 2, 3);
@@ -204,7 +192,6 @@ ssize_t dwrite(int, const void *, size_t)
 #if !HAVE_DPRINTF
 /* replacement only as powerful as needed for this */
 void dprintf(int, const char *, ...)
-    MKSH_A_NONNULL(2)
     MKSH_A_FORMAT(__printf__, 2, 3);
 #endif
 

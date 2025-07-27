@@ -1,13 +1,12 @@
 #!/bin/sh
-srcversion='$MirOS: src/bin/pax/Build.sh,v 1.27 2024/08/17 23:33:49 tg Exp $'
+# -*- mode: sh -*-
+srcversion='$MirOS: src/bin/pax/Build.sh,v 1.28 2025/07/27 23:02:45 tg Exp $'
 set +evx
 #-
 # Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #		2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019,
-#		2020, 2021, 2023, 2024
-#	mirabilos <m@mirbsd.org>
-# Copyright (c) 2018
-#	mirabilos <t.glaser@tarent.de>
+#		2020, 2021, 2023, 2024, 2025
+#	mirabilos <m$(date +%Y)@mirbsd.de>
 #
 # Provided that these terms and disclaimer and all copyright notices
 # are retained or reproduced in an accompanying document, permission
@@ -215,7 +214,7 @@ ac_testinit() {
 
 cat_h_blurb() {
 	echo '#ifdef MKSH_USE_AUTOCONF_H
-/* things that “should” have been on the command line */
+/* things that "should" have been on the command line */
 #include "autoconf.h"
 #undef MKSH_USE_AUTOCONF_H
 #endif
@@ -450,6 +449,10 @@ x)
 	exit 1
 	;;
 esac
+test -d "$srcdir" || {
+	echo >&2 Source directory must exist.
+	exit 1
+}
 srcdisp=`cd "$srcdir" && pwd` || srcdisp=
 test_n "$srcdisp" || srcdisp=$srcdir
 if test x"$srcdisp" = x"$curdir"; then
@@ -474,7 +477,7 @@ mans=0
 for i
 do
 	case $last:$i in
-	c:dragonegg|c:llvm)
+	c:dragonegg|c:llvm|c:trace)
 		cm=$i
 		last=
 		;;
@@ -498,7 +501,7 @@ do
 	:-g)
 		# checker, debug, valgrind build
 		add_cppflags -DDEBUG
-		Cg=YES
+		Cg=' '
 		;;
 	:-j)
 		pm=1
@@ -569,7 +572,7 @@ fi
 test x"$use_ach" = x"1" || use_ach=0
 cpp_define MKSH_BUILDSH 1
 rmf a.exe* a.out* conftest.* *core core.* ${tfn}* *.bc *.dbg *.ll *.o *.cat? \
-    *.gen Rebuild.sh Makefrag.inc lft no x vv.out
+    Rebuild.sh Makefrag.inc lft no x vv.out
 rm -rf mans
 
 SRCS="ar.c ar_io.c ar_subs.c buf_subs.c compat.c cpio.c"
@@ -610,6 +613,7 @@ if test_z "$TARGET_OS"; then
 fi
 osnote=
 oswarn=
+oswerr=
 ccpc=-Wc,
 ccpl=-Wl,
 tsts=
@@ -717,7 +721,7 @@ Coherent)
 	cpp_define MKSH__NO_SYMLINK 1
 	;;
 CYGWIN*)
-	# libc lacks dprintf but the headers declare it unless #define’d
+	# libc lacks dprintf but the headers declare it unless #define'd
 	cpp_define dprintf rpl_dprintf
 	;;
 Darwin)
@@ -843,6 +847,7 @@ OpenBSD)
 	;;
 OS/2)
 	oswarn='; it is not ported'
+	: "${HAVE_SELECT=0}"
 	# cf. https://github.com/komh/pdksh-os2/commit/590f2b19b0ff92a9a373295bce914654f9f5bf22
 	HAVE_TERMIOS_H=0
 	: "${CC=gcc}"
@@ -994,9 +999,9 @@ scosysv|SCO_SV|UnixWare|UNIX_SV|XENIX)
 	vv '|' "uname -a >&2"
 	;;
 esac
-test_z "$oswarn" || echo >&2 "
+test_z "$oswarn$oswerr" || echo >&2 "
 Warning: $whatshort has not yet been ported to or tested on your
-operating system '$TARGET_OS'$oswarn."
+operating system '$TARGET_OS'$oswarn$oswerr."
 test_z "$osnote" || echo >&2 "
 Note: $whatshort is not fully ported to or tested yet on your
 operating system '$TARGET_OS'$osnote."
@@ -1006,6 +1011,7 @@ may improve; please drop us a success or failure notice or
 even send patches for the remaining issues, or, at the very
 least, complete logs (Build.sh + test?) will help.
 "
+test_z "$osnote$oswarn$oswerr" || sleep 3
 $e "$bi$me: Building $whatlong$ao $ui$dstversion$ao on $TARGET_OS ${TARGET_OSREV}..."
 
 #
@@ -1069,7 +1075,7 @@ ct="tcc"
 ct="clang"
 #elif defined(__NWCC__)
 ct="nwcc"
-#elif defined(__GNUC__) && (__GNUC__ < 2)
+#elif defined(__GNUC__) && ((__GNUC__) < 2)
 ct="gcc1"
 #elif defined(__GNUC__)
 ct="gcc"
@@ -1314,22 +1320,31 @@ case $cm in
 dragonegg|llvm)
 	vv '|' "llc -version"
 	;;
+trace)
+	case $ct in
+	gcc) ;;
+	*)
+		echo >&2 "E: -c trace does not work with $cm"
+		exit 1
+		;;
+	esac
+	;;
 esac
 etd=" on $et"
-# still imake style but… can’t be helped
+# still imake style but... cannot be helped
 case $et in
 dietlibc)
-	# live, BSD, live❣
+	# live, BSD, live\u2763
 	#add_cppflags -D_BSD_SOURCE
 	# dietlibc has u_long as uint32_t in many versions, ouch,
-	# but thankfully ifdef _BSD_SOURCE, so… ouch²…
+	# but thankfully ifdef _BSD_SOURCE, so ouch^2...
 	add_cppflags -U_BSD_SOURCE
 	: "${HAVE_CAN_ULONG=0}"
 	;;
 klibc)
 	;;
 unknown)
-	# nothing special detected, don’t worry
+	# nothing special detected, do not worry
 	etd=
 	;;
 *)
@@ -1521,7 +1536,7 @@ gcc1)
 	# The following tests run with -Werror (gcc only) if possible
 	NOWARN=$DOWARN; phase=u
 	ac_flags 1 wnodeprecateddecls -Wno-deprecated-declarations
-	# we do not even use CFrustFrust in MirBSD so don’t code in it…
+	# we do not even use CFrustFrust in MirBSD so do not code in it...
 	ac_flags 1 no_eh_frame -fno-asynchronous-unwind-tables
 	ac_flags 1 fnostrictaliasing -fno-strict-aliasing
 	ac_flags 1 data_abi_align -malign-data=abi
@@ -1532,7 +1547,7 @@ gcc)
 	# The following tests run with -Werror (gcc only) if possible
 	NOWARN=$DOWARN; phase=u
 	ac_flags 1 wnodeprecateddecls -Wno-deprecated-declarations
-	# we do not even use CFrustFrust in MirBSD so don’t code in it…
+	# we do not even use CFrustFrust in MirBSD so do not code in it...
 	ac_flags 1 no_eh_frame -fno-asynchronous-unwind-tables
 	ac_flags 1 fnostrictaliasing -fno-strict-aliasing
 	ac_flags 1 fstackprotectorstrong -fstack-protector-strong
@@ -1693,26 +1708,12 @@ ac_test attribute_format attribute_extension 0 'for __attribute__((__format__))'
 	    __attribute__((__format__(__printf__, 2, 3)));
 	int main(int ac, char *av[]) { return (fprintf(stderr, "%s%d", *av, ac)); }
 EOF
-ac_test attribute_nonnull attribute_extension 0 'for __attribute__((__nonnull__))' <<-'EOF'
-	#include <stdio.h>
-	#undef __attribute__
-	int fnord(const char *) __attribute__((__nonnull__(1)));
-	int main(void) { return (fnord("x")); }
-	int fnord(const char *x) { return (fputc(*x, stderr)); }
-EOF
 ac_test attribute_noreturn attribute_extension 0 'for __attribute__((__noreturn__))' <<-'EOF'
 	#include <stdlib.h>
 	#undef __attribute__
 	void fnord(void) __attribute__((__noreturn__));
 	int main(void) { fnord(); }
 	void fnord(void) { exit(0); }
-EOF
-ac_test attribute_pure attribute_extension 0 'for __attribute__((__pure__))' <<-'EOF'
-	#include <unistd.h>
-	#undef __attribute__
-	int foo(const char *) __attribute__((__pure__));
-	int main(int ac, char *av[]) { return (foo(av[ac - 1]) + isatty(0)); }
-	int foo(const char *s) { return ((int)s[0]); }
 EOF
 ac_test attribute_unused attribute_extension 0 'for __attribute__((__unused__))' <<-'EOF'
 	#include <unistd.h>
@@ -1787,16 +1788,28 @@ rmf lft*	# end of large file support test
 ac_test can_inttypes '!' stdint_h 1 "for standard 32-bit integer types" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
+	#if HAVE_STDINT_H
+	#include <stdarg.h>
+	#include <stdint.h>
+	#endif
 	int main(int ac, char *av[]) { return ((uint32_t)(size_t)*av + (int32_t)ac); }
 EOF
 ac_test can_ucbints '!' can_inttypes 1 "for UCB 32-bit integer types" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
+	#if HAVE_STDINT_H
+	#include <stdarg.h>
+	#include <stdint.h>
+	#endif
 	int main(int ac, char *av[]) { return ((u_int32_t)(size_t)*av + (int32_t)ac); }
 EOF
 ac_test can_ulong '' "for u_long" <<-'EOF'
 	#include <sys/types.h>
 	#include <stddef.h>
+	#if HAVE_STDINT_H
+	#include <stdarg.h>
+	#include <stdint.h>
+	#endif
 	int main(int ac, char *av[]) { return ((u_long)(size_t)av[ac]); }
 EOF
 
@@ -1868,7 +1881,11 @@ else
 		#include "tar.h"
 		#include "extern.h"
 		__RCSID("$srcversion");
-		int main(void) { printf("Hello, World!\\n"); return (isatty(0)); }
+		__IDSTRING(mbsdcc_h_rcsid, SYSKERN_MBSDCC_H);
+		int main(void) {
+			printf("Hello, World!\\n");
+			return (isatty(0));
+		}
 EOF
 	case $cm in
 	llvm)
@@ -1893,6 +1910,12 @@ EOF
 		v "$CC $CFLAGS $Cg $CPPFLAGS $NOWARN -c conftest.c" || fv=0
 		test $fv = 0 || v "$CC $CFLAGS $Cg $LDFLAGS -o $tcfn conftest.o $LIBS $ccpr"
 		;;
+	trace)
+		rm -f conftest.d conftest.o
+		v "$CC $CFLAGS $Cg $CPPFLAGS $NOWARN -MD -c conftest.c" || fv=0
+		test -f conftest.d && test -s conftest.d || fv=0
+		test -f conftest.o && test -s conftest.o || fv=0
+		test $fv = 0 || v "$CC $CFLAGS $Cg $LDFLAGS -o $tcfn conftest.o $LIBS -Wl,-t,-t $ccpr"
 	esac
 	test -f $tcfn || fv=0
 	ac_testdone
@@ -2021,18 +2044,21 @@ ac_test utimensat <<-'EOF'
 EOF
 
 ac_test utimes '!' utimensat 0 <<-'EOF'
+	#include <sys/types.h>
 	#include <sys/time.h>
 	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	int main(void) { return (utimes(".", tv)); }
 EOF
 
 ac_test lutimes '!' utimensat 0 <<-'EOF'
+	#include <sys/types.h>
 	#include <sys/time.h>
 	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	int main(void) { return (lutimes(".", tv)); }
 EOF
 
 ac_test futimes '!' futimens 0 <<-'EOF'
+	#include <sys/types.h>
 	#include <sys/time.h>
 	struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
 	int main(void) { return (futimes(0, tv)); }
@@ -2234,14 +2260,15 @@ ac_cppflags ST_MTIMENSEC
 # End of mirtoconf checks
 #
 $e ... done.
-rmf vv.out
+
+rmf x vv.out
+
+test 1 = "$HAVE_CAN_VERB" && CFLAGS="$CFLAGS -verbose"
 
 addsrcs '!' HAVE_UGID_FROM_UG cache.c
 addsrcs '!' HAVE_REALLOCARRAY reallocarray.c
 addsrcs '!' HAVE_STRMODE strmode.c
 addsrcs '!' HAVE_STRTONUM strtonum.c
-
-test 1 = "$HAVE_CAN_VERB" && CFLAGS="$CFLAGS -verbose"
 
 $e $bi$me: Finished configuration testing, now producing output.$ao
 
@@ -2308,7 +2335,7 @@ echo "for x in $paxexe $cpioexe $tarexe; do" >>Rebuild.sh
 echo "  ln \$tcfn \$x || cp -p \$tcfn \$x || exit 1" >>Rebuild.sh
 echo "done" >>Rebuild.sh
 if test $cm = makefile; then
-	extras='.linked/reallocarray.inc .linked/strlfun.inc .linked/strmode.inc .linked/strtonum.inc ar.h compat.h cpio.h extern.h ftimes.h pax.h tar.h'
+	extras='.linked/mbsdcc.h .linked/strlfun.inc ar.h compat.h cpio.h extern.h ftimes.h pax.h tar.h'
 	cat >Makefrag.inc <<EOF
 # Makefile fragment for building $whatlong $dstversion
 
@@ -2329,9 +2356,11 @@ CFLAGS=		$CFLAGS $Cg
 LDFLAGS=	$LDFLAGS
 LIBS=		$LIBS
 
+# for all make variants:
+#all: \$(PROG)
+
 # not BSD make only:
 #VPATH=		\$(SRCDIR)
-#all: \$(PROG)
 #\$(PROG): \$(OBJS_BP)
 #	\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$@ \$(OBJS_BP) \$(LIBS)
 #\$(OBJS_BP): \$(SRCS_FP) \$(NONSRCS)
@@ -2345,6 +2374,10 @@ EOF
 	$e
 	$e Generated Makefrag.inc successfully.
 	exit 0
+fi
+if test $cm = trace; then
+	emitbc='-MD -c'
+	rm -f *.d
 fi
 if test $cm = combine; then
 	objs="-o $buildoutput"
@@ -2382,6 +2415,10 @@ tcfn=$buildoutput
 case $cm in
 combine)
 	;;
+trace)
+	rm -f $tfn.*.t
+	v "$CC $CFLAGS $Cg $LDFLAGS -o $tcfn $lobjs $LIBS -Wl,-t,-t >$tfn.l.t $ccpr"
+	;;
 *)
 	v "$CC $CFLAGS $Cg $LDFLAGS -o $tcfn $lobjs $LIBS $ccpr"
 	;;
@@ -2399,6 +2436,83 @@ echo .nr g $mans | cat - "$srcdir/tar.1" >mans/$tarname.1
 test 1 = $r || v "$NROFF -mdoc <mans/$cpioname.1 >mans/$cpioname.cat1" || rmf mans/$cpioname.cat1
 test 1 = $r || v "$NROFF -mdoc <mans/$paxname.1 >mans/$paxname.cat1" || rmf mans/$paxname.cat1
 test 1 = $r || v "$NROFF -mdoc <mans/$tarname.1 >mans/$tarname.cat1" || rmf mans/$tarname.cat1
+if test $cm = trace; then
+	echo >&2 "I: tracing compilation, linking and binding inputs"
+    (
+	if test -n "$KSH_VERSION"; then
+		Xe() { print -r -- "$1"; }
+	elif test -n "$BASH_VERSION"; then
+		Xe() { printf '%s\n' "$1"; }
+	else
+		Xe() { echo "$1"; }
+	fi
+	Xgrep() {
+		set +e
+		grep "$@"
+		XgrepRV=$?
+		set -e
+		test $XgrepRV -lt 2
+	}
+	set -e
+	tsrc=`readlink -f "$srcdir"`
+	tdst=`readlink -f .`
+	# some sh do not like ${foo#bar} or ${#foo} at parse time
+	eval 'if test ${#tsrc} -lt ${#tdst}; then
+		mkr() {
+			r=`readlink -f "$1"`
+			case $r in #((
+			"$tdst"|"$tdst/"*) r="<<BLDDIR>>${r#"$tdst"}" ;;
+			"$tsrc"|"$tsrc/"*) r="<<SRCDIR>>${r#"$tsrc"}" ;;
+			esac
+		}
+	else
+		mkr() {
+			r=`readlink -f "$1"`
+			case $r in #((
+			"$tsrc"|"$tsrc/"*) r="<<SRCDIR>>${r#"$tsrc"}" ;;
+			"$tdst"|"$tdst/"*) r="<<BLDDIR>>${r#"$tdst"}" ;;
+			esac
+		}
+	fi'
+
+	cat *.d >$tfn.c1.t
+	set -o noglob
+	while read dst src; do
+		for f in $src; do
+			Xe "$f"
+		done
+	done <$tfn.c1.t >$tfn.c2.t
+	set +o noglob
+	sort -u <$tfn.c2.t >$tfn.c3.t
+	while IFS= read -r name; do
+		mkr "$name"
+		Xe "$r"
+	done <$tfn.c3.t >$tfn.c4.t
+	sort -u <$tfn.c4.t >$tfn.cz.t
+
+	sort -u <$tfn.l.t >$tfn.l1.t
+	sed -n '/^(/s///p' <$tfn.l1.t >$tfn.l2l.t #)
+	Xgrep -v '^(' <$tfn.l1.t >$tfn.l2.t
+	b=
+	while IFS=')' read -r lib memb; do
+		test x"$lib" = x"$b" || {
+			Xgrep -F -v -x "$lib" <$tfn.l2.t >$tfn.l2a.t
+			mv $tfn.l2a.t $tfn.l2.t
+			b=$lib
+			mkr "$lib"
+		}
+		Xe "$r($memb)"
+	done <$tfn.l2l.t >$tfn.l3.t
+	while IFS= read -r name; do
+		mkr "$name"
+		Xe "$r"
+	done <$tfn.l2.t >>$tfn.l3.t
+	sort -u <$tfn.l3.t >$tfn.lz.t
+	cat $tfn.cz.t $tfn.lz.t >$tfn.trace
+	rm $tfn.*.t
+    )
+	test 0 = $eq && sed 's/^/- /' <$tfn.trace
+fi
 test 0 = $eq && v $SIZE $tcfn
 i=install
 test -f /usr/ucb/$i && i=/usr/ucb/$i
@@ -2448,7 +2562,7 @@ HAVE_STRING_H			ac_header
 HAVE_CAN_FSTACKPROTECTORALL	ac_flags
 
 ==== cpp definitions ====
-DEBUG				don’t use in production, wants gcc
+DEBUG				do not use in production, wants gcc
 MKSH_DONT_EMIT_IDSTRING		omit RCS IDs from binary
 PAX_SAFE_PATH			subprocess PATH, default "/bin:/usr/bin"
 SMALL				for the MirBSD installer/rescue system

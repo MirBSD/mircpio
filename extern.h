@@ -3,7 +3,7 @@
 
 /*-
  * Copyright © 2013, 2015, 2016, 2018, 2019
- *	mirabilos <m@mirbsd.org>
+ *	mirabilos <m$(date +%Y)@mirbsd.de>
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -43,7 +43,7 @@
  */
 
 #ifdef EXTERN
-__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.40 2020/04/07 11:56:43 tg Exp $");
+__IDSTRING(rcsid_extern_h, "$MirOS: src/bin/pax/extern.h,v 1.41 2025/07/27 23:02:45 tg Exp $");
 #endif
 
 #ifndef PAX_JUST_THE_WARNINGS
@@ -362,13 +362,10 @@ extern char fdgetline_err;
 char *fdgetline(int);
 int tty_init(void);
 void tty_prnt(const char *, ...)
-    MKSH_A_NONNULL(1)
     MKSH_A_FORMAT(__printf__, 1, 2);
 char *tty_rd(void);
 #endif
 void paxwarn(int, const char *, ...)
-    MKSH_A_NONNULL(2)
     MKSH_A_FORMAT(__printf__, 2, 3);
 void syswarn(int, int, const char *, ...)
-    MKSH_A_NONNULL(3)
     MKSH_A_FORMAT(__printf__, 3, 4);
